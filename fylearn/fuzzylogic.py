@@ -38,6 +38,11 @@ def pi(a, r, b, m=2.0):
             return ((2 ** (m - 1)) * (((b - x) / (b - r)) ** m))
         else:
             return 0.0
+    # save factory values
+    pi_f.a = a
+    pi_f.r = r
+    pi_f.b = b
+    pi_f.m = m
     return pi_f
 
 def prod(x):

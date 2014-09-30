@@ -7,7 +7,7 @@ import numpy as np
 
 # shortcut (but, expensive calc) return max(0.0, min((x - a) / (b - a), (c - x) / (c - b)))
 def triangular(a, b, c):
-    def f(x):
+    def triangular_f(x):
         if np.isnan(x):
             return 0.0
         elif a < x and x < b:
@@ -19,7 +19,26 @@ def triangular(a, b, c):
         else:
             return 0.0
     # give the specific function
-    return f
+    return triangular_f
+
+# trapezoidal membership function
+def trapezoidal(a, b, c, d):
+    def trapezoidal_f(x):
+        if np.isnan(x):
+            return 0.0
+        elif x < a:
+            return 0.0
+        elif a <= x and x < b:
+            return (x - a) / (b - a)
+        elif b <= x and x <= c:
+            return 1.0
+        elif c < x and x <= d:
+            return (d - x) / (d - c)
+        else:
+            return 0.0
+    trapezoidal_f.p = (a, b, c, d)
+    trapezoidal_f.__str__ = lambda: "T(%.2f %.2f %.2f %.2f)" % trapezoidal_f.p
+    return trapezoidal_f
 
 # pi shaped function (bell)
 def pi(a, r, b, m=2.0):
@@ -43,6 +62,7 @@ def pi(a, r, b, m=2.0):
     pi_f.r = r
     pi_f.b = b
     pi_f.m = m
+    pi_f.__str__ = lambda: "pi(%.2f %.2f %.2f)" % (pi_f.a, pi_f.r, pi_f.b)
     return pi_f
 
 def prod(x):

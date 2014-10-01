@@ -5,6 +5,7 @@ Genetic algorithm implementation.
 
 """
 import numpy as np
+#from joblib import Parallel, delayed
 from sklearn.utils import check_arrays
 
 
@@ -13,7 +14,8 @@ class GeneticAlgorithm:
     def __init__(self, fitness_function, n_genes=None, n_chromosomes=None,
                  keep_parents=10, p_mutation=0.02,
                  scaling=1.0, random_seed=None,
-                 population=None, crossover_points=None):
+                 population=None, crossover_points=None,
+                 n_jobs=-1):
         """
         Initializes the genetic algorithm.
 
@@ -44,6 +46,7 @@ class GeneticAlgorithm:
         self.p_mutation = p_mutation
         self.scaling = scaling
         self.random_seed = random_seed
+        self.n_jobs = n_jobs
         # init population
         if population is None:
             self.population_ = np.random.random((n_chromosomes, n_genes)) * self.scaling
@@ -59,7 +62,13 @@ class GeneticAlgorithm:
         else:
             self.crossover_points = crossover_points
         # init fitness
-        self.fitness_ = np.apply_along_axis(self.fitness_function, 1, self.population_)
+        # self.fitness_ = np.apply_along_axis(self.fitness_function, 1, self.population_)
+        self.fitness_ = self._fitness()
+
+    def _fitness(self):
+        return np.apply_along_axis(self.fitness_function, 1, self.population_)
+        #return Parallel(n_jobs=self.n_jobs)(delayed(self.fitness_function)(self.population_, i)
+        #                                    for i in range(self.population_.shape[0]))
 
     def next(self):
         # sort population by fitness, parents are the top-n
@@ -70,12 +79,13 @@ class GeneticAlgorithm:
         for i in range(self.keep_parents, self.n_chromosomes):
             self.population_[i] = self.__new_child(parents)
         # update fitness
-        self.fitness_ = np.apply_along_axis(self.fitness_function, 1, self.population_)
+        #self.fitness_ = np.apply_along_axis(self.fitness_function, 1, self.population_)
+        self.fitness_ = self._fitness()
 
     def best(self, n_best=1):
         f_sorted = np.argsort(self.fitness_)
         p_sorted = self.population_[f_sorted]
-        return p_sorted[:n_best]
+        return p_sorted[:n_best], self.fitness_[f_sorted][:n_best]
         
     def __new_child(self, parents):
         # choose two random parents

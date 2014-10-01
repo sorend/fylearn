@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import logging
 import pandas as pd
 import fylearn.fpcga as fpcga
 import fylearn.frr as frr
@@ -24,13 +25,21 @@ def execute_one(L, X, y):
             (str(scores), np.mean(scores), np.std(scores))
 
 
+logger = logging.getLogger("fpcga")
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch = logging.FileHandler('info.txt')
+ch.setLevel(logging.INFO)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+            
 L = (
     tree.DecisionTreeClassifier(),
-    frr.FuzzyReductionRuleClassifier(aggregation=np.nanmean),
+    frr.FuzzyReductionRuleClassifier(aggregation=fl.mean),
     frr.FuzzyReductionRuleClassifier(aggregation=fl.prod),
-    fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,)),
-    fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,)),
-    fpcga.FuzzyPatternClassifierGA(), # all
+    fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=50),
+    fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=50),
+    fpcga.FuzzyPatternClassifierGA(iterations=50), # all
 )
             
 # iterate over datsets

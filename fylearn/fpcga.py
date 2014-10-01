@@ -88,6 +88,7 @@ def _predict(prototypes, aggregation, classes, X):
     # predict the lot
     return np.apply_along_axis(predict_one, 1, X)
 
+logger = logging.getLogger("fpcga")
 
 class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
@@ -160,7 +161,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         # number of genes (2 for the aggregation, 4 for each attribute)
         n_genes = 2 + (self.m * 5 * len(self.classes_))
 
-        logging.info("initializing GA", self.iterations, "iterations")
+        logger.info("initializing GA %d iterations" % (self.iterations,))
         # initialize
         ga = GeneticAlgorithm(fitness_function=rmse_fitness_function,
                               scaling=1.0,
@@ -172,23 +173,31 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         #print "population", ga.population_
         #print "fitness", ga.fitness_
 
-        last_fitness = ga.fitness_[0]
+        chromosomes, fitnesses = ga.best(10)
+        last_fitness = np.mean(fitnesses)
         
         #
         for generation in range(self.iterations):
             ga.next()
-            logging.info("GA iteration", generation, "Fitness (top-4)", ga.fitness_[:4])
-            chromosome = ga.best(1)[0]
-            aggregation, protos = _decode(self.m, self.aggregation_rules, self.mu_factories, self.classes_, chromosome)
+            logger.info("GA iteration %d Fitness (top-4) %s" % (generation, str(ga.fitness_[:4])))
+            chromosomes, fitnesses = ga.best(10)
+            aggregation, protos = _decode(self.m, self.aggregation_rules, self.mu_factories, self.classes_, chromosomes[0])
             self.aggregation = aggregation
             self.protos_ = protos
-            change_fitness = ga.fitness_[0] - last_fitness
+
+            # check stopping condition
+            new_fitness = np.mean(fitnesses)
+            d_fitness = last_fitness - new_fitness
+            if d_fitness < self.epsilon:
+                logger.info("Early stop d_fitness %f" % (d_fitness,))
+                break
+            last_fitness = new_fitness
 
         # print learned.
-        logging.info("+- Final: Aggregation", self.aggregation)
+        logger.info("+- Final: Aggregation %s" % (str(self.aggregation),))
         for key, value in self.protos_.items():
-            logging.info("`- Class-%d" % (key))
-            logging.info("`- Membership-fs", [ x.__str__() for x in value ])
+            logger.info("`- Class-%d" % (key,))
+            logger.info("`- Membership-fs %s" % (str([ x.__str__() for x in value ]),))
 
 
 if __name__ == "__main__":

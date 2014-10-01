@@ -18,7 +18,7 @@ def execute_one(L, X, y):
         # cross validation
         scores = cross_val_score(l, X, y, cv=10)
 
-        output.append("$%.2f \pm %.2f" % (np.mean(scores), np.std(scores)))
+        output.append("$%.2f \pm %.2f$" % (np.mean(scores), np.std(scores)))
         print "---"
         print "dataset", dataset
         print "learner", l

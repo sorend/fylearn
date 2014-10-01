@@ -13,16 +13,20 @@ import sklearn.tree as tree
 def execute_one(L, X, y):
 
     # iterate learners
+    output = []
     for l in L:
         # cross validation
         scores = cross_val_score(l, X, y, cv=10)
 
+        output.append("$%.2f \pm %.2f" % (np.mean(scores), np.std(scores)))
         print "---"
         print "dataset", dataset
         print "learner", l
 
         print "scores %s, mean %f, std %f" % \
             (str(scores), np.mean(scores), np.std(scores))
+
+    return output
 
 
 logger = logging.getLogger("fpcga")
@@ -46,4 +50,5 @@ L = (
 import paper
 for dataset in paper.datasets:
     X, y = paper.load(paper.path(dataset))
-    execute_one(L, X, y)
+    output = execute_one(L, X, y)
+    print "%s & %s \\\\" % (dataset[0], " & ".join(output))

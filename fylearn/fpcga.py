@@ -72,7 +72,7 @@ def _decode(m, aggregation_rules, mu_factories, classes, chromosome):
     return aggregation, protos
 
 def _predict(prototypes, aggregation, classes, X):
-    m = len(prototypes)
+    m = X.shape[1]
     M = np.zeros(m) # M holds membership support for each attribute
     R = np.zeros(len(classes)) # holds output for one class, "result"
     attribute_idxs = range(m)
@@ -93,6 +93,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
     def get_params(self, deep=False):
         return {"iterations": self.iterations,
+                "epsilon": self.epsilon,
                 "mu_factories": self.mu_factories,
                 "aggregation_rules": self.aggregation_rules}
 
@@ -102,10 +103,11 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         return self
     
     def __init__(self, mu_factories=MEMBERSHIP_FACTORIES, aggregation_rules=AGGREGATION_RULES,
-                 iterations=10):
+                 iterations=10, epsilon=0.0001):
         self.mu_factories = mu_factories
         self.aggregation_rules = aggregation_rules
         self.iterations = iterations
+        self.epsilon = epsilon
 
     def fit(self, X, y_orig):
 
@@ -170,6 +172,8 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         #print "population", ga.population_
         #print "fitness", ga.fitness_
 
+        last_fitness = ga.fitness_[0]
+        
         #
         for generation in range(self.iterations):
             ga.next()
@@ -178,6 +182,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
             aggregation, protos = _decode(self.m, self.aggregation_rules, self.mu_factories, self.classes_, chromosome)
             self.aggregation = aggregation
             self.protos_ = protos
+            change_fitness = ga.fitness_[0] - last_fitness
 
         # print learned.
         logging.info("+- Final: Aggregation", self.aggregation)

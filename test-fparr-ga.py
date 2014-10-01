@@ -13,7 +13,7 @@ def execute_one(L, X, y):
 
     # iterate learners
     for l in L:
-        # cross validation    
+        # cross validation
         scores = cross_val_score(l, X, y, cv=10)
 
         print "---"

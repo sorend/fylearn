@@ -7,6 +7,8 @@ datasets = (
     ("Bupa Liver Disorders", "bupa.csv"),
     ("Wine", "wine.csv"),
     ("Telugu Vowels", "vowel.csv"),
+    ("Haberman", "haberman.csv"),
+    ("Indian Liver Patient", "indian-liver.csv"),
 )
 
 def path(dataset):

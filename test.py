@@ -3,7 +3,6 @@
 import logging
 import pandas as pd
 import fylearn.fpcga as fpcga
-import fylearn.fpcga2 as fpcga2
 import fylearn.frr as frr
 import numpy as np
 import fylearn.fuzzylogic as fl

@@ -16,7 +16,7 @@ import logging
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_arrays, column_or_1d
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import accuracy_score
 import fylearn.fuzzylogic as fl
 from fylearn.ga import GeneticAlgorithm
 
@@ -154,7 +154,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
             aggregation, mus = _decode(self.m, self.aggregation_rules, self.mu_factories, self.classes_, chromosome)
 
             y_pred = _predict(mus, aggregation, self.classes_, X)
-            return mean_squared_error(y, y_pred)
+            return 1.0 - accuracy_score(y, y_pred)
 
         # number of genes (2 for the aggregation, 4 for each attribute)
         n_genes = 2 + (self.m * 5 * len(self.classes_))

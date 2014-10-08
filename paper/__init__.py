@@ -9,6 +9,9 @@ datasets = (
     ("Telugu Vowels", "vowel.csv"),
     ("Haberman", "haberman.csv"),
     ("Indian Liver Patient", "indian-liver.csv"),
+    ("Vertebral Column", "column_2C.csv"),
+    ("Glass", "glass.csv"),
+    ("Ionosphere", "ionosphere.csv"),
 )
 
 def path(dataset):

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Fuzzy reduction rule based methods
+"""Fuzzy pattern classifier with genetic algorithm based methods
 
 The module structure is the following:
 
-- The "FuzzyReductionRuleClassifier" implements the model learning using the
-  [1, 2] algorithm.
+- The "FuzzyPatternClassifierGA" is a FPC where the membership
+  functions are learned using genetic algorithms.
 
 References:
 
-[1] Meher, 2009.
+[1] Davidsen, 2014.
   
 """
 
@@ -19,7 +19,6 @@ from sklearn.utils import check_arrays, column_or_1d
 from sklearn.metrics import mean_squared_error
 import fylearn.fuzzylogic as fl
 from fylearn.ga import GeneticAlgorithm
-from fylearn.frr import pi_factory, FuzzyReductionRuleClassifier
 
 #
 # Authors: Søren Atmakuri Davidsen <sorend@gmail.com>
@@ -38,19 +37,22 @@ def build_aggregation(rules, chromosome, idx):
 # requires 3 genes
 def build_pi_membership(chromosome, idx):
     a, r, b = sorted(chromosome[idx:idx+3])
-    return fl.pi(a, r, b)
+    return fl.Pi(a, r, b)
 
 # requires 4 genes
 def build_trapezoidal_membership(chromosome, idx):
     a, b, c, d = sorted(chromosome[idx:idx+4])
-    return fl.trapezoidal(a, b, c, d)
+    return fl.Trapezoidal(a, b, c, d)
+
+class StaticFunction:
+    def __call__(self, X):
+        return 0.5
+    def __str__(self):
+        return "(0.5)"
 
 # requires 0 genes
 def build_static_membership(chromosome, idx):
-    def static_f(x):
-        return 0.5
-    static_f.__str__ = lambda: "(0.5)"
-    return static_f
+    return StaticFunction()
 
 # default definition of membership function factories
 MEMBERSHIP_FACTORIES = (build_pi_membership, build_trapezoidal_membership, build_static_membership)
@@ -72,21 +74,17 @@ def _decode(m, aggregation_rules, mu_factories, classes, chromosome):
     return aggregation, protos
 
 def _predict(prototypes, aggregation, classes, X):
-    m = X.shape[1]
-    M = np.zeros(m) # M holds membership support for each attribute
-    R = np.zeros(len(classes)) # holds output for one class, "result"
-    attribute_idxs = range(m)
+    Mus = np.zeros(X.shape)
+    R = np.zeros((X.shape[0], len(classes))) # holds output for each class
+    attribute_idxs = range(X.shape[1])
 
-    def predict_one(x):
-        # class_idx has class_prototypes membership functions
-        for class_idx, class_prototypes in prototypes.items():
-            for i in attribute_idxs:
-                M[i] = class_prototypes[i](x[i]) if np.isfinite(x[i]) else 0.5
-            R[class_idx] = aggregation(M)
-        return classes.take(np.argmax(R))
+    # class_idx has class_prototypes membership functions
+    for class_idx, class_prototypes in prototypes.items():
+        for i in attribute_idxs:
+            Mus[:,i] = class_prototypes[i](X[:,i])
+        R[:,class_idx] = aggregation(Mus)
 
-    # predict the lot
-    return np.apply_along_axis(predict_one, 1, X)
+    return classes.take(np.argmax(R, 1))
 
 logger = logging.getLogger("fpcga")
 
@@ -166,6 +164,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         ga = GeneticAlgorithm(fitness_function=rmse_fitness_function,
                               scaling=1.0,
                               crossover_points=range(2, n_genes, 5),
+                              keep_parents=10,
                               n_chromosomes=100,
                               n_genes=n_genes,
                               p_mutation=0.3)

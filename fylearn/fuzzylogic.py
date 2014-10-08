@@ -21,25 +21,54 @@ def triangular(a, b, c):
     # give the specific function
     return triangular_f
 
-# trapezoidal membership function
-def trapezoidal(a, b, c, d):
-    def trapezoidal_f(x):
-        if np.isnan(x):
-            return 0.0
-        elif x < a:
-            return 0.0
-        elif a <= x and x < b:
-            return (x - a) / (b - a)
-        elif b <= x and x <= c:
-            return 1.0
-        elif c < x and x <= d:
-            return (d - x) / (d - c)
-        else:
-            return 0.0
-    trapezoidal_f.p = (a, b, c, d)
-    trapezoidal_f.__str__ = lambda: "T(%.2f %.2f %.2f %.2f)" % trapezoidal_f.p
-    return trapezoidal_f
+class Trapezoidal:
+    def __init__(self, a, b, c, d):
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
 
+    def __call__(self, X):
+        y = np.zeros(X.shape)
+        left   = (self.a < X) & (X < self.b)
+        center = (self.b <= X) & (X <= self.c)
+        right  = (self.c < X) & (X < self.d)
+        y[left] = (X[left] - self.a) / (self.b - self.a)
+        y[center] = 1.0
+        y[right] = (self.d - X[right]) / (self.d - self.c)
+        return y
+
+    def __str__(self):
+        return "T(%.2f %.2f %.2f %.2f)" % (self.a, self.b, self.c, self.d)
+
+class Pi:
+    def __init__(self, a, r, b, m=2.0):
+        self.a = a
+        self.r = r
+        self.b = b
+        self.m = m
+        self.p = (r + a) / 2.0
+        self.q = (b + r) / 2.0
+        self.S = (2**(m - 1.0))
+
+    def __call__(self, X):
+        y = np.zeros(X.shape)
+
+        l1 = (self.a < X) & (X <= self.p) # left lower
+        l2 = (self.p < X) & (X <= self.r) # left upper
+        r1 = (self.r < X) & (X <= self.q) # right upper
+        r2 = (self.q < X) & (X <= self.b) # right lower
+
+        y[l1] = self.S * (((X[l1] - self.a) / (self.r - self.a)) ** self.m)
+        y[l2] = 1.0 - (self.S * (((self.r - X[l2]) / (self.r - self.a)) ** self.m))
+        y[r1] = 1.0 - (self.S * (((X[r1] - self.r) / (self.b - self.r)) ** self.m))
+        y[r2] = self.S * (((self.b - X[r2]) / (self.b - self.r)) ** self.m)
+
+        return y
+
+    def __str__(self):
+        return "pi(%.2f %.2f %.2f)" % (self.a, self.r, self.b)
+    
 # pi shaped function (bell)
 def pi(a, r, b, m=2.0):
     p = (r + a) / 2.0
@@ -65,11 +94,15 @@ def pi(a, r, b, m=2.0):
     pi_f.__str__ = lambda: "pi(%.2f %.2f %.2f)" % (pi_f.a, pi_f.r, pi_f.b)
     return pi_f
 
-def prod(x):
-    return np.multiply.reduce(x)
+def prod(X):
+    X = np.array(X)
+    d = len(X.shape)
+    return np.multiply.reduce(X, d-1)
 
-def mean(x):
-    return np.mean(x)
+def mean(X):
+    X = np.array(X)
+    d = len(X.shape)
+    return np.mean(X, d-1)
 
 def lukasiewicz_i(x):
     return max(0, x[0] + x[1] - 1)

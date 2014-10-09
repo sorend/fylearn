@@ -1,11 +1,11 @@
 
 
 datasets = (
+    ("Wine", "wine.csv"),
     ("Iris", "iris.csv"),
     ("Pima Indians Diabetes", "diabetes.csv"),
     ("Wisconsin Breast Cancer", "breast-w.csv"),
     ("Bupa Liver Disorders", "bupa.csv"),
-    ("Wine", "wine.csv"),
     ("Telugu Vowels", "vowel.csv"),
     ("Haberman", "haberman.csv"),
     ("Indian Liver Patient", "indian-liver.csv"),
@@ -42,6 +42,8 @@ def cross_val_score(l, X, y, cv=10):
     from sklearn.utils import check_arrays, column_or_1d
 
     skf = cross_validation.StratifiedKFold(y, n_folds=cv)
+    X, = check_arrays(X)
+    y, = check_arrays(y)
 
     test_scores = []
     training_scores = []
@@ -49,9 +51,6 @@ def cross_val_score(l, X, y, cv=10):
     for train_idx, test_idx in skf:
         X_train, X_test = X[train_idx], X[test_idx]
         y_train, y_test = y[train_idx], y[test_idx]
-
-        y_train, = check_arrays(y_train)
-        y_test,  = check_arrays(y_test)
 
         y_train = y_train.astype(str)
         y_test  = y_test.astype(str)

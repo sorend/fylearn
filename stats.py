@@ -3,8 +3,10 @@
 import numpy as np
 import paper
 
-for dataset in paper.datasets:
+for i, dataset in enumerate(paper.datasets):
     X, y = paper.load(paper.path(dataset))
 
-    print dataset[0], "&", X.shape[0], "&", X.shape[1], "&", len(np.unique(y)), "& \\\\"
+    u, c = np.unique(y, return_inverse=True)
+    dummy = float(np.max(np.bincount(c))) / len(y)
+    print (i+1), "&", dataset[0], "&", X.shape[0], "&", X.shape[1], "&", len(np.unique(y)), "&", "%.2f" % (dummy,), "&  \\\\"
 

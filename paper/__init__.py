@@ -1,11 +1,11 @@
 
 
 datasets = (
-    ("Wine", "wine.csv"),
     ("Iris", "iris.csv"),
     ("Pima Indians Diabetes", "diabetes.csv"),
     ("Wisconsin Breast Cancer", "breast-w.csv"),
     ("Bupa Liver Disorders", "bupa.csv"),
+    ("Wine", "wine.csv"),
     ("Telugu Vowels", "vowel.csv"),
     ("Haberman", "haberman.csv"),
     ("Indian Liver Patient", "indian-liver.csv"),

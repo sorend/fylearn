@@ -10,17 +10,9 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.cross_validation import cross_val_score
 from sklearn import tree, svm, neighbors
 
-logger = logging.getLogger("fpcga")
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch = logging.FileHandler('info.txt')
-ch.setLevel(logging.INFO)
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-
 RUNS = 1
             
-def execute_one(L, X, y):
+def execute_one(logger, L, X, y):
 
     # iterate learners
     output = []
@@ -40,22 +32,32 @@ def execute_one(L, X, y):
 
     return output
 
-L = (
-    tree.DecisionTreeClassifier(),
-    svm.SVC(kernel='linear'),
-    neighbors.KNeighborsClassifier(),
-    frr.FuzzyReductionRuleClassifier(aggregation=fl.prod),
-    frr.FuzzyReductionRuleClassifier(aggregation=fl.mean),
-    fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=50),
-    fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=50),
-    fpcga.FuzzyPatternClassifierGA(iterations=50), # all
-)
-            
-# iterate over datsets
-import paper
-for dataset in paper.datasets:
-    X, y = paper.load(paper.path(dataset))
+if __name__ == "__main__":
 
-    output = execute_one(L, X, y)
-    print ",".join(dataset) + "," + ",".join(map(str, output))
-    #print "%s & %s \\\\" % (dataset[0], " & ".join(output))
+    logger = logging.getLogger("fpcga")
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch = logging.FileHandler('info.txt')
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+    L = (
+        tree.DecisionTreeClassifier(),
+        svm.SVC(kernel='linear'),
+        neighbors.KNeighborsClassifier(),
+        frr.FuzzyReductionRuleClassifier(aggregation=fl.prod),
+        frr.FuzzyReductionRuleClassifier(aggregation=fl.mean),
+        fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=50),
+        fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=50),
+        fpcga.FuzzyPatternClassifierGA(iterations=50), # all
+    )
+            
+    # iterate over datsets
+    import paper
+    for dataset in paper.datasets:
+        X, y = paper.load(paper.path(dataset))
+
+        output = execute_one(L, X, y)
+        print ",".join(dataset) + "," + ",".join(map(str, output))
+        #print "%s & %s \\\\" % (dataset[0], " & ".join(output))

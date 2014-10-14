@@ -20,11 +20,11 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
             
 L = (
-    fpcga.FuzzyPatternClassifierGA(iterations=10), # all
-    fpcga.FuzzyPatternClassifierGA(iterations=50), # all
-    fpcga.FuzzyPatternClassifierGA(iterations=100), # all
-    fpcga.FuzzyPatternClassifierGA(iterations=500), # all
-    fpcga.FuzzyPatternClassifierGA(iterations=1000), # all
+    fpcga.FuzzyPatternClassifierGA(iterations=10, epsilon=0.00000001), # all
+    fpcga.FuzzyPatternClassifierGA(iterations=50, epsilon=0.00000001), # all
+    fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=0.00000001), # all
+    fpcga.FuzzyPatternClassifierGA(iterations=500, epsilon=0.00000001), # all
+    fpcga.FuzzyPatternClassifierGA(iterations=1000, epsilon=0.00000001), # all
 )
 
 # iterate over datsets

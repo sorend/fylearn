@@ -16,7 +16,7 @@ def execute_one(L, X, y):
     output = []
     for l in L:
         # cross validation
-        scores = cross_val_score(l, X, y, cv=10)
+        scores = paper.cross_val_score(l, X, y, cv=10)
 
         output.append("$%.2f \pm %.2f$" % (np.mean(scores), np.std(scores)))
         print "---"
@@ -32,7 +32,7 @@ def execute_one(L, X, y):
 logger = logging.getLogger("fpcga")
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch = logging.FileHandler('info.txt')
+ch = logging.FileHandler('iterations.log')
 ch.setLevel(logging.INFO)
 ch.setFormatter(formatter)
 logger.addHandler(ch)

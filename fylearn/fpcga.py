@@ -187,7 +187,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
             # check stopping condition
             new_fitness = np.mean(fitnesses)
             d_fitness = last_fitness - new_fitness
-            if d_fitness < self.epsilon:
+            if self.epsilon is not None and d_fitness < self.epsilon:
                 logger.info("Early stop d_fitness %f" % (d_fitness,))
                 break
             last_fitness = new_fitness

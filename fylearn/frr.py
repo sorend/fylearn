@@ -22,16 +22,14 @@ import fylearn.fuzzylogic as fl
 #
 
 
-def pi_factory(fuzzifier=2.0):
-    def factory(a, b, c):
-        return fl.pi(a, b, c, fuzzifier)
-    return factory
+def pi_factory(*args):
+    return fl.Pi(args[0], args[1], args[2], 2.0)
 
 def build_memberships(X, factory):
     mins  = np.nanmin(X, 0)
     maxs  = np.nanmax(X, 0)
     means = np.nanmean(X, 0)
-    return [ factory(mins[i], means[i], maxs[i]) for i in range(len(X.T)) ]
+    return [ factory(means[i] - ((maxs[i] - mins[i]) / 2.0), means[i], means[i] + ((maxs[i] - mins[i]) / 2.0)) for i in range(len(X.T)) ]
 
 class FuzzyReductionRuleClassifier(BaseEstimator, ClassifierMixin):
 
@@ -44,7 +42,7 @@ class FuzzyReductionRuleClassifier(BaseEstimator, ClassifierMixin):
             self.setattr(key, value)
         return self
     
-    def __init__(self, aggregation=np.mean, membership_factory=pi_factory(2.0)):
+    def __init__(self, aggregation=np.mean, membership_factory=pi_factory):
         self.aggregation = aggregation
         self.membership_factory = membership_factory
     

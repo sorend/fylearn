@@ -32,6 +32,6 @@ if __name__ == "__main__":
     import paper
     dataset = ("Telugu Vowels", "vowel.csv")
     X, y = paper.load(paper.path(dataset))
-    output = test.execute_one(L, X, y)
+    output = test.execute_one(logger, L, X, y)
 
     print ",".join(dataset) + "," + ",".join(map(str, output))

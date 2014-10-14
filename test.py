@@ -9,6 +9,7 @@ import fylearn.fuzzylogic as fl
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.cross_validation import cross_val_score
 from sklearn import tree, svm, neighbors
+import paper
 
 RUNS = 1
             
@@ -58,6 +59,6 @@ if __name__ == "__main__":
     for dataset in paper.datasets:
         X, y = paper.load(paper.path(dataset))
 
-        output = execute_one(L, X, y)
+        output = execute_one(logger, L, X, y)
         print ",".join(dataset) + "," + ",".join(map(str, output))
         #print "%s & %s \\\\" % (dataset[0], " & ".join(output))

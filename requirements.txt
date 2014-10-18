@@ -1,4 +1,7 @@
 argparse==1.2.1
+ipython==2.3.0
+## FIXME: could not find svn URL in dependency_links for this package:
+joblib==0.8.3-r1
 numpy==1.9.0
 pandas==0.14.1
 python-dateutil==2.2

@@ -71,31 +71,6 @@ class PiSet:
 
     def __str__(self):
         return "pi(%.2f %.2f %.2f)" % (self.a, self.r, self.b)
-    
-# pi shaped function (bell)
-def pi(a, r, b, m=2.0):
-    p = (r + a) / 2.0
-    q = (b + r) / 2.0
-    def pi_f(x):
-        if x <= a:
-            return 0.0
-        elif a < x and x <= p:
-            return (2 ** (m - 1)) * (((x - a) / (r - a)) ** m)
-        elif p < x and x <= r:
-            return 1.0 - ((2 ** (m - 1)) * (((r - x) / (r - a)) ** m))
-        elif r < x and x <= q:
-            return 1.0 - ((2 ** (m - 1)) * (((x - r) / (b - r)) ** m))
-        elif q < x and x <= b:
-            return ((2 ** (m - 1)) * (((b - x) / (b - r)) ** m))
-        else:
-            return 0.0
-    # save factory values
-    pi_f.a = a
-    pi_f.r = r
-    pi_f.b = b
-    pi_f.m = m
-    pi_f.__str__ = lambda: "pi(%.2f %.2f %.2f)" % (pi_f.a, pi_f.r, pi_f.b)
-    return pi_f
 
 def prod(X):
     X = np.array(X)

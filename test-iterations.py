@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # iterate over datsets
     import paper
     dataset = ("Telugu Vowels", "vowel.csv")
-    X, y = paper.load(paper.path(dataset))
-    output = test.execute_one(logger, L, X, y)
-
-    print ",".join(dataset) + "," + ",".join(map(str, output))
+    for dataset in paper.datasets:
+        X, y = paper.load(paper.path(dataset))
+        output = test.run_one_dataset(logger, L, X, y)
+        print ",".join(dataset) + "," + ",".join(map(str, output))

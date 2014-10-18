@@ -2,6 +2,7 @@
 
 import logging
 import pandas as pd
+from joblib import Parallel, delayed
 import fylearn.fpcga as fpcga
 import fylearn.frr as frr
 import numpy as np
@@ -12,24 +13,30 @@ from sklearn import tree, svm, neighbors
 import paper
 
 RUNS = 1
+
+def run_one_classifier(l, X, y):
+    test_scores = []
+    training_scores = []
+    for i in range(RUNS):
+        test, training = paper.cross_val_score(l, X, y, cv=10)
+        test_scores.extend(test)
+        training_scores.extend(training)
+
+    return ( np.mean(test_scores), np.std(test_scores), np.mean(training_scores), np.std(training_scores) )
+    
             
-def execute_one(logger, L, X, y):
+def run_one_dataset(logger, L, X, y):
 
     # iterate learners
     output = []
     for l in L:
         # cross validation
-        test_scores = []
-        training_scores = []
-        for i in range(RUNS):
-            test, training = paper.cross_val_score(l, X, y, cv=10)
-            test_scores.extend(test)
-            training_scores.extend(training)
+        scores = Parallel(n_jobs=-1)(delayed(paper.cross_val_score)(l, X, y, cv=10) for l in L)
+        output.extend(scores)
 
-        output.extend([ np.mean(test_scores), np.std(test_scores), np.mean(training_scores), np.std(training_scores) ])
         #print "---"
         #print "dataset", dataset
-        logger.info("learner=%s test=%s mean=%f std=%f, training=%s mean=%f std=%f" % (str(l), str(test_scores), np.mean(test_scores), np.std(test_scores), str(training_scores), np.mean(training_scores), np.std(training_scores)))
+        logger.info("learner=%s mean=%f std=%f, mean=%f std=%f" % (str(l), scores[0], scores[1], scores[2], scores[3]))
 
     return output
 
@@ -50,6 +57,6 @@ if __name__ == "__main__":
     for dataset in paper.datasets:
         X, y = paper.load(paper.path(dataset))
 
-        output = execute_one(logger, L, X, y)
+        output = run_one_dataset(logger, L, X, y)
         print ",".join(dataset) + "," + ",".join(map(str, output))
         #print "%s & %s \\\\" % (dataset[0], " & ".join(output))

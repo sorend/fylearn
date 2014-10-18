@@ -20,8 +20,6 @@ datasets = (
 )
 
 learners = (
-    (r"$\text{SFPC_{\text{pp}}}$", fpcga.FuzzyPatternClassifierGA2(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=25, epsilon=None)),
-    (r"$\text{SFPC}_{\text{pm}}$", fpcga.FuzzyPatternClassifierGA2(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=25, epsilon=None)),
     ("CART", tree.DecisionTreeClassifier()),
     ("SVM", svm.SVC(kernel='linear')),
     ("kNN", neighbors.KNeighborsClassifier()),
@@ -30,6 +28,8 @@ learners = (
     (r"$\text{FPC}_{\text{pp}}$", fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=100, epsilon=None)),
     (r"$\text{FPC}_{\text{pm}}$", fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=100, epsilon=None)),
     (r"$\text{FPC}_{\text{tp}}$", fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_t_membership,), aggregation_rules=(fl.prod,), iterations=100, epsilon=None)),
+    (r"$\text{SFPC_{\text{pp}}}$", fpcga.FuzzyPatternClassifierGA2(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=25, epsilon=None)),
+    (r"$\text{SFPC}_{\text{pm}}$", fpcga.FuzzyPatternClassifierGA2(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=25, epsilon=None)),
     # fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None), # all
 )
 

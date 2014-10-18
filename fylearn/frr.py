@@ -23,7 +23,7 @@ import fylearn.fuzzylogic as fl
 
 
 def pi_factory(*args):
-    return fl.Pi(args[0], args[1], args[2], 2.0)
+    return fl.PiSet(args[0], args[1], args[2], 2.0)
 
 def build_memberships(X, factory):
     mins  = np.nanmin(X, 0)

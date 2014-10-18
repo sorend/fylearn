@@ -51,6 +51,7 @@ if __name__ == "__main__":
         frr.FuzzyReductionRuleClassifier(aggregation=fl.mean),
         fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=100, epsilon=None),
         fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=100, epsilon=None),
+        fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_t_membership,), aggregation_rules=(fl.prod,), iterations=100, epsilon=None),
         fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None), # all
     )
             

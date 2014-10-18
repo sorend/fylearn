@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Fuzzy sets and aggregation utils
 
@@ -5,23 +6,24 @@ Fuzzy sets and aggregation utils
 
 import numpy as np
 
-# shortcut (but, expensive calc) return max(0.0, min((x - a) / (b - a), (c - x) / (c - b)))
-def triangular(a, b, c):
-    def triangular_f(x):
-        if np.isnan(x):
-            return 0.0
-        elif a < x and x < b:
-            return (x - a) / (b - a)
-        elif x == b:
-            return 1.0
-        elif b < x and x < c:
-            return (c - x) / (c - b)
-        else:
-            return 0.0
-    # give the specific function
-    return triangular_f
+class TriangularSet:
+    def __init__(self, a, b, c):
+        self.a = a
+        self.b = b
+        self.c = c
 
-class Trapezoidal:
+    def __call__(self, X):
+        y = np.zeros(X.shape) # allocate output (y)
+        left  = (self.a < X) & (X < self.b) # find where to apply left
+        right = (self.b < X) & (X < self.c) # find where to apply right
+        y[left] = (X[left] - self.a) / (self.b - self.a)
+        y[X == self.b] = 1.0 # at top
+        y[right] = (self.c - X[right]) / (self.c - self.b)
+
+    def __str__(self):
+        return "Δ(%.2f %.2f %.2f)" % (self.a, self.b, self.c)
+
+class TrapezoidalSet:
     def __init__(self, a, b, c, d):
         self.a = a
         self.b = b
@@ -41,7 +43,7 @@ class Trapezoidal:
     def __str__(self):
         return "T(%.2f %.2f %.2f %.2f)" % (self.a, self.b, self.c, self.d)
 
-class Pi:
+class PiSet:
     def __init__(self, a, r, b, m=2.0):
         self.a = a
         self.r = r
@@ -116,8 +118,8 @@ def einstein_i(x):
 def einstein_u(x):
     return (x[0] + x[1]) / (1.0 + (x[0] * x[1]))
 
-def algebraic_sum(x):
-    return 1.0 - prod(1.0 - np.array(x))
+def algebraic_sum(X):
+    return 1.0 - prod(1.0 - np.array(X))
 
 def owa(w):
     w_a = np.array(w)

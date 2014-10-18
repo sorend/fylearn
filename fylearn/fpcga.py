@@ -37,18 +37,22 @@ def build_aggregation(rules, chromosome, idx):
 # requires 3 genes
 def build_pi_membership(chromosome, idx):
     a, r, b = sorted(chromosome[idx:idx+3])
-    return fl.Pi(a, r, b)
+    return fl.PiSet(a, r, b)
 
 # requires 4 genes
 def build_trapezoidal_membership(chromosome, idx):
     a, b, c, d = sorted(chromosome[idx:idx+4])
-    return fl.Trapezoidal(a, b, c, d)
+    return fl.TrapezoidalSet(a, b, c, d)
+
+def build_t_membership(chromosome, idx):
+    a, b, c = sorted(chromosome[idx:idx+3])
+    return fl.TriangularSet(a, b, c)
 
 class StaticFunction:
     def __call__(self, X):
         return 0.5
     def __str__(self):
-        return "(0.5)"
+        return "S(0.5)"
 
 # requires 0 genes
 def build_static_membership(chromosome, idx):

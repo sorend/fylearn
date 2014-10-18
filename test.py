@@ -49,9 +49,9 @@ if __name__ == "__main__":
         neighbors.KNeighborsClassifier(),
         frr.FuzzyReductionRuleClassifier(aggregation=fl.prod),
         frr.FuzzyReductionRuleClassifier(aggregation=fl.mean),
-        fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=50),
-        fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=50),
-        fpcga.FuzzyPatternClassifierGA(iterations=50), # all
+        fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=100, epsilon=None),
+        fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=100, epsilon=None),
+        fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None), # all
     )
             
     # iterate over datsets

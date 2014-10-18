@@ -42,8 +42,8 @@ if __name__ == "__main__":
 
     L = map(lambda x: x[1], paper.learners)
 
-    def test_acc_std(x):
-        return "$%.2f (%.2f)$" % (x[0] * 100.0, x[1] * 100.0)
+    #def test_acc_std(x):
+    #    return "$%.2f (%.2f)$" % (x[0] * 100.0, x[1] * 100.0)
             
     # iterate over datsets
     import paper
@@ -51,5 +51,5 @@ if __name__ == "__main__":
         X, y = paper.load(paper.path(dataset))
 
         output = run_one_dataset(logger, L, X, y)
-        print ",".join(dataset) + "," + ",".join(map(test_acc_std, output))
+        print ",".join(dataset) + "," + ",".join([ str(i) for j in output for i in j ])
         #print "%s & %s \\\\" % (dataset[0], " & ".join(output))

@@ -43,17 +43,7 @@ if __name__ == "__main__":
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    L = (
-        tree.DecisionTreeClassifier(),
-        svm.SVC(kernel='linear'),
-        neighbors.KNeighborsClassifier(),
-        frr.FuzzyReductionRuleClassifier(aggregation=fl.prod),
-        frr.FuzzyReductionRuleClassifier(aggregation=fl.mean),
-        fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=100, epsilon=None),
-        fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=100, epsilon=None),
-        fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_t_membership,), aggregation_rules=(fl.prod,), iterations=100, epsilon=None),
-        fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None), # all
-    )
+    L = map(lambda x: x[1], paper.learners)
             
     # iterate over datsets
     import paper

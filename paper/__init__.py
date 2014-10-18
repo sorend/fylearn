@@ -1,4 +1,8 @@
 
+import fylearn.fpcga as fpcga
+import fylearn.frr as frr
+from sklearn import tree, svm, neighbors
+import fylearn.fuzzylogic as fl
 
 datasets = (
     ("Iris", "iris.csv"),
@@ -13,6 +17,20 @@ datasets = (
     ("Glass", "glass.csv"),
     ("Ionosphere", "ionosphere.csv"),
     ("Balance Scale", "balance-scale.csv"),
+)
+
+learners = (
+    (r"$\text{SFPC_{\text{pp}}}$", fpcga.FuzzyPatternClassifierGA2(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=25, epsilon=None)),
+    (r"$\text{SFPC}_{\text{pm}}$", fpcga.FuzzyPatternClassifierGA2(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=25, epsilon=None)),
+    ("CART", tree.DecisionTreeClassifier()),
+    ("SVM", svm.SVC(kernel='linear')),
+    ("kNN", neighbors.KNeighborsClassifier()),
+    (r"$\text{FRR}_{\text{prod}}$", frr.FuzzyReductionRuleClassifier(aggregation=fl.prod)),
+    (r"$\text{FRR}_{\text{mean}}$", frr.FuzzyReductionRuleClassifier(aggregation=fl.mean)),
+    (r"$\text{FPC}_{\text{pp}}$", fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=100, epsilon=None)),
+    (r"$\text{FPC}_{\text{pm}}$", fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.mean,), iterations=100, epsilon=None)),
+    (r"$\text{FPC}_{\text{tp}}$", fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_t_membership,), aggregation_rules=(fl.prod,), iterations=100, epsilon=None)),
+    # fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None), # all
 )
 
 def path(dataset):

@@ -16,7 +16,7 @@ import logging
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_arrays, column_or_1d
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, mean_squared_error
 import fylearn.fuzzylogic as fl
 from fylearn.ga import GeneticAlgorithm
 
@@ -76,6 +76,12 @@ def _decode(m, aggregation_rules, mu_factories, classes, chromosome):
     for i in range(len(classes)):
         protos[i] = [ build_membership(mu_factories, chromosome, 2 + (i * m * 5) + (j * 4)) for j in range(m) ]
     return aggregation, protos
+
+def _predict_one(prototype, aggregation, X):
+    Mus = np.zeros(X.shape)
+    for i in range(X.shape[1]):
+        Mus[:,i] = prototype[i](X[:,i])
+    return aggregation(Mus)
 
 def _predict(prototypes, aggregation, classes, X):
     Mus = np.zeros(X.shape)
@@ -202,6 +208,67 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
             logger.info("`- Class-%d" % (key,))
             logger.info("`- Membership-fs %s" % (str([ x.__str__() for x in value ]),))
 
+
+class FuzzyPatternClassifierGA2(FuzzyPatternClassifierGA):
+
+    def decode(self, chromosome):
+        return [ build_membership(self.mu_factories, chromosome, i * 5) for i in range(self.m) ]
+    
+    def build_for_class(self, X, y, class_idx):
+
+        y_target = np.zeros(y.shape) # create the target of 1 and 0.
+        y_target[class_idx] = 1.0
+
+        n_genes = 5 * self.m
+
+        def rmse_fitness_function(chromosome):
+            proto = self.decode(chromosome)
+            y_pred = _predict_one(proto, self.aggregation, X)
+            return mean_squared_error(y_target, y_pred)
+
+        logger.info("initializing GA %d iterations" % (self.iterations,))
+        # initialize
+        ga = GeneticAlgorithm(fitness_function=rmse_fitness_function,
+                              scaling=1.0,
+                              crossover_points=range(0, n_genes, 5),
+                              keep_parents=10,
+                              n_chromosomes=100,
+                              n_genes=n_genes,
+                              p_mutation=0.3)
+
+        #print "population", ga.population_
+        #print "fitness", ga.fitness_
+
+        chromosomes, fitnesses = ga.best(10)
+        last_fitness = np.mean(fitnesses)
+
+        proto = None
+        #
+        for generation in range(self.iterations):
+            ga.next()
+            logger.info("GA iteration %d Fitness (top-4) %s" % (generation, str(ga.fitness_[:4])))
+            chromosomes, fitnesses = ga.best(10)
+            proto = self.decode(chromosomes[0])
+
+            # check stopping condition
+            new_fitness = np.mean(fitnesses)
+            d_fitness = last_fitness - new_fitness
+            if self.epsilon is not None and d_fitness < self.epsilon:
+                logger.info("Early stop d_fitness %f" % (d_fitness,))
+                break
+            last_fitness = new_fitness
+
+        return proto
+    
+    def build_with_ga(self, X, y):
+        self.aggregation = self.aggregation_rules[0]
+        self.protos_ = {}
+        for class_no, class_value in enumerate(self.classes_):
+            class_idx = y == class_value
+
+            proto = self.build_for_class(X, y, class_idx)
+            self.protos_[class_no] = proto
+            
 
 if __name__ == "__main__":
 

@@ -21,11 +21,11 @@ if __name__ == "__main__":
     logger.addHandler(ch)
             
     L = (
-        fpcga.FuzzyPatternClassifierGA(iterations=10, epsilon=None), # all
-        fpcga.FuzzyPatternClassifierGA(iterations=50, epsilon=None), # all
-        fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None), # all
-        fpcga.FuzzyPatternClassifierGA(iterations=500, epsilon=None), # all
-        fpcga.FuzzyPatternClassifierGA(iterations=1000, epsilon=None), # all
+        fpcga.FuzzyPatternClassifierGA(iterations=10, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
+        fpcga.FuzzyPatternClassifierGA(iterations=50, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
+        fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
+        fpcga.FuzzyPatternClassifierGA(iterations=500, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
+        fpcga.FuzzyPatternClassifierGA(iterations=1000, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
     )
 
     # iterate over datsets

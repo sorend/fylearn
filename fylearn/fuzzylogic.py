@@ -19,6 +19,7 @@ class TriangularSet:
         y[left] = (X[left] - self.a) / (self.b - self.a)
         y[X == self.b] = 1.0 # at top
         y[right] = (self.c - X[right]) / (self.c - self.b)
+        return y
 
     def __str__(self):
         return "Δ(%.2f %.2f %.2f)" % (self.a, self.b, self.c)

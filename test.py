@@ -26,19 +26,9 @@ def run_one_classifier(l, X, y):
     
             
 def run_one_dataset(logger, L, X, y):
-
-    # iterate learners
-    output = []
-    for l in L:
-        # cross validation
-        scores = Parallel(n_jobs=-1)(delayed(paper.cross_val_score)(l, X, y, cv=10) for l in L)
-        output.extend(scores)
-
-        #print "---"
-        #print "dataset", dataset
-        logger.info("learner=%s mean=%f std=%f, mean=%f std=%f" % (str(l), scores[0], scores[1], scores[2], scores[3]))
-
-    return output
+    # cross validation
+    scores = Parallel(n_jobs=-1)(delayed(run_one_classifier)(l, X, y) for l in L)
+    return scores
 
 if __name__ == "__main__":
 
@@ -51,6 +41,9 @@ if __name__ == "__main__":
     logger.addHandler(ch)
 
     L = map(lambda x: x[1], paper.learners)
+
+    def test_acc_std(x):
+        return "$%.2f (%.2f)$" % (x[0] * 100.0, x[1] * 100.0)
             
     # iterate over datsets
     import paper
@@ -58,5 +51,5 @@ if __name__ == "__main__":
         X, y = paper.load(paper.path(dataset))
 
         output = run_one_dataset(logger, L, X, y)
-        print ",".join(dataset) + "," + ",".join(map(str, output))
+        print ",".join(dataset) + "," + ",".join(map(test_acc_std, output))
         #print "%s & %s \\\\" % (dataset[0], " & ".join(output))

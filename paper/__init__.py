@@ -1,7 +1,15 @@
 
+import numpy as np
+
+from sklearn import cross_validation
+from sklearn import metrics, clone
+from sklearn.utils import check_arrays, column_or_1d
+from sklearn import tree, svm, neighbors
+
+from joblib import Parallel, delayed
+
 import fylearn.fpcga as fpcga
 import fylearn.frr as frr
-from sklearn import tree, svm, neighbors
 import fylearn.fuzzylogic as fl
 
 datasets = (
@@ -52,12 +60,30 @@ def load(dataset):
     # done
     return X, y
 
-def cross_val_score(l, X, y, cv=10):
+def _cross_val_score_one(l, X, y, train_idx, test_idx):
+    X_train, X_test = X[train_idx], X[test_idx]
+    y_train, y_test = y[train_idx], y[test_idx]
 
-    from sklearn import cross_validation
-    from sklearn import metrics
-    import numpy as np
-    from sklearn.utils import check_arrays, column_or_1d
+    y_train = y_train.astype(str)
+    y_test  = y_test.astype(str)
+
+    # fit and predict
+    t = clone(l)
+    
+    t.fit(X_train, y_train)
+
+    # training scores
+    y_pred = t.predict(X_train)
+
+    training_score = metrics.accuracy_score(y_train, y_pred)
+    
+    # testing scores
+    y_pred = t.predict(X_test)
+    test_score = metrics.accuracy_score(y_test, y_pred)
+
+    return (test_score, training_score)
+
+def cross_val_score(l, X, y, cv=10, n_jobs=1):
 
     skf = cross_validation.StratifiedKFold(y, n_folds=cv)
     X, = check_arrays(X)
@@ -66,23 +92,11 @@ def cross_val_score(l, X, y, cv=10):
     test_scores = []
     training_scores = []
 
-    for train_idx, test_idx in skf:
-        X_train, X_test = X[train_idx], X[test_idx]
-        y_train, y_test = y[train_idx], y[test_idx]
+    # get scores out
+    scores = Parallel(n_jobs)(
+        delayed(_cross_val_score_one)(l, X, y, train_idx, test_idx) for train_idx, test_idx in skf)
 
-        y_train = y_train.astype(str)
-        y_test  = y_test.astype(str)
-
-        # fit and predict
-        l.fit(X_train, y_train)
-
-        # training scores
-        y_pred = l.predict(X_train)
-
-        training_scores.append(metrics.accuracy_score(y_train, y_pred))
-
-        # testing scores
-        y_pred = l.predict(X_test)
-        test_scores.append(metrics.accuracy_score(y_test, y_pred))
+    test_scores = map(lambda x: scores[0], scores)
+    training_scores = map(lambda x: scores[1], scores)
 
     return (test_scores, training_scores)

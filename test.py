@@ -18,15 +18,14 @@ def run_one_classifier(l, X, y):
     test_scores = []
     training_scores = []
     for i in range(RUNS):
-        test, training = paper.cross_val_score(l, X, y, cv=10)
+        test, training = paper.cross_val_score(l, X, y, cv=10, n_jobs=-1)
         test_scores.extend(test)
         training_scores.extend(training)
 
     return ( np.mean(test_scores), np.std(test_scores), np.mean(training_scores), np.std(training_scores) )
             
 def run_one_dataset(logger, L, X, y):
-    # return [ run_one_classifier(l, X, y) for l in L ]
-    return Parallel(n_jobs=-1)(delayed(run_one_classifier)(l, X, y) for l in L)
+    return [ run_one_classifier(l, X, y) for l in L ]
 
 if __name__ == "__main__":
 

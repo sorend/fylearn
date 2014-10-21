@@ -23,12 +23,10 @@ def run_one_classifier(l, X, y):
         training_scores.extend(training)
 
     return ( np.mean(test_scores), np.std(test_scores), np.mean(training_scores), np.std(training_scores) )
-    
             
 def run_one_dataset(logger, L, X, y):
-    # cross validation
-    scores = Parallel(n_jobs=-1)(delayed(run_one_classifier)(l, X, y) for l in L)
-    return scores
+    # return [ run_one_classifier(l, X, y) for l in L ]
+    return Parallel(n_jobs=-1)(delayed(run_one_classifier)(l, X, y) for l in L)
 
 if __name__ == "__main__":
 

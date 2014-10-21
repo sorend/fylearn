@@ -30,7 +30,6 @@ if __name__ == "__main__":
 
     # iterate over datsets
     import paper
-    dataset = ("Telugu Vowels", "vowel.csv")
     for dataset in paper.datasets:
         X, y = paper.load(paper.path(dataset))
         output = test.run_one_dataset(logger, L, X, y)

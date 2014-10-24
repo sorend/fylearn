@@ -74,7 +74,6 @@ def _cross_val_score_one(l, X, y, train_idx, test_idx):
 
     # training scores
     y_pred = t.predict(X_train)
-
     training_score = metrics.accuracy_score(y_train, y_pred)
     
     # testing scores
@@ -89,14 +88,12 @@ def cross_val_score(l, X, y, cv=10, n_jobs=1):
     X, = check_arrays(X)
     y, = check_arrays(y)
 
-    test_scores = []
-    training_scores = []
-
     # get scores out
     scores = Parallel(n_jobs)(
         delayed(_cross_val_score_one)(l, X, y, train_idx, test_idx) for train_idx, test_idx in skf)
 
-    test_scores = map(lambda x: scores[0], scores)
-    training_scores = map(lambda x: scores[1], scores)
+    #test_scores = map(lambda x: x[0], scores)
+    #training_scores = map(lambda x: x[1], scores)
+    #return (test_scores, training_scores)
 
-    return (test_scores, training_scores)
+    return scores

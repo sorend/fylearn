@@ -82,18 +82,23 @@ def _cross_val_score_one(l, X, y, train_idx, test_idx):
 
     return (test_score, training_score)
 
-def cross_val_score(l, X, y, cv=10, n_jobs=1):
+def cross_val_score_folds(l, X, y, folds, n_jobs=1):
 
-    skf = cross_validation.StratifiedKFold(y, n_folds=cv)
     X, = check_arrays(X)
     y, = check_arrays(y)
-
+    
     # get scores out
     scores = Parallel(n_jobs)(
-        delayed(_cross_val_score_one)(l, X, y, train_idx, test_idx) for train_idx, test_idx in skf)
+        delayed(_cross_val_score_one)(l, X, y, train_idx, test_idx) for train_idx, test_idx in folds)
 
     #test_scores = map(lambda x: x[0], scores)
     #training_scores = map(lambda x: x[1], scores)
     #return (test_scores, training_scores)
 
     return scores
+
+def cross_val_score(l, X, y, cv=10, n_jobs=1):
+
+    skf = cross_validation.StratifiedKFold(y, n_folds=cv)
+
+    return cross_val_score_folds(l, X, y, skf, n_jobs)

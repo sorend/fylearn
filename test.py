@@ -8,19 +8,19 @@ import fylearn.frr as frr
 import numpy as np
 import fylearn.fuzzylogic as fl
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.cross_validation import cross_val_score
+from sklearn import cross_validation
 from sklearn import tree, svm, neighbors
 import paper
 
 RUNS  = 1
 FOLDS = 10
 
-def run_one_classifier(key, l, X, y):
+def run_one_classifier(key, l, X, y, folds):
     test_scores = []
     training_scores = []
     for i in range(RUNS):
         # scores is a tuple of (test, training) accuracy
-        scores = paper.cross_val_score(l, X, y, cv=FOLDS, n_jobs=-1)
+        scores = paper.cross_val_score_folds(l, X, y, folds, n_jobs=-1)
         for j in range(FOLDS):
             print "%s,%d,%d,%f,%f" % (key, i, j, scores[j][0], scores[j][1])
 
@@ -28,7 +28,9 @@ def run_one_classifier(key, l, X, y):
             
 def run_one_dataset(key, L, X, y):
     for lidx, l in enumerate(L):
-        run_one_classifier("\"%s\",\"%s\",%d" % (key, l[0], lidx), l[1], X, y)
+        folds = cross_validation.ShuffleSplit(len(y), n_iter=10, test_size=0.9, random_state=0)
+        # folds = cross_validation.StratifiedKFold(y, n_folds=FOLDS)
+        run_one_classifier("\"%s\",\"%s\",%d" % (key, l[0], lidx), l[1], X, y, folds)
 
 if __name__ == "__main__":
 

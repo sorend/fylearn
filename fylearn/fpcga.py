@@ -264,11 +264,16 @@ class FuzzyPatternClassifierGA2(FuzzyPatternClassifierGA):
         self.aggregation = self.aggregation_rules[0]
         self.protos_ = {}
         for class_no, class_value in enumerate(self.classes_):
-            class_idx = y == class_value
+            class_idx = np.array(y == class_value)
 
             proto = self.build_for_class(X, y, class_idx)
             self.protos_[class_no] = proto
-            
+
+        # print learned.
+        logger.info("+- Final: Aggregation %s" % (str(self.aggregation),))
+        for key, value in self.protos_.items():
+            logger.info("`- Class-%d" % (key,))
+            logger.info("`- Membership-fs %s" % (str([ x.__str__() for x in value ]),))
 
 if __name__ == "__main__":
 

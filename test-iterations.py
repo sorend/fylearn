@@ -26,11 +26,15 @@ if __name__ == "__main__":
         fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
         fpcga.FuzzyPatternClassifierGA(iterations=500, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
         fpcga.FuzzyPatternClassifierGA(iterations=1000, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
+        fpcga.FuzzyPatternClassifierGA2(iterations=10, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
+        fpcga.FuzzyPatternClassifierGA2(iterations=50, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
+        fpcga.FuzzyPatternClassifierGA2(iterations=100, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
+        fpcga.FuzzyPatternClassifierGA2(iterations=500, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
+        fpcga.FuzzyPatternClassifierGA2(iterations=1000, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
     )
 
     # iterate over datsets
     import paper
     for dataset in paper.datasets:
         X, y = paper.load(paper.path(dataset))
-        output = test.run_one_dataset(logger, L, X, y)
-        print ",".join(dataset) + "," + ",".join(map(str, output))
+        test.run_one_dataset(dataset[0], L, X, y)

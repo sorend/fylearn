@@ -28,9 +28,9 @@ datasets = (
 )
 
 learners = (
-    # ("CART", tree.DecisionTreeClassifier()),
+    ("CART", tree.DecisionTreeClassifier()),
     ("SVM", svm.SVC(kernel='linear')),
-    # ("kNN", neighbors.KNeighborsClassifier()),
+    ("kNN", neighbors.KNeighborsClassifier()),
     (r"$\text{FRR}_{\text{prod}}$", frr.FuzzyReductionRuleClassifier(aggregation=fl.prod)),
     (r"$\text{FRR}_{\text{mean}}$", frr.FuzzyReductionRuleClassifier(aggregation=fl.mean)),
     (r"$\text{FPC}_{\text{pp}}$", fpcga.FuzzyPatternClassifierGA(mu_factories=(fpcga.build_pi_membership,), aggregation_rules=(fl.prod,), iterations=100, epsilon=None)),

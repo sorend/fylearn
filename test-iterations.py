@@ -21,16 +21,16 @@ if __name__ == "__main__":
     logger.addHandler(ch)
             
     L = (
-        fpcga.FuzzyPatternClassifierGA(iterations=10, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
-        fpcga.FuzzyPatternClassifierGA(iterations=50, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
-        fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
-        fpcga.FuzzyPatternClassifierGA(iterations=500, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
-        fpcga.FuzzyPatternClassifierGA(iterations=1000, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
-        fpcga.FuzzyPatternClassifierGA2(iterations=10, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
-        fpcga.FuzzyPatternClassifierGA2(iterations=50, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
-        fpcga.FuzzyPatternClassifierGA2(iterations=100, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
-        fpcga.FuzzyPatternClassifierGA2(iterations=500, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
-        fpcga.FuzzyPatternClassifierGA2(iterations=1000, epsilon=None, mu_factories=(fpcga.build_pi_membership,)), # all
+        ("FPC_10", fpcga.FuzzyPatternClassifierGA(iterations=10, epsilon=None, mu_factories=(fpcga.build_pi_membership,))),
+        ("FPC_50", fpcga.FuzzyPatternClassifierGA(iterations=50, epsilon=None, mu_factories=(fpcga.build_pi_membership,))),
+        ("FPC_100", fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None, mu_factories=(fpcga.build_pi_membership,))),
+        ("FPC_500", fpcga.FuzzyPatternClassifierGA(iterations=500, epsilon=None, mu_factories=(fpcga.build_pi_membership,))),
+        ("FPC_1000", fpcga.FuzzyPatternClassifierGA(iterations=1000, epsilon=None, mu_factories=(fpcga.build_pi_membership,))),
+        ("SFPC_10", fpcga.FuzzyPatternClassifierGA2(iterations=10, epsilon=None, mu_factories=(fpcga.build_pi_membership,))),
+        ("SFPC_50", fpcga.FuzzyPatternClassifierGA2(iterations=50, epsilon=None, mu_factories=(fpcga.build_pi_membership,))),
+        ("SFPC_100", fpcga.FuzzyPatternClassifierGA2(iterations=100, epsilon=None, mu_factories=(fpcga.build_pi_membership,))),
+        ("SFPC_500", fpcga.FuzzyPatternClassifierGA2(iterations=500, epsilon=None, mu_factories=(fpcga.build_pi_membership,))),
+        ("SFPC_1000", fpcga.FuzzyPatternClassifierGA2(iterations=1000, epsilon=None, mu_factories=(fpcga.build_pi_membership,))),
     )
 
     # iterate over datsets

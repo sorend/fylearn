@@ -15,7 +15,7 @@ References:
 import logging
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_arrays, column_or_1d
+from sklearn.utils import check_arrays, column_or_1d, array2d
 from sklearn.metrics import accuracy_score, mean_squared_error
 import fylearn.fuzzylogic as fl
 from fylearn.ga import GeneticAlgorithm
@@ -120,6 +120,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y_orig):
 
+        X = array2d(X)
         X, = check_arrays(X)
 
         self.classes_, y = np.unique(y_orig, return_inverse=True)
@@ -150,7 +151,8 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         """
         if self.protos_ is None:
             raise Exception("Prototypes not initialized. Perform a fit first.")
-        
+
+        X = array2d(X)        
         X, = check_arrays(X)
 
         # predict

@@ -12,9 +12,6 @@ The module structure is the following:
 - The "FuzzyPatternTreeRegressor" implements a regressor based on
   top-down constructed fuzzy pattern tree [3].
 
-TODO:
- - Change membership function evaluation to use vectorized versions.
-
 References:
 
 [1] Hwong, 2009.

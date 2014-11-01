@@ -11,6 +11,9 @@ Algorithms implemented
 
  - fylearn.frr.FuzzyReductionRuleClassifier
  - fylearn.frrga.FuzzyPatternClassifierGA
+ - fylearn.frrga.FuzzyPatternClassifierLocalGA
+ - fylearn.fpt.FuzzyPatternTreeClassifier
+ - fylearn.fpt.FuzzyPatternTreeTopDownClassifier
 
 Usage
 -----

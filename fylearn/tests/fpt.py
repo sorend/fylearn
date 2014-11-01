@@ -10,7 +10,7 @@ def test_tree_iterator():
     def f(x):
         return 1.0
     
-    l1, l2 = fpt.Leaf(0, f), fpt.Leaf(1, f)
+    l1, l2 = fpt.Leaf(0, "l1", f), fpt.Leaf(1, "l2", f)
     root = fpt.Inner(max, [l1, l2])
 
     i = 0
@@ -27,3 +27,39 @@ def test_tree_iterator():
     assert_equal(l1, t[1])
     assert_equal(l2, t[2])
     
+def test_classifier():
+
+    l = fpt.FuzzyPatternTreeClassifier()
+
+    X = np.array([
+        [1.0, 2.0, 4.0],
+        [2.0, 4.0, 8.0]
+    ])
+
+    y = np.array([
+        0,
+        1
+    ])
+    
+    l.fit(X, y)
+
+    assert_equal([0], l.predict([[0.9, 1.7, 4.5]]))
+
+def test_classifier_single():
+
+    l = fpt.FuzzyPatternTreeClassifier()
+
+    X = np.array([
+        [1.0, 2.0, 4.0],
+        [2.0, 4.0, 8.0]
+    ])
+
+    y = np.array([
+        0,
+        1
+    ])
+    
+    l.fit(X, y)
+
+    assert_equal(0, l.predict([0.9, 1.7, 4.5]))
+        

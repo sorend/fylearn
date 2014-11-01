@@ -73,37 +73,41 @@ class PiSet:
         return "pi(%.2f %.2f %.2f)" % (self.a, self.r, self.b)
 
 def prod(X):
-    X = np.array(X)
-    d = len(X.shape)
-    return np.multiply.reduce(X, d-1)
+    """Product along dimension 0 or 1 depending on array or matrix"""
+    return np.multiply.reduce(X, -1)
 
 def mean(X):
-    X = np.array(X)
-    d = len(X.shape)
-    return np.mean(X, d-1)
+    return np.mean(X, -1)
 
-def lukasiewicz_i(x):
-    return max(0, x[0] + x[1] - 1)
+def min(X):
+    return np.nanmin(X, -1)
 
-def lukasiewicz_u(x):
-    return min(1, x[0] + x[1])
+def max(X):
+    return np.nanmin(X, -1)
 
-def einstein_i(x):
-    return (x[0] * x[1]) / (2.0 - (x[0] + x[1] - (x[0] * x[1])))
+def lukasiewicz_i(X):
+    return np.maximum(0.0, X[:,0] + X[:,1] - 1)
 
-def einstein_u(x):
-    return (x[0] + x[1]) / (1.0 + (x[0] * x[1]))
+def lukasiewicz_u(X):
+    return np.minimum(1.0, X[:,0] + X[:,1])
+
+def einstein_i(X):
+    a, b = X[:,0], X[:,1]
+    return (a * b) / (2.0 - (a + b - (a * b)))
+
+def einstein_u(X):
+    a, b = X[:,0], X[:,1]
+    return (a + b) / (1.0 + (a * b))
 
 def algebraic_sum(X):
-    return 1.0 - prod(1.0 - np.array(X))
+    return 1.0 - prod(1.0 - X)
 
 def owa(w):
-    w_a = np.array(w)
-    def owa_f(x):
-        c = np.max(len(x), len(w_a))
-        w_a = w_a[:c]
-        s = np.sort(x)[:c]
-        return np.sum(s * w_a)
+    w_a = np.array(w, copy=False)
+    def owa_f(X):
+        if X.shape[1] != len(w_a):
+            raise Exception("Number of weights must match number of elements")
+        return np.sum(np.sort(X, -1) * w_a, -1)
     return owa_f
 
 def aiwa(p):

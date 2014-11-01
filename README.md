@@ -34,5 +34,5 @@ You can use the classifiers as any other SciKit-Learn classifier:
 About
 -----
 
-FyLearn is supposed to mean "FuzzY learning", but in Danish the word "fy" means loosely translated "for shame". It has been created by the Department of Computer Science at Sri Venkateswara University, Tirupati, INDIA by PhD student [Søren](http://www.cs.svuni.in/~sorend/) as part of his research.
+FyLearn is supposed to mean "FuzzY learning", but in Danish the word "fy" means "for shame", and in a context meaning something along "don't learn!". It has been created by the Department of Computer Science at Sri Venkateswara University, Tirupati, INDIA by PhD student [Søren](http://www.cs.svuni.in/~sorend/) as part of his research.
 

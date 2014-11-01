@@ -95,7 +95,6 @@ def _select_candidates(candidates, n_select, class_vector, similarity_measure, X
 
 def _evaluate_similarity(candidate, class_vector, similarity_measure, X):
     y_pred = candidate(X)
-    print "y_pred", y_pred
     s = similarity_measure(y_pred, class_vector)
     return (s, candidate)
         
@@ -176,7 +175,6 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
 
         # build the pattern tree for each class
         for class_idx, class_value in enumerate(self.classes_):
-            print "Building for class", class_value
             class_vector = np.zeros(len(y))
             class_vector[y == class_idx] = 1.0
             root = self.build_for_class(X, y, class_vector, list(P))
@@ -307,11 +305,8 @@ class FuzzyPatternTreeTopDownClassifier(FuzzyPatternTreeClassifier):
                         modified.append(_tree_clone_replace_leaf(c, c_leaf, Inner(aggr, [ c_leaf, p_leaf ])))
 
             R.extend(_select_candidates(modified, self.num_candidates, class_vector, self.similarity_measure, X))
-            #print "R(1)", R
             
             R = list(heapq.nlargest(self.num_candidates, R, key=lambda x: x[0]))
-
-            #print "R(2)", R
         
         return list(reversed(sorted(R, key=lambda x: x[0])))
 
@@ -329,8 +324,6 @@ class FuzzyPatternTreeTopDownClassifier(FuzzyPatternTreeClassifier):
 
             if len(new_candidates) == 0:
                 break
-
-            # print "C.max", C[0][0], "new_C.max", new_candidates[0][0]
 
             if new_candidates[0][0] < (1.0 + self.relative_improvement) * C[0][0]:
                 break

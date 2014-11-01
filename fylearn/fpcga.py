@@ -25,7 +25,7 @@ from fylearn.ga import GeneticAlgorithm
 #
 
 # default aggregation rules to use
-AGGREGATION_RULES = (fl.prod, np.nanmin, fl.mean, np.nanmax, fl.algebraic_sum)
+AGGREGATION_RULES = (fl.prod, fl.mean)
 
 # requires 1 gene
 def build_aggregation(rules, chromosome, idx):
@@ -59,7 +59,7 @@ def build_static_membership(chromosome, idx):
     return StaticFunction()
 
 # default definition of membership function factories
-MEMBERSHIP_FACTORIES = (build_pi_membership, build_trapezoidal_membership, build_static_membership)
+MEMBERSHIP_FACTORIES = (build_pi_membership,)
 
 # requires 1 gene
 def build_membership(mu_factories, chromosome, idx):

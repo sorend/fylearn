@@ -1,6 +1,6 @@
 
 import numpy as np
-from sklearn.utils.testing import assert_equal
+from sklearn.utils.testing import assert_equal, assert_true
 
 import fylearn.fpcga as fpcga
     
@@ -54,7 +54,13 @@ def test_classifier_iris():
     X = MinMaxScaler().fit_transform(X)
 
     l = fpcga.FuzzyPatternClassifierGA(iterations=100)
-    l.fit(X, y)
-    print l.score(X, y)
-    
+
+    from sklearn import cross_validation
+
+    scores = cross_validation.cross_val_score(l, X, y, cv=10)
+    mean = np.mean(scores)
+
+    print "mean", mean
+
+    assert_true(0.90 < mean)
     

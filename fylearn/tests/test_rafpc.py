@@ -6,7 +6,7 @@ import fylearn.rafpc as rafpc
     
 def test_classifier():
 
-    l = rafpc.RandomAgreementFuzzyPatternClassifier(n_agreeing = 2, n_samples = 1, n_features=2)
+    l = rafpc.RandomAgreementFuzzyPatternClassifier(n_protos=1, sample_length=1, n_features=2)
 
     X = np.array([
         [0.1,  0.2,  0.4],
@@ -28,7 +28,7 @@ def test_classifier():
 
 def test_classifier_single():
 
-    l = rafpc.RandomAgreementFuzzyPatternClassifier(n_agreeing = 2, n_samples = 1, n_features=2)
+    l = rafpc.RandomAgreementFuzzyPatternClassifier(n_protos=1, sample_length=1, n_features=2)
 
     X = np.array([
         [0.1,  0.2,  0.4],
@@ -61,7 +61,7 @@ def test_classifier_iris():
     from sklearn.preprocessing import MinMaxScaler
     X = MinMaxScaler().fit_transform(X)
 
-    l = rafpc.RandomAgreementFuzzyPatternClassifier(n_agreeing=10, random_state=0, n_features=3)
+    l = rafpc.RandomAgreementFuzzyPatternClassifier(n_protos=10, random_state=0, n_features=3)
 
     from sklearn import cross_validation
 

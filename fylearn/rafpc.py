@@ -10,6 +10,7 @@ References:
 [1] Davidsen, 2014.
   
 """
+import logging
 import numpy as np
 from numpy.random import RandomState
 import scipy.stats as stats
@@ -50,7 +51,7 @@ def fuzzify(A):
 
     return R
 
-def agreement_fuzzy(A, B):
+def agreement_fuzzy(aggregation, A, B):
     """ Calculate fuzzy agreement using mean values and euclidean distance.
 
     A  :  First sample
@@ -64,9 +65,13 @@ def agreement_fuzzy(A, B):
     #hamming = 1.0 - np.mean(d)
     #return hamming, d
 
-    d = (S_A - S_B) ** 2
-    rmse = 1.0 - np.sqrt(np.mean(d))
-    return rmse, 1.0 - d
+    d = 1.0 - ((S_A - S_B) ** 2)
+    a = aggregation(d)
+
+    return a, d
+    
+    #rmse = 1.0 - np.sqrt(np.mean(d))
+    #return np.max(d), 1.0 - d
 
 def triangular_factory(*args):
     return fl.TriangularSet(args[0], args[1], args[2])
@@ -77,10 +82,13 @@ def build_memberships(X, idxs, factory):
     means = np.nanmean(X, 0)
     return [ (i, factory(means[i] - ((maxs[i] - mins[i]) / 2.0), means[i], means[i] + ((maxs[i] - mins[i]) / 2.0))) for i in idxs ]
 
+logger = logging.getLogger("rafpc")
+
 class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
     def get_params(self, deep=False):
         return {"aggregation": self.aggregation,
+                "n_features": self.n_features,
                 "n_agreeing": self.n_agreeing,
                 "n_samples": self.n_samples,
                 "sample_length": self.sample_length,
@@ -95,7 +103,7 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
     
     def __init__(self, n_samples=10, sample_length=100,
                  aggregation=fl.mean, membership_factory=triangular_factory,
-                 n_agreeing=5, epsilon=0.8, 
+                 n_agreeing=5, epsilon=0.8, n_features=None,
                  random_state=None):
         """
         Initialize the classifier
@@ -114,9 +122,14 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         self.aggregation = aggregation
         self.membership_factory = membership_factory
         self.epsilon = epsilon
+        self.n_features = n_features
         self.random_state = random_state
-    
+
     def fit(self, X, y):
+
+        # the owa operator to use for aggregation.
+        owa_weights = [1.0 / self.n_features] * self.n_features
+        aa_f = fl.owa(owa_weights)
 
         # get random
         rs = RandomState(self.random_state)
@@ -132,34 +145,42 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
             raise Exception("NaN not supported in class values")
 
         # agreeing not set, require all features to be in agreement
-        if self.n_agreeing is None:
-            self.n_agreeing = X.shape[1]
+        if self.n_features is None:
+            self.n_features = X.shape[1]
 
-        if self.n_agreeing > X.shape[1]:
-            raise Exception("Number of agreeing features must be less than/equal to number features in X")
+        if self.n_features > X.shape[1]:
+            raise Exception("n_features must be <= number features in X")
 
         # build membership functions for each feature for each class
         self.protos_ = {}
         for class_idx, class_value in enumerate(self.classes_):
             X_class = X[y == class_idx]
 
-            self.protos_[class_idx] = []
+            agreements = []
             for x in range(self.sample_length):
                 #
                 sample = X_class[rs.permutation(len(X_class))[:self.n_samples * 2]]
                 sample1, sample2 = sample[:self.n_samples], sample[self.n_samples:]
                 #
-                agreement, d = agreement_fuzzy(sample1, sample2)
+                agreement, d = agreement_fuzzy(aa_f, sample1, sample2)
+                agreements.append({"agreement": agreement, "d": d, "sample": sample})
+
+            agreements.sort(key=lambda x: x["agreement"]) # in-place sort list on agreement
+
+            # create protos from n_agreeing most agreeing
+            self.protos_[class_idx] = []
+            for a in agreements[-self.n_agreeing:]:
+
+                # logger.info("d %s" %(str(a["d"]), ))
 
                 ranking = np.argsort(1.0 - d)
-
-                ranking = ranking[:self.n_agreeing]
-                lastrank = d[ranking[-1]]
+                ranking = ranking[:self.n_features]
+                #lastrank = d[ranking[-1]]
 
                 # we need at least epsilon agreement of the features
-                if lastrank >= self.epsilon:
-                    self.protos_[class_idx].append(build_memberships(sample, ranking,
-                                                                self.membership_factory))
+                #if lastrank >= self.epsilon:
+                self.protos_[class_idx].append(build_memberships(a["sample"], ranking, self.membership_factory))
+                
         return self
 
     def predict(self, X):
@@ -169,17 +190,18 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         X = array2d(X)
 
-        Mus = np.zeros(X.shape) # holds output per prototype
-        
+        Mus = np.zeros(X.shape)                        # holds output per prototype
         R = np.zeros((X.shape[0], len(self.classes_))) # holds output for each class
+        feature_nos = range(self.n_features)         # index for agreements
 
-        agreement_nos = range(self.n_agreeing)
+        #for k, v in self.protos_.items():
+        #    logger.info("class %d prototypes %d min-v-len %d" % (k, len(v), min(map(lambda x: len(x), v))))
 
         # class_idx has class_prototypes membership functions
         for class_idx, class_prototypes in self.protos_.items():
             C = np.zeros((X.shape[0], len(class_prototypes)))
             for j, cp in enumerate(class_prototypes):
-                for i in agreement_nos:
+                for i in feature_nos:
                     f_idx, f_f = cp[i]
                     Mus[:,i] = f_f(X[:,f_idx])
                 C[:,j] = self.aggregation(Mus)

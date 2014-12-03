@@ -24,6 +24,9 @@ class TriangularSet:
     def __str__(self):
         return "Δ(%.2f %.2f %.2f)" % (self.a, self.b, self.c)
 
+    def __repr__(self):
+        return str(self)
+
 class TrapezoidalSet:
     def __init__(self, a, b, c, d):
         self.a = a
@@ -102,12 +105,17 @@ def einstein_u(X):
 def algebraic_sum(X):
     return 1.0 - prod(1.0 - X)
 
-def owa(w):
-    w_a = np.array(w, copy=False)
+def owa(*w):
+    w = np.array(w, copy=False).ravel()
     def owa_f(X):
-        if X.shape[1] != len(w_a):
-            raise Exception("Number of weights must match number of elements")
-        return np.sum(np.sort(X, -1) * w_a, -1)
+        v = w[::-1]
+        lv = len(v)
+        if X.shape[-1] < lv:
+            raise Exception("len(X) < len(w)")
+        elif X.shape[-1] > lv:
+            missing = [ 0.0 ] * (X.shape[-1] - lv)
+            v = np.append(missing, v)
+        return np.sum(np.sort(X, -1) * v, -1)
     return owa_f
 
 def aiwa(p):

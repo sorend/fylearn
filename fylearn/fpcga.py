@@ -160,8 +160,8 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
     def build_with_ga(self, X, y):
 
-        # root mean squared error fitness function
-        def rmse_fitness_function(chromosome):
+        # accuracy fitness function
+        def accuracy_fitness_function(chromosome):
             # decode the class model from gene
             aggregation, mus = _decode(self.m, self.aggregation_rules, self.mu_factories, self.classes_, chromosome)
 
@@ -173,7 +173,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
         logger.info("initializing GA %d iterations" % (self.iterations,))
         # initialize
-        ga = GeneticAlgorithm(fitness_function=rmse_fitness_function,
+        ga = GeneticAlgorithm(fitness_function=accuracy_fitness_function,
                               scaling=1.0,
                               crossover_points=range(2, n_genes, 5),
                               keep_parents=10,

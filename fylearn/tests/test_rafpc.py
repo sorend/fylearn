@@ -3,10 +3,25 @@ import numpy as np
 from sklearn.utils.testing import assert_equal, assert_true
 
 import fylearn.rafpc as rafpc
+
+def test_agreement_hamming():
+
+    X = np.array([
+        [0.1,  0.3,  0.4,  0.1, 0.3, 0.4],
+        [0.09, 0.28, 0.45, 0.4, 0.3, 0.1]
+    ])
+
+    e = rafpc.agreement_hamming(3, X, 0, 1)
+
+    print "e", e
+
+    assert_true(e[0] > 0.9)
+    assert_true(e[1] < 0.9)
+
     
 def test_classifier():
 
-    l = rafpc.RandomAgreementFuzzyPatternClassifier(n_protos=1, sample_length=1, n_features=2)
+    l = rafpc.RandomAgreementFuzzyPatternClassifier(n_protos=1, n_features=2)
 
     X = np.array([
         [0.1,  0.2,  0.4],
@@ -28,7 +43,7 @@ def test_classifier():
 
 def test_classifier_single():
 
-    l = rafpc.RandomAgreementFuzzyPatternClassifier(n_protos=1, sample_length=1, n_features=2)
+    l = rafpc.RandomAgreementFuzzyPatternClassifier(n_protos=1, n_features=2)
 
     X = np.array([
         [0.1,  0.2,  0.4],
@@ -70,5 +85,5 @@ def test_classifier_iris():
 
     print "mean", mean
 
-    assert_true(0.93 < mean and mean < 0.94)
+    assert_true(0.92 < mean and mean < 0.94)
     

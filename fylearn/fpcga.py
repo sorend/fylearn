@@ -176,7 +176,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         ga = GeneticAlgorithm(fitness_function=accuracy_fitness_function,
                               scaling=1.0,
                               crossover_points=range(2, n_genes, 5),
-                              keep_parents=10,
+                              elitism=5,
                               n_chromosomes=100,
                               n_genes=n_genes,
                               p_mutation=0.3)
@@ -233,7 +233,7 @@ class FuzzyPatternClassifierGA2(FuzzyPatternClassifierGA):
         ga = GeneticAlgorithm(fitness_function=rmse_fitness_function,
                               scaling=1.0,
                               crossover_points=range(0, n_genes, 5),
-                              keep_parents=10,
+                              elitism=5,
                               n_chromosomes=100,
                               n_genes=n_genes,
                               p_mutation=0.3)

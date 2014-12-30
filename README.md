@@ -14,6 +14,7 @@ Algorithms implemented
  - fylearn.frrga.FuzzyPatternClassifierLocalGA
  - fylearn.fpt.FuzzyPatternTreeClassifier
  - fylearn.fpt.FuzzyPatternTreeTopDownClassifier
+ - fylearn.garules.MultimodalEvolutionaryClassifer
 
 Installation
 ------------

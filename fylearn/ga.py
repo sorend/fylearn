@@ -5,13 +5,56 @@ Genetic algorithm implementation.
 
 """
 import numpy as np
+from numpy.random import RandomState
 from sklearn.utils import check_arrays
+
+#
+# Authors: Søren A. Davidsen <sorend@cs.svuni.in>
+#
+
+def tournament_selection(tournament_size=10):
+    def tournament_sel(rs, P, f):
+        participants = rs.choice(len(f), size=tournament_size) # select the tournament participants
+        winners = np.argsort(f[participants]) # sort them by fitness
+        return participants[winners[0]], participants[winners[1]] # take two with min fitness
+
+    return tournament_sel
+
+def top_n_selection(n=25):
+    def top_n_sel(rs, P, f):
+        top_n = np.argsort(f)[:n] # select top-n fitness.
+        parents = rs.choice(top_n, size=2) # pick two randomly
+        return parents[0], parents[1]
+
+    return top_n_sel
+
+def helper_n_generations(ga, n=100):
+    for i in range(n):
+        ga.next()
+    return ga
+
+def helper_min_fitness_decrease(ga, epsilon=0.001, top_n=10):
+    last_fitness = None
+    while True:
+        # next
+        ga.next()
+        # get top_n
+        chromosomes, fitnesses = ga.best(top_n)
+        # mean fitness
+        new_fitness = np.mean(fitnesses)
+        if last_fitness is not None:
+            d_fitness = last_fitness - new_fitness
+            if d_fitness < epsilon:
+                break
+        last_fitness = new_fitness
+    return ga
 
 class GeneticAlgorithm:
 
     def __init__(self, fitness_function, n_genes=None, n_chromosomes=None,
-                 keep_parents=10, p_mutation=0.02,
-                 scaling=1.0, random_seed=None,
+                 elitism=0, p_mutation=0.02,
+                 scaling=1.0, random_state=None,
+                 selection_function=top_n_selection(25),
                  population=None, crossover_points=None):
         """
         Initializes the genetic algorithm.
@@ -25,13 +68,13 @@ class GeneticAlgorithm:
 
         n_chromosomes : number of chromosomes (only needed if population is not specified)
 
-        keep_parents : number of parents to keep between each generation
+        elitism : number of parents to keep between each generation
 
         p_mutation : the probability for mutation (applies to each gene)
 
         scaling : mutation is within [-0.5, 0.5], scaling allows to make the mutation larger/smaller.
 
-        random_seed : the seed for the randomization to use
+        random_state : the state for the randomization to use
 
         population : Initial population, use this or use n_genes and n_chromosomes
 
@@ -39,13 +82,17 @@ class GeneticAlgorithm:
 
         """
         self.fitness_function = fitness_function
-        self.keep_parents = keep_parents
+        self.selection_function = selection_function
+        self.elitism = elitism
         self.p_mutation = p_mutation
         self.scaling = scaling
-        self.random_seed = random_seed
+        if random_state is None:
+            self.random_state = RandomState()
+        else:
+            self.random_state = RandomState(random_state)
         # init population
         if population is None:
-            self.population_ = np.random.random((n_chromosomes, n_genes)) * self.scaling
+            self.population_ = self.random_state.rand(n_chromosomes, n_genes) * self.scaling
             self.n_genes = n_genes
             self.n_chromosomes = n_chromosomes
         else:
@@ -64,30 +111,36 @@ class GeneticAlgorithm:
         return np.apply_along_axis(self.fitness_function, 1, self.population_)
 
     def next(self):
-        # sort population by fitness, parents are the top-n
-        self.population_ = self.population_[np.argsort(self.fitness_)]
-        parents = self.population_[:self.keep_parents]
+        # create new population
+        new_population = np.array(self.population_)
+        
+        # if we have elitism, sort so we have the top the most fit.
+        if self.elitism > 0:
+            new_population = new_population[np.argsort(self.fitness_)]
 
-        # create new children in the remaining elements
-        for i in range(self.keep_parents, self.n_chromosomes):
-            self.population_[i] = self.__new_child(parents)
-        # update fitness
+        # generate new children
+        for i in range(self.elitism, self.n_chromosomes):
+            new_population[i] = self.__new_child(self.population_)
+
+        # update pop and fitness
+        self.population_ = new_population
         self.fitness_ = self._fitness()
 
     def best(self, n_best=1):
         f_sorted = np.argsort(self.fitness_)
         p_sorted = self.population_[f_sorted]
         return p_sorted[:n_best], self.fitness_[f_sorted][:n_best]
-        
-    def __new_child(self, parents):
+
+    def __new_child(self, P_old):
         # choose two random parents
-        (father, mother) = parents[np.random.choice(len(parents), 2)]
+        father_idx, mother_idx = self.selection_function(self.random_state, P_old, self.fitness_)
+        father, mother = P_old[father_idx], P_old[mother_idx]
         # breed by single-point crossover
-        crossover_idx = np.random.choice(self.crossover_points)
+        crossover_idx = self.random_state.choice(self.crossover_points)
         child = np.hstack([father[:crossover_idx], mother[crossover_idx:]])
         # mutate
-        mutation_idx = np.random.random(len(child)) < self.p_mutation # select which to mutate
-        mutations = (np.random.random(np.sum(mutation_idx)) - 0.5) * self.scaling # create mutations
+        mutation_idx = self.random_state.rand(len(child)) < self.p_mutation # select which to mutate
+        mutations = (self.random_state.rand(np.sum(mutation_idx)) - 0.5) * self.scaling # create mutations
         child[mutation_idx] += mutations # add mutations
         
         return child

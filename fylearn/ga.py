@@ -88,6 +88,8 @@ class GeneticAlgorithm:
         self.scaling = scaling
         if random_state is None:
             self.random_state = RandomState()
+        elif isinstance(random_state, RandomState):
+            self.random_state = random_state
         else:
             self.random_state = RandomState(random_state)
         # init population

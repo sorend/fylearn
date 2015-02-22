@@ -196,7 +196,7 @@ def _predict_multi(prototypes, aggregation, classes, X, n_features):
                 
 logger = logging.getLogger("rafpc")
 
-class RandomAgreementFuzzyPatternClassifier():
+class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
     def get_params(self, deep=False):
         return {"n_protos": self.n_protos,

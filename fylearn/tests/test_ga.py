@@ -1,7 +1,7 @@
 
 import numpy as np
 from sklearn.utils.testing import assert_true
-from fylearn.ga import GeneticAlgorithm, tournament_selection, DiscreteGeneticAlgorithm
+from fylearn.ga import GeneticAlgorithm, tournament_selection, DiscreteGeneticAlgorithm, helper_fitness
 
 def test_discrete():
 
@@ -14,9 +14,9 @@ def test_discrete():
         range(2),
     )
         
-    ga = DiscreteGeneticAlgorithm(fitness_function=ff, n_genes=4, n_chromosomes=100, p_mutation=0.1,
+    ga = DiscreteGeneticAlgorithm(fitness_function=helper_fitness(ff),
+                                  n_genes=4, n_chromosomes=100, p_mutation=0.1,
                                   ranges=ranges)
-
 
     for i in range(10):
         print ga.best()
@@ -47,7 +47,7 @@ def test_sreedevi():
 
     ff = lambda x: 1.0 / (x[0] + (2 * x[1]) + (3 * x[2]) + (4 * x[3]) - 30)
 
-    ga = GeneticAlgorithm(fitness_function=ff, n_genes=4, n_chromosomes=100, p_mutation=0.1)
+    ga = GeneticAlgorithm(fitness_function=helper_fitness(ff), n_genes=4, n_chromosomes=100, p_mutation=0.1)
 
     for i in range(100):
         ga.next()
@@ -68,7 +68,7 @@ def test_ga_variance():
     # fitness function is the variance (means, prefer with small variance)
     ff = lambda x: np.var(x)
     # create instance
-    ga = GeneticAlgorithm(fitness_function=ff, n_genes=10, n_chromosomes=1000, elitism=10, p_mutation=0.1)
+    ga = GeneticAlgorithm(fitness_function=helper_fitness(ff), n_genes=10, n_chromosomes=1000, elitism=10, p_mutation=0.1)
 
     for i in range(100):
         print "next generation", i

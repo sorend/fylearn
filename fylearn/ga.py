@@ -48,6 +48,16 @@ def helper_min_fitness_decrease(ga, epsilon=0.001, top_n=10):
         last_fitness = new_fitness
     return ga
 
+def helper_fitness(chromosome_fitness_function):
+    """
+    Helper function, will evaluate chromosome_fitness_function for each chromosome
+    and return the result. Can be used to wrap fitness functions that evaluate
+    each chromosome at a time instead of the whole population.
+    """
+    def fitness_function(population):
+        return np.apply_along_axis(chromosome_fitness_function, 1, population)
+    return fitness_function
+
 class BaseGeneticAlgorithm(object):
 
     def __init__(self, fitness_function,
@@ -104,16 +114,13 @@ class BaseGeneticAlgorithm(object):
         else:
             self.crossover_points = crossover_points
         # init fitness
-        self.fitness_ = self.fitness()
+        self.fitness_ = self.fitness_function(self.population_)
 
     def initialize_population(self, n_chromosomes, n_genes, random_state):
         raise Error("initialize_population not implemented")
 
     def mutate(self, chromosomes, mutation_idx, random_state):
         raise Error("initialize_population not implemented")
-
-    def fitness(self):
-        return np.apply_along_axis(self.fitness_function, 1, self.population_)
 
     def next(self):
         # create new population
@@ -134,7 +141,7 @@ class BaseGeneticAlgorithm(object):
 
         # update pop and fitness
         self.population_ = new_population
-        self.fitness_ = self.fitness()
+        self.fitness_ = self.fitness_function(self.population_)
 
     def best(self, n_best=1):
         f_sorted = np.argsort(self.fitness_)

@@ -127,6 +127,11 @@ class BaseGeneticAlgorithm(object):
         for i in range(self.elitism, self.n_chromosomes):
             new_population[i] = self.__new_child(self.population_)
 
+        # mutate
+        mutation_idx = self.random_state.random_sample(new_population[self.elitism:].shape) < self.p_mutation
+        new_population[self.elitism:] = self.mutate(new_population[self.elitism:],
+                                                    mutation_idx, self.random_state)
+
         # update pop and fitness
         self.population_ = new_population
         self.fitness_ = self.fitness()
@@ -142,12 +147,7 @@ class BaseGeneticAlgorithm(object):
         father, mother = P_old[father_idx], P_old[mother_idx]
         # breed by single-point crossover
         crossover_idx = self.random_state.choice(self.crossover_points)
-        child = np.hstack([father[:crossover_idx], mother[crossover_idx:]])
-        # mutate
-        mutation_idx = self.random_state.random_sample(child.shape) < self.p_mutation # select which to mutate
-        child = self.mutate(child, mutation_idx, self.random_state)
-        
-        return child
+        return np.hstack([father[:crossover_idx], mother[crossover_idx:]])
 
 class GeneticAlgorithm(BaseGeneticAlgorithm):
     """
@@ -185,7 +185,7 @@ class DiscreteGeneticAlgorithm(GeneticAlgorithm):
                  (ranges[gene_index] are the selectable values for the gene)
         """
         self.ranges = ranges
-        super(DiscreteGeneticAlgorithm, self).__init__(kwargs)
+        super(DiscreteGeneticAlgorithm, self).__init__(*args, **kwargs)
 
     def initialize_population(self, n_chromosomes, n_genes, random_state):
         P = np.zeros((n_chromosomes, n_genes))
@@ -196,5 +196,5 @@ class DiscreteGeneticAlgorithm(GeneticAlgorithm):
     def mutate(self, chromosomes, mutation_idx, random_state):
         for i in range(self.n_genes):
             midx_i = mutation_idx[:,i]
-            chromosomes[:,midx_i] = random_state.choice(self.ranges[i], sum(midx_i))
+            chromosomes[midx_i,i] = random_state.choice(self.ranges[i], np.sum(midx_i))
         return chromosomes

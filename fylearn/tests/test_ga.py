@@ -1,7 +1,29 @@
 
 import numpy as np
 from sklearn.utils.testing import assert_true
-from fylearn.ga import GeneticAlgorithm, tournament_selection
+from fylearn.ga import GeneticAlgorithm, tournament_selection, DiscreteGeneticAlgorithm
+
+def test_discrete():
+
+    ff = lambda x: np.var(x)
+
+    ranges = (
+        range(10),
+        range(20, 30),
+        range(40, 50),
+        range(2),
+    )
+        
+    ga = DiscreteGeneticAlgorithm(fitness_function=ff, n_genes=4, n_chromosomes=100, p_mutation=0.1,
+                                  ranges=ranges)
+
+
+    for i in range(10):
+        print ga.best()
+        ga.next()
+
+    assert_true(ga.best()[1] <= np.var([9, 20, 40, 1])) # assume we find the solution
+
 
 def test_tournament_selection():
 
@@ -53,3 +75,4 @@ def test_ga_variance():
         ga.next()
 
     assert_true(0.01 > ga.best(1)[1])
+

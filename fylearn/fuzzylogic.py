@@ -73,7 +73,10 @@ class PiSet:
         return y
 
     def __str__(self):
-        return "pi(%.2f %.2f %.2f)" % (self.a, self.r, self.b)
+        return "π(%.2f %.2f %.2f)" % (self.p, self.r, self.q)
+
+    def __repr__(self):
+        return str(self)
 
 def prod(X):
     """Product along dimension 0 or 1 depending on array or matrix"""

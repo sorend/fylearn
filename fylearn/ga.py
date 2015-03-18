@@ -49,12 +49,23 @@ def helper_min_fitness_decrease(ga, epsilon=0.001, top_n=10):
         last_fitness = new_fitness
     return ga
 
-class GeneticAlgorithm:
+def helper_fitness(chromosome_fitness_function):
+    """
+    Helper function, will evaluate chromosome_fitness_function for each chromosome
+    and return the result. Can be used to wrap fitness functions that evaluate
+    each chromosome at a time instead of the whole population.
+    """
+    def fitness_function(population):
+        return np.apply_along_axis(chromosome_fitness_function, 1, population)
+    return fitness_function
 
-    def __init__(self, fitness_function, n_genes=None, n_chromosomes=None,
-                 elitism=0, p_mutation=0.02,
-                 scaling=1.0, random_state=None,
+class BaseGeneticAlgorithm(object):
+
+    def __init__(self, fitness_function,
                  selection_function=top_n_selection(25),
+                 n_genes=None, n_chromosomes=None,
+                 elitism=0, p_mutation=0.02,
+                 random_state=None,
                  population=None, crossover_points=None):
         """
         Initializes the genetic algorithm.
@@ -72,8 +83,6 @@ class GeneticAlgorithm:
 
         p_mutation : the probability for mutation (applies to each gene)
 
-        scaling : mutation is within [-0.5, 0.5], scaling allows to make the mutation larger/smaller.
-
         random_state : the state for the randomization to use
 
         population : Initial population, use this or use n_genes and n_chromosomes
@@ -85,14 +94,15 @@ class GeneticAlgorithm:
         self.selection_function = selection_function
         self.elitism = elitism
         self.p_mutation = p_mutation
-        self.scaling = scaling
         if random_state is None:
-            self.random_state = RandomState()
+            self.random_state = np.random.RandomState()
+        elif isinstance(random_state, np.random.RandomState):
+            self.random_state = random_state
         else:
-            self.random_state = RandomState(random_state)
+            self.random_state = np.random.RandomState(random_state)
         # init population
         if population is None:
-            self.population_ = self.random_state.rand(n_chromosomes, n_genes) * self.scaling
+            self.population_ = self.initialize_population(n_chromosomes, n_genes, self.random_state)
             self.n_genes = n_genes
             self.n_chromosomes = n_chromosomes
         else:
@@ -105,10 +115,13 @@ class GeneticAlgorithm:
         else:
             self.crossover_points = crossover_points
         # init fitness
-        self.fitness_ = self._fitness()
+        self.fitness_ = self.fitness_function(self.population_)
 
-    def _fitness(self):
-        return np.apply_along_axis(self.fitness_function, 1, self.population_)
+    def initialize_population(self, n_chromosomes, n_genes, random_state):
+        raise Error("initialize_population not implemented")
+
+    def mutate(self, chromosomes, mutation_idx, random_state):
+        raise Error("initialize_population not implemented")
 
     def next(self):
         # create new population
@@ -122,9 +135,14 @@ class GeneticAlgorithm:
         for i in range(self.elitism, self.n_chromosomes):
             new_population[i] = self.__new_child(self.population_)
 
+        # mutate
+        mutation_idx = self.random_state.random_sample(new_population[self.elitism:].shape) < self.p_mutation
+        new_population[self.elitism:] = self.mutate(new_population[self.elitism:],
+                                                    mutation_idx, self.random_state)
+
         # update pop and fitness
         self.population_ = new_population
-        self.fitness_ = self._fitness()
+        self.fitness_ = self.fitness_function(self.population_)
 
     def best(self, n_best=1):
         f_sorted = np.argsort(self.fitness_)
@@ -137,10 +155,54 @@ class GeneticAlgorithm:
         father, mother = P_old[father_idx], P_old[mother_idx]
         # breed by single-point crossover
         crossover_idx = self.random_state.choice(self.crossover_points)
-        child = np.hstack([father[:crossover_idx], mother[crossover_idx:]])
-        # mutate
-        mutation_idx = self.random_state.rand(len(child)) < self.p_mutation # select which to mutate
-        mutations = (self.random_state.rand(np.sum(mutation_idx)) - 0.5) * self.scaling # create mutations
-        child[mutation_idx] += mutations # add mutations
-        
-        return child
+        return np.hstack([father[:crossover_idx], mother[crossover_idx:]])
+
+class GeneticAlgorithm(BaseGeneticAlgorithm):
+    """
+    Continuous genetic algorithm is a genetic algorithm where the gene values
+    are chosen from a continous domain. This means the population is randomly
+    initialized to [-1.0, 1.0] and mutation modifies the gene value in the range [-1.0, 1.0].
+    """
+    def __init__(self, scaling=1.0, *args, **kwargs):
+        self.scaling = scaling
+        super(GeneticAlgorithm, self).__init__(*args, **kwargs)
+
+    def initialize_population(self, n_chromosomes, n_genes, random_state):
+        return random_state.rand(n_chromosomes, n_genes) * self.scaling
+
+    def mutate(self, chromosomes, mutation_idx, random_state):
+        mutations = (random_state.rand(np.sum(mutation_idx)) - 0.5) * self.scaling
+        chromosomes[mutation_idx] += mutations
+        return chromosomes
+
+class DiscreteGeneticAlgorithm(GeneticAlgorithm):
+    """
+    Discrete genetic algorithm is a genetic algorithm where the gene values are
+    chosen from a discrete domain. In this context, mutation means to randomly pick another value
+    from this domain.
+    """
+
+    def __init__(self, ranges=None, *args, **kwargs):
+        """
+        Initializes the genetic algorithm.
+
+        Parameters:
+        -----------
+
+        ranges : An tuple of tuples describing the values possible for each gene.
+                 (ranges[gene_index] are the selectable values for the gene)
+        """
+        self.ranges = ranges
+        super(DiscreteGeneticAlgorithm, self).__init__(*args, **kwargs)
+
+    def initialize_population(self, n_chromosomes, n_genes, random_state):
+        P = np.zeros((n_chromosomes, n_genes))
+        for i in range(n_genes):
+            P[:,i] = random_state.choice(self.ranges[i], P.shape[0])
+        return P
+
+    def mutate(self, chromosomes, mutation_idx, random_state):
+        for i in range(self.n_genes):
+            midx_i = mutation_idx[:,i]
+            chromosomes[midx_i,i] = random_state.choice(self.ranges[i], np.sum(midx_i))
+        return chromosomes

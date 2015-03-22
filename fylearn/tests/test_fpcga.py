@@ -6,39 +6,56 @@ import fylearn.fpcga as fpcga
     
 def test_classifier():
 
-    l = fpcga.FuzzyPatternClassifierGA(iterations=100)
+    l = fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None)
 
     X = np.array([
         [0.1, 0.2, 0.4],
-        [0.2, 0.4, 0.8]
+        [0.11, 0.3, 0.5],
+        [0.2, 0.4, 0.8],
+        [0.18, 0.42, 0.88]
     ])
 
     y = np.array([
+        1,
+        1,
         0,
-        1
+        0
     ])
     
     l.fit(X, y)
 
-    assert_equal([0], l.predict([[0.9, 1.7, 4.5]]))
+    y_pred = l.predict([[0.0, 0.3, 0.35],
+                        [0.1, 0.4, 0.78]])
+
+    print "y_pred", y_pred
+
+    assert_equal(len(y_pred), 2)
+    assert_equal(y_pred[0], 1)
+    assert_equal(y_pred[1], 0)
 
 def test_classifier_single():
 
-    l = fpcga.FuzzyPatternClassifierGA(iterations=100)
+    l = fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None)
 
     X = np.array([
         [0.1, 0.2, 0.4],
-        [0.2, 0.4, 0.8]
+        [0.11, 0.3, 0.5],
+        [0.2, 0.4, 0.8],
+        [0.18, 0.42, 0.88]
     ])
 
     y = np.array([
-        0,
-        1
+        3,
+        3,
+        10,
+        10
     ])
     
     l.fit(X, y)
 
-    assert_equal(0, l.predict([0.9, 1.7, 4.5]))
+    y_pred = l.predict([0.15, 0.45, 0.78])
+
+    assert_equal(10, y_pred)
         
         
 def test_classifier_iris():
@@ -63,4 +80,4 @@ def test_classifier_iris():
     print "mean", mean
 
     assert_true(0.90 < mean)
-    
+

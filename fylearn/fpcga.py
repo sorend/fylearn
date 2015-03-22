@@ -164,7 +164,6 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         def accuracy_fitness_function(chromosome):
             # decode the class model from gene
             aggregation, mus = _decode(self.m, self.aggregation_rules, self.mu_factories, self.classes_, chromosome)
-
             y_pred = _predict(mus, aggregation, self.classes_, X)
             return 1.0 - accuracy_score(y, y_pred)
 
@@ -181,11 +180,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
                               n_genes=n_genes,
                               p_mutation=0.3)
 
-        #print "population", ga.population_
-        #print "fitness", ga.fitness_
-
-        chromosomes, fitnesses = ga.best(10)
-        last_fitness = np.mean(fitnesses)
+        last_fitness = None
         
         #
         for generation in range(self.iterations):
@@ -198,10 +193,11 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
             # check stopping condition
             new_fitness = np.mean(fitnesses)
-            d_fitness = last_fitness - new_fitness
-            if self.epsilon is not None and d_fitness < self.epsilon:
-                logger.info("Early stop d_fitness %f" % (d_fitness,))
-                break
+            if last_fitness is not None:
+                d_fitness = last_fitness - new_fitness
+                if self.epsilon is not None and d_fitness < self.epsilon:
+                    logger.info("Early stop d_fitness %f" % (d_fitness,))
+                    break
             last_fitness = new_fitness
 
         # print learned.

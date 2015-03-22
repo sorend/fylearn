@@ -108,29 +108,39 @@ def einstein_u(X):
 def algebraic_sum(X):
     return 1.0 - prod(1.0 - X)
 
-def owa(*w):
-    w = np.array(w, copy=False).ravel()
-    def owa_f(X):
-        v = w[::-1]
-        lv = len(v)
+
+class OWA:
+    def __init__(self, v):
+        self.v = v
+        self.lv = len(v)
+
+    def __call__(self, X):
+        v, lv = self.v, self.lv
         if X.shape[-1] < lv:
-            raise Exception("len(X) < len(w)")
+            raise ValueError("len(X) < len(w)")
         elif X.shape[-1] > lv:
-            missing = [ 0.0 ] * (X.shape[-1] - lv)
+            missing = [ 0. ] * (X.shape[-1] - lv)
             v = np.append(missing, v)
         return np.sum(np.sort(X, -1) * v, -1)
-    return owa_f
 
-def aiwa(p):
+def owa(*w):
+    w = np.array(w, copy=False).ravel()
+    return OWA(w[::-1])
+
+class AndnessDirectedAveraging:
+    def __init__(self, p):
+        self.p = p
+        self.alpha = (1.0 - p) / p if p <= 0.5 else p / (1.0 - p)
+        self.__call__ = self.aiwa_tnorm if p <= 0.5 else self.aiwa_tconorm # setup call
+
+    def aiwa_tnorm(self, X):
+        X = np.array(X)
+        return (np.sum(X ** self.alpha) / len(X)) ** (1.0 / self.alpha)
+
+    def aiwa_tconorm(self, X):
+        X = np.array(X)
+        return 1.0 - ((np.sum((1.0 - X) ** (1.0 / self.alpha)) / len(X)) ** self.alpha)
+
+def aa(p):
     assert 0 < p and p < 1
-    alpha = (1.0 - p) / p
-    if p <= 0.5:
-        def aiwa_f_t(x):
-            x = np.array(x)
-            return (np.sum(x ** 2) / len(x)) ** (1 / alpha)
-        return aiwa_f_t
-    else:
-        def aiwa_f_co(x):
-            x = np.array(x)
-            return 1.0 - ((np.sum((1.0 - x) ** (1 / alpha)) / len(x)) ** alpha)
-        return aiwa_f_co
+    return AndnessDirectedAveraging(p)

@@ -273,28 +273,3 @@ class FuzzyPatternClassifierGA2(FuzzyPatternClassifierGA):
             logger.info("`- Class-%d" % (key,))
             logger.info("`- Membership-fs %s" % (str([ x.__str__() for x in value ]),))
 
-if __name__ == "__main__":
-
-    import sys
-    import pandas as pd
-    from sklearn.preprocessing import MinMaxScaler
-    from sklearn.cross_validation import cross_val_score
-    
-    data = pd.read_csv(sys.argv[1])
-    X = data.ix[:,:-1]
-    y = data["class"]
-
-    # scale to [0, 1]
-    X = MinMaxScaler().fit_transform(X)
-
-    l = FuzzyPatternClassifierGA(iterations=100)
-
-    # cross validation    
-    scores = cross_val_score(l, X, y, cv=10)
-
-    print "- dataset", sys.argv[1]
-    print "- learner", l
-    print "- scores %s, mean %f, std %f" % \
-        (str(scores), np.mean(scores), np.std(scores))
-
-    

@@ -6,6 +6,9 @@ from sklearn.utils.testing import assert_equal, assert_true, assert_almost_equal
 
 
 def test_simple_stationary():
+    """
+    Constructs a nonstationary fuzzy set, with all stationary values.
+    """
 
     s = NonstationaryFuzzySet(TriangularSet,
                               a=helper_stationary_value(1),
@@ -21,6 +24,9 @@ def test_simple_stationary():
     assert_equal(0, Y[0][2])
 
 def test_simple():
+    """
+    Constructs a nostationary fuzzy set based on a decreasing and increasing behaviour.
+    """
 
     def helper_decreasing(val):
         return lambda t: val - t
@@ -93,4 +99,41 @@ def test_n_dim():
     assert_equal(len(Y), len(T))
     assert_equal(Y.ndim, 3)
     assert_equal(len(Y[0]), len(X[0]))
+
+def test_paper():
+
+    def f_c(t):
+        if t in (1, 3, 5):
+            return 0.
+        elif t == 2:
+            return -2.
+        elif t == 4:
+            return 2.
+        else:
+            raise ValueError("Only defined for t in {1, 2, 3, 4, 5}")
+
+    def f_rho(t):
+        if t in (1, 2, 4):
+            return -1.
+        elif t == 3:
+            return 0.
+        elif t == 5:
+            return 1.
+        else:
+            raise ValueError("Only defined for t in {1, 2, 3, 4, 5}")
+
+    class GaussianSample:
+        def __init__(self, c, rho):
+            self.c = c
+            self.rho = rho
+
+        def __call__(self, X):
+            return np.exp(-(((X - self.c)**2) / ((2*self.rho)**2)))
+
+    s = NonstationaryFuzzySet(GaussianSample, c=f_c, rho=f_rho)
+
+    T = [1, 2, 3, 4, 5]
+    X = [ range(100), range(100), range(100), range(100), range(100) ]
+
+    Y = s(T, X)
 

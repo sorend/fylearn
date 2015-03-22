@@ -6,7 +6,6 @@ Genetic algorithm implementation.
 """
 import numpy as np
 from numpy.random import RandomState
-from sklearn.utils import check_arrays
 
 #
 # Authors: Søren A. Davidsen <sorend@cs.svuni.in>
@@ -106,7 +105,7 @@ class BaseGeneticAlgorithm(object):
             self.n_genes = n_genes
             self.n_chromosomes = n_chromosomes
         else:
-            self.population_, = check_arrays(population)
+            self.population_, = population
             self.n_genes = self.population_.shape[1]
             self.n_chromosomes = self.population_.shape[0]
         # crossover points
@@ -132,8 +131,8 @@ class BaseGeneticAlgorithm(object):
             new_population = new_population[np.argsort(self.fitness_)]
 
         # generate new children
-        for i in range(self.elitism, self.n_chromosomes):
-            new_population[i] = self.__new_child(self.population_)
+        for idx in range(self.elitism, self.n_chromosomes):
+            new_population[idx] = self.new_child(self.population_, self.fitness_)
 
         # mutate
         mutation_idx = self.random_state.random_sample(new_population[self.elitism:].shape) < self.p_mutation
@@ -149,9 +148,9 @@ class BaseGeneticAlgorithm(object):
         p_sorted = self.population_[f_sorted]
         return p_sorted[:n_best], self.fitness_[f_sorted][:n_best]
 
-    def __new_child(self, P_old):
+    def new_child(self, P_old, f_old):
         # choose two random parents
-        father_idx, mother_idx = self.selection_function(self.random_state, P_old, self.fitness_)
+        father_idx, mother_idx = self.selection_function(self.random_state, P_old, f_old)
         father, mother = P_old[father_idx], P_old[mother_idx]
         # breed by single-point crossover
         crossover_idx = self.random_state.choice(self.crossover_points)

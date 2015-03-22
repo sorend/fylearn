@@ -65,38 +65,38 @@ def test_classifier_iris():
     assert_true(0.90 < mean)
 
 
-def test_compare_diabetes():
-    import os
-    csv_file = os.path.join(os.path.dirname(__file__), "diabetes.csv")
-    data = np.genfromtxt(csv_file, dtype=float, delimiter=',', names=True)
+# def test_compare_diabetes():
+#     import os
+#     csv_file = os.path.join(os.path.dirname(__file__), "diabetes.csv")
+#     data = np.genfromtxt(csv_file, dtype=float, delimiter=',', names=True)
 
-    X = np.array([data["preg"], data["plas"], data["pres"], data["skin"],
-                  data["insu"], data["mass"], data["pedi"], data["age"]]).T
-    y = data["class"]
+#     X = np.array([data["preg"], data["plas"], data["pres"], data["skin"],
+#                   data["insu"], data["mass"], data["pedi"], data["age"]]).T
+#     y = data["class"]
 
-    from sklearn.preprocessing import MinMaxScaler
-    X = MinMaxScaler().fit_transform(X)
+#     from sklearn.preprocessing import MinMaxScaler
+#     X = MinMaxScaler().fit_transform(X)
 
-    l = garules.MultimodalEvolutionaryClassifier(n_iterations=100)
+#     l = garules.MultimodalEvolutionaryClassifier(n_iterations=100)
 
-    from sklearn import cross_validation
+#     from sklearn import cross_validation
 
-    scores = cross_validation.cross_val_score(l, X, y, cv=10)
-    mean = np.mean(scores)
+#     scores = cross_validation.cross_val_score(l, X, y, cv=10)
+#     mean = np.mean(scores)
 
-    print "mean", mean
+#     print "mean", mean
 
-    assert_true(0.68 < mean)
+#     assert_true(0.68 < mean)
 
-    from sklearn.ensemble import BaggingClassifier
+#     from sklearn.ensemble import BaggingClassifier
 
-    l = BaggingClassifier(garules.MultimodalEvolutionaryClassifier(n_iterations=100))
+#     l = BaggingClassifier(garules.MultimodalEvolutionaryClassifier(n_iterations=100))
 
-    scores = cross_validation.cross_val_score(l, X, y, cv=10)
-    mean = np.mean(scores)
+#     scores = cross_validation.cross_val_score(l, X, y, cv=10)
+#     mean = np.mean(scores)
 
-    print "mean", mean
+#     print "mean", mean
 
-    assert_true(0.80 < mean)
+#     assert_true(0.80 < mean)
     
     

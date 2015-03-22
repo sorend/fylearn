@@ -18,7 +18,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_arrays, column_or_1d, array2d
 from sklearn.metrics import accuracy_score, mean_squared_error
 import fylearn.fuzzylogic as fl
-from fylearn.ga import GeneticAlgorithm
+from fylearn.ga import GeneticAlgorithm, helper_fitness
 
 #
 # Authors: Søren Atmakuri Davidsen <sorend@gmail.com>
@@ -173,7 +173,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
         logger.info("initializing GA %d iterations" % (self.iterations,))
         # initialize
-        ga = GeneticAlgorithm(fitness_function=accuracy_fitness_function,
+        ga = GeneticAlgorithm(fitness_function=helper_fitness(accuracy_fitness_function),
                               scaling=1.0,
                               crossover_points=range(2, n_genes, 5),
                               elitism=5,
@@ -230,7 +230,7 @@ class FuzzyPatternClassifierGA2(FuzzyPatternClassifierGA):
 
         logger.info("initializing GA %d iterations" % (self.iterations,))
         # initialize
-        ga = GeneticAlgorithm(fitness_function=rmse_fitness_function,
+        ga = GeneticAlgorithm(fitness_function=helper_fitness(rmse_fitness_function),
                               scaling=1.0,
                               crossover_points=range(0, n_genes, 5),
                               elitism=5,

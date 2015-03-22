@@ -21,7 +21,7 @@ from numpy.random import RandomState
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_arrays, array2d
 from sklearn.neighbors import DistanceMetric
-from fylearn.ga import GeneticAlgorithm, helper_n_generations
+from fylearn.ga import GeneticAlgorithm, helper_n_generations, helper_fitness
 
 logger = logging.getLogger("garules")
 
@@ -36,8 +36,13 @@ def distancemetric_f(name, **kwargs):
 class StoeanDistance(DistanceMetric):
     def __init__(self, d):
         self.d = d
-    def pairwise(self, X, c):
-        return np.sum(np.abs(X - c) / self.d, 1)
+    def pairwise(self, X, Y=None):
+        if Y is None:
+            Y = X
+        R = np.zeros((len(X), len(Y)))
+        for idx, x in enumerate(X):
+            R[idx,:] = np.sum(np.abs(Y - x) / self.d, 1)
+        return R
 
 class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
@@ -54,9 +59,12 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
             setattr(self, key, value)
         return self
 
+    def distance_sum(self, X, Y):
+        return np.sum(self.distance_.pairwise(X, Y), 1)
+
     def build_for_class(self, X):
-        
-        distance_fitness = lambda c: np.sum(self.distance_.pairwise(X, np.array([c])))
+
+        distance_fitness = lambda P: self.distance_sum(P, X)
 
         # setup GA
         ga = GeneticAlgorithm(fitness_function=distance_fitness,
@@ -81,9 +89,9 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         self.distance_ = self.df(X)
 
         # build models
-        models = {}
+        models = np.zeros((len(self.classes_), X.shape[1]))
         for c_idx, c_value in enumerate(self.classes_):
-            models[c_value] = self.build_for_class(X[y == c_value])
+            models[c_idx,:] = self.build_for_class(X[y == c_value])
 
         self.models_ = models
 
@@ -92,14 +100,9 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
     def predict(self, X):
         X = array2d(X)
 
-        R = np.zeros((len(X), len(self.classes_))) # prediction output
-
-        distance_sum = lambda c: np.sum(self.distance_.pairwise(X, np.array([c])))
-
         # calculate similarity for the inputs
-        for c_idx, c_value in enumerate(self.classes_):
-            R[:,c_idx] = distance_sum(self.models_[c_value])
-            
+        R = self.distance_.pairwise(X, self.models_)
+        
         # reduce by taking the one with minimum distance
         return self.classes_.take(np.argmin(R, 1))
 
@@ -127,7 +130,7 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         distance_fitness = lambda c: np.sum(np.abs(X - c) / self.d)
         
         # setup GA
-        ga = GeneticAlgorithm(fitness_function=distance_fitness,
+        ga = GeneticAlgorithm(fitness_function=helper_fitness(distance_fitness),
                               elitism=3,
                               n_chromosomes=100,
                               n_genes=X.shape[1],
@@ -168,8 +171,6 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
             models[c_value] = np.array(c_models)
 
         self.models_ = models
-
-        # print "models", self.models_
 
         return self
 

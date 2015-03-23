@@ -130,16 +130,15 @@ def owa(*w):
 class AndnessDirectedAveraging:
     def __init__(self, p):
         self.p = p
-        self.alpha = (1.0 - p) / p if p <= 0.5 else p / (1.0 - p)
-        self.__call__ = self.aiwa_tnorm if p <= 0.5 else self.aiwa_tconorm # setup call
+        self.tnorm = p <= 0.5
+        self.alpha = (1.0 - p) / p if self.tnorm else p / (1.0 - p)
 
-    def aiwa_tnorm(self, X):
+    def __call__(self, X):
         X = np.array(X)
-        return (np.sum(X ** self.alpha) / len(X)) ** (1.0 / self.alpha)
-
-    def aiwa_tconorm(self, X):
-        X = np.array(X)
-        return 1.0 - ((np.sum((1.0 - X) ** (1.0 / self.alpha)) / len(X)) ** self.alpha)
+        if self.tnorm:
+            return (np.sum(X ** self.alpha) / len(X)) ** (1.0 / self.alpha)
+        else:
+            return 1.0 - ((np.sum((1.0 - X) ** (1.0 / self.alpha)) / len(X)) ** self.alpha)
 
 def aa(p):
     assert 0 < p and p < 1

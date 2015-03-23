@@ -63,3 +63,14 @@ def test_aa_t():
     # 1.0 - ((((1.0-0.2)**(1.0/a)) + ((1.0-0.6)**(1.0/a)) + ((1.0-0.7)**(1.0/a)) + ((1.0-0.9)**(1.0/a))) / 4.0)**a
     # = 0.6649
     assert_almost_equal(0.6649, h([0.2, 0.6, 0.7, 0.9]), 4)
+
+def test_aa_joblib():
+    from joblib import Parallel, delayed
+
+    h = fl.aa(0.8)
+
+    X = np.random.rand(100, 10)
+
+    Y = Parallel(2)(delayed(h)(x) for x in X)
+    
+    assert_equal(len(Y), 100)

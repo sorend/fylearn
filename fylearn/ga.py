@@ -65,7 +65,8 @@ class BaseGeneticAlgorithm(object):
                  n_genes=None, n_chromosomes=None,
                  elitism=0, p_mutation=0.02,
                  random_state=None,
-                 population=None, crossover_points=None):
+                 population=None, crossover_locations=None,
+                 crossover_points=1):
         """
         Initializes the genetic algorithm.
 
@@ -86,7 +87,7 @@ class BaseGeneticAlgorithm(object):
 
         population : Initial population, use this or use n_genes and n_chromosomes
 
-        crossover_points : Indexes used for cross-over points (Default: None, any cross-over point)
+        crossover_locations : Indexes used for cross-over points (Default: None, any cross-over point)
 
         """
         self.fitness_function = fitness_function
@@ -109,10 +110,11 @@ class BaseGeneticAlgorithm(object):
             self.n_genes = self.population_.shape[1]
             self.n_chromosomes = self.population_.shape[0]
         # crossover points
-        if crossover_points is None:
-            self.crossover_points = range(self.population_.shape[1])
+        if crossover_locations is None:
+            self.crossover_locations = range(self.population_.shape[1])
         else:
-            self.crossover_points = crossover_points
+            self.crossover_locations = crossover_locations
+        self.crossover_points = crossover_points
         # init fitness
         self.fitness_ = self.fitness_function(self.population_)
 
@@ -152,8 +154,8 @@ class BaseGeneticAlgorithm(object):
         # choose two random parents
         father_idx, mother_idx = self.selection_function(self.random_state, P_old, f_old)
         father, mother = P_old[father_idx], P_old[mother_idx]
-        # breed by single-point crossover
-        crossover_idx = self.random_state.choice(self.crossover_points)
+        # breed by cross-over
+        crossover_idx = self.random_state.choice(self.crossover_locations, self.crossover_points)
         return np.hstack([father[:crossover_idx], mother[crossover_idx:]])
 
 class GeneticAlgorithm(BaseGeneticAlgorithm):

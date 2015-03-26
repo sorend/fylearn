@@ -127,7 +127,7 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
     def build_for_class(self, rs, X):
         
         # distance based fitness function
-        distance_fitness = lambda c: np.sum(np.abs(X - c) / self.d)
+        distance_fitness = lambda c: np.sum(np.abs(X - c))
         
         # setup GA
         ga = GeneticAlgorithm(fitness_function=helper_fitness(distance_fitness),
@@ -154,11 +154,6 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
         self.classes_, y_reverse = np.unique(y, return_inverse=True)
 
-        # calculate normalization parameter for distance measure
-        b = np.nanmax(X, 0) # find b and a (max, min) columnwise.
-        a = np.nanmin(X, 0)
-        self.d = b - a
-
         # build models
         models = {}
         for c_idx, c_value in enumerate(self.classes_):
@@ -183,8 +178,8 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         # calculate similarity for the inputs
         for c_idx, c_value in enumerate(self.classes_):
             for m_idx, model in enumerate(self.models_[c_value]):
-                R[:,m_idx] = np.sum(np.abs(X - model) / self.d, 1)
-            M[:,c_idx] = np.sum(R, 1)
+                R[:,m_idx] = np.sum(np.abs(X - model), 1)
+            M[:,c_idx] = np.min(R, 1)
 
         # reduce by taking the one with minimum distance
         return self.classes_.take(np.argmin(M, 1))

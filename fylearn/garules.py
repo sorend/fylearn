@@ -179,7 +179,7 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         for c_idx, c_value in enumerate(self.classes_):
             for m_idx, model in enumerate(self.models_[c_value]):
                 R[:,m_idx] = np.sum(np.abs(X - model), 1)
-            M[:,c_idx] = np.min(R, 1)
+            M[:,c_idx] = np.sum(R, 1)
 
         # reduce by taking the one with minimum distance
         return self.classes_.take(np.argmin(M, 1))

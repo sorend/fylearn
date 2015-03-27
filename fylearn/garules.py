@@ -46,13 +46,15 @@ class StoeanDistance(DistanceMetric):
 
 class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, n_iterations=10, df=stoean_f):
+    def __init__(self, n_iterations=10, df=stoean_f, sample_size=10):
         self.n_iterations = n_iterations
         self.df = df
+        self.sample_size=sample_size
 
     def get_params(self, deep=False):
         return {"n_iterations": self.n_iterations,
-                "df": self.df}
+                "df": self.df,
+                "sample_size": self.sample_size}
 
     def set_params(self, **kwargs):
         for key, value in kwargs.items():
@@ -158,10 +160,11 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         models = {}
         for c_idx, c_value in enumerate(self.classes_):
             X_class = X[y == c_value]
+            a_sample_size = min(len(X_class), self.sample_size)
             c_models = []
             for i in range(self.n_models):
                 # resample
-                X_sample = X_class[random_state.choice(len(X_class), len(X_class))]
+                X_sample = X_class[random_state.choice(len(X_class), a_sample_size)]
                 c_models.append(self.build_for_class(random_state, X_sample))
             models[c_value] = np.array(c_models)
 

@@ -57,6 +57,9 @@ class PiSet:
         self.q = (b + r) / 2.0
         self.S = (2**(m - 1.0))
 
+        self.r_a = self.r - self.a
+        self.b_r = self.b - self.r
+
     def __call__(self, X):
         y = np.zeros(X.shape)
 
@@ -65,10 +68,10 @@ class PiSet:
         r1 = (self.r < X) & (X <= self.q) # right upper
         r2 = (self.q < X) & (X <= self.b) # right lower
 
-        y[l1] = self.S * (((X[l1] - self.a) / (self.r - self.a)) ** self.m)
-        y[l2] = 1.0 - (self.S * (((self.r - X[l2]) / (self.r - self.a)) ** self.m))
-        y[r1] = 1.0 - (self.S * (((X[r1] - self.r) / (self.b - self.r)) ** self.m))
-        y[r2] = self.S * (((self.b - X[r2]) / (self.b - self.r)) ** self.m)
+        y[l1] = self.S * (((X[l1] - self.a) / (self.r_a)) ** self.m)
+        y[l2] = 1.0 - (self.S * (((self.r - X[l2]) / (self.r_a)) ** self.m))
+        y[r1] = 1.0 - (self.S * (((X[r1] - self.r) / (self.b_r)) ** self.m))
+        y[r2] = self.S * (((self.b - X[r2]) / (self.b_r)) ** self.m)
 
         return y
 

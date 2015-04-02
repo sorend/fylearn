@@ -1,7 +1,53 @@
 
 import numpy as np
-from sklearn.utils.testing import assert_true
-from fylearn.ga import GeneticAlgorithm, tournament_selection, DiscreteGeneticAlgorithm, helper_fitness
+from sklearn.utils.testing import assert_true, assert_equal
+from fylearn.ga import *
+
+
+def test_uniform_crossover():
+    
+    rs = np.random.RandomState(0)
+    
+    c = UniformCrossover()
+
+    a = c([1, 2, 3], [1, 2, 3], rs)
+
+    assert_equal(len(a.shape), 1)
+    assert_equal(a.shape[0], 3)
+    assert_equal(1, a[0])
+    assert_equal(2, a[1])
+    assert_equal(3, a[2])
+
+    b = c([[1, 2, 3], [4, 5, 6]], [[1, 2, 3], [4, 5, 6]], rs)
+
+    assert_equal(len(b.shape), 2)
+    assert_equal(b.shape[0], 2)
+    assert_equal(b.shape[1], 3)
+
+
+def test_pointwise_crossover():
+
+    rs = np.random.RandomState(0)
+
+    p1 = range(0, 10, 1)
+    p2 = range(0, 100, 10)
+    
+    c = PointwiseCrossover(crossover_locations=[1, 3, 5, 7, 8], n_crossovers=2)
+
+    a = c(p1, p2, rs)
+
+    assert_equal(len(a.shape), 1)
+    assert_equal(a.shape[0], 10)
+    #assert_equal(1, a[0])
+    #assert_equal(2, a[1])
+    #assert_equal(3, a[2])
+
+    b = c([[1, 2, 3], [4, 5, 6]], [[1, 2, 3], [4, 5, 6]], rs)
+
+    assert_equal(len(b.shape), 2)
+    assert_equal(b.shape[0], 2)
+    assert_equal(b.shape[1], 3)
+
 
 def test_discrete():
 

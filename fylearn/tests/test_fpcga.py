@@ -6,7 +6,7 @@ import fylearn.fpcga as fpcga
     
 def test_classifier():
 
-    l = fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None)
+    l = fpcga.FuzzyPatternClassifierGA(iterations=25, epsilon=None)
 
     X = np.array([
         [0.1, 0.2, 0.4],
@@ -35,7 +35,7 @@ def test_classifier():
 
 def test_classifier_single():
 
-    l = fpcga.FuzzyPatternClassifierGA(iterations=100, epsilon=None)
+    l = fpcga.FuzzyPatternClassifierGA(iterations=25, epsilon=None)
 
     X = np.array([
         [0.1, 0.2, 0.4],

@@ -32,6 +32,71 @@ def helper_n_generations(ga, n=100):
         ga.next()
     return ga
 
+class UniformCrossover:
+    """Implements a uniform crossover, with a specific random probability of getting genes
+    from each parent."""
+
+    def __init__(self, p1_proba=0.5):
+        """Constructs the crossover operation.
+
+        Parameters:
+        -----------
+
+        p1_proba : probability of selecting parent1 (first parent given for crossover operation)
+        """
+        self.p1_proba = p1_proba
+
+    def __call__(self, P1, P2, random_state):
+        C = np.array(P1) # clone p1
+        R = random_state.random_sample(C.shape) > self.p1_proba # create filter
+        C[R] = np.array(P2, copy=False)[R] # mixin P2 values
+        return C
+
+class PointwiseCrossover:
+    """Implements a pointwise crossover operation, meaning crossover operation can only occur
+    at predefined locations in the chromosome.
+    """
+    def __init__(self, crossover_locations, n_crossovers=1):
+        """Construct the crossover operation
+
+        Parameters:
+        -----------
+
+        crossover_locations : List of locations in the chromosome where crossover can occur.
+
+        n_crossovers : Number of crossovers.
+        """
+        self.crossover_locations = np.array(crossover_locations, copy=False)
+        self.n_crossovers = n_crossovers
+
+    def __call__(self, A, B, random_state):
+        A, B = np.array(A, copy=False), np.array(B, copy=False)
+        is_1d = len(A.shape) == 1
+        A, B = np.atleast_2d(A), np.atleast_2d(B)
+        C = np.zeros(A.shape)
+
+        def pick(a, b, i):
+            r = a if i[2] == 0 else b
+            return r[i[0]:i[1]].tolist()
+
+        start = [0]
+        end = [A.shape[1]]
+
+        for idx, a in enumerate(A):
+            b = B[idx]
+            selected = np.sort(random_state.choice(self.crossover_locations, self.n_crossovers))
+            # use python to merge
+            selected = start + selected.tolist() + end
+            index = zip(selected, selected[1:], [0, 1] * len(selected))
+            merged = np.array([ item for i in index for item in pick(a, b, i)])
+            # add merged child
+            C[idx,:] = merged
+
+        if is_1d:
+            return C.ravel()
+        else:
+            return C
+    
 def helper_min_fitness_decrease(ga, epsilon=0.001, top_n=10):
     last_fitness = None
     while True:
@@ -61,12 +126,12 @@ def helper_fitness(chromosome_fitness_function):
 class BaseGeneticAlgorithm(object):
 
     def __init__(self, fitness_function,
-                 selection_function=top_n_selection(25),
+                 selection_function=tournament_selection(),
                  n_genes=None, n_chromosomes=None,
-                 elitism=0, p_mutation=0.02,
+                 elitism=0, p_mutation=0.1,
                  random_state=None,
-                 population=None, crossover_locations=None,
-                 crossover_points=1):
+                 population=None,
+                 crossover_function=UniformCrossover()):
         """
         Initializes the genetic algorithm.
 
@@ -87,7 +152,7 @@ class BaseGeneticAlgorithm(object):
 
         population : Initial population, use this or use n_genes and n_chromosomes
 
-        crossover_locations : Indexes used for cross-over points (Default: None, any cross-over point)
+        crossover_function : the function to perform crossover between two parents
 
         """
         self.fitness_function = fitness_function
@@ -109,12 +174,8 @@ class BaseGeneticAlgorithm(object):
             self.population_, = population
             self.n_genes = self.population_.shape[1]
             self.n_chromosomes = self.population_.shape[0]
-        # crossover points
-        if crossover_locations is None:
-            self.crossover_locations = range(self.population_.shape[1])
-        else:
-            self.crossover_locations = crossover_locations
-        self.crossover_points = crossover_points
+        # crossover
+        self.crossover_function = crossover_function
         # init fitness
         self.fitness_ = self.fitness_function(self.population_)
 
@@ -127,14 +188,23 @@ class BaseGeneticAlgorithm(object):
     def next(self):
         # create new population
         new_population = np.array(self.population_)
-        
+
         # if we have elitism, sort so we have the top the most fit.
         if self.elitism > 0:
             new_population = new_population[np.argsort(self.fitness_)]
 
-        # generate new children
+        fathers = np.zeros(self.population_.shape)
+        mothers = np.zeros(self.population_.shape)
+
+        # selection, generate sets of parents
         for idx in range(self.elitism, self.n_chromosomes):
-            new_population[idx] = self.new_child(self.population_, self.fitness_)
+            father_idx, mother_idx = self.selection_function(self.random_state, self.population_, self.fitness_)
+            fathers[idx], mothers[idx] = self.population_[father_idx], self.population_[mother_idx]
+            
+        # generate new children
+        new_population[self.elitism:] = self.crossover_function(fathers[self.elitism:],
+                                                                mothers[self.elitism:],
+                                                                self.random_state)
 
         # mutate
         mutation_idx = self.random_state.random_sample(new_population[self.elitism:].shape) < self.p_mutation
@@ -150,13 +220,13 @@ class BaseGeneticAlgorithm(object):
         p_sorted = self.population_[f_sorted]
         return p_sorted[:n_best], self.fitness_[f_sorted][:n_best]
 
-    def new_child(self, P_old, f_old):
-        # choose two random parents
-        father_idx, mother_idx = self.selection_function(self.random_state, P_old, f_old)
-        father, mother = P_old[father_idx], P_old[mother_idx]
-        # breed by cross-over
-        crossover_idx = self.random_state.choice(self.crossover_locations, self.crossover_points)
-        return np.hstack([father[:crossover_idx], mother[crossover_idx:]])
+    # def new_child(self, P_old, f_old):
+    #     # choose two random parents
+    #     father_idx, mother_idx = self.selection_function(self.random_state, P_old, f_old)
+    #     father, mother = P_old[father_idx], P_old[mother_idx]
+    #     # breed by cross-over
+    #     crossover_idx = self.random_state.choice(self.crossover_locations, self.crossover_points)
+    #     return np.hstack([father[:crossover_idx], mother[crossover_idx:]])
 
 class GeneticAlgorithm(BaseGeneticAlgorithm):
     """

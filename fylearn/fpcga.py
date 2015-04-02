@@ -18,7 +18,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_arrays, column_or_1d, array2d
 from sklearn.metrics import accuracy_score, mean_squared_error
 import fylearn.fuzzylogic as fl
-from fylearn.ga import GeneticAlgorithm, helper_fitness
+from fylearn.ga import GeneticAlgorithm, helper_fitness, UniformCrossover
 
 #
 # Authors: Søren Atmakuri Davidsen <sorend@gmail.com>
@@ -174,8 +174,9 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         # initialize
         ga = GeneticAlgorithm(fitness_function=helper_fitness(accuracy_fitness_function),
                               scaling=1.0,
-                              crossover_points=range(2, n_genes, 5),
-                              elitism=5,
+                              crossover_function=UniformCrossover(0.5),
+                              # crossover_points=range(2, n_genes, 5),
+                              elitism=5, # no elitism
                               n_chromosomes=100,
                               n_genes=n_genes,
                               p_mutation=0.3)
@@ -185,7 +186,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         #
         for generation in range(self.iterations):
             ga.next()
-            logger.info("GA iteration %d Fitness (top-4) %s" % (generation, str(ga.fitness_[:4])))
+            logger.info("GA iteration %d Fitness (top-4) %s" % (generation, str(np.sort(ga.fitness_)[:4])))
             chromosomes, fitnesses = ga.best(10)
             aggregation, protos = _decode(self.m, self.aggregation_rules, self.mu_factories, self.classes_, chromosomes[0])
             self.aggregation = aggregation
@@ -228,8 +229,9 @@ class FuzzyPatternClassifierGA2(FuzzyPatternClassifierGA):
         # initialize
         ga = GeneticAlgorithm(fitness_function=helper_fitness(rmse_fitness_function),
                               scaling=1.0,
-                              crossover_points=range(0, n_genes, 5),
-                              elitism=5,
+                              crossover_function=UniformCrossover(0.5),
+                              #crossover_points=range(0, n_genes, 5),
+                              elitism=5, # no elitism
                               n_chromosomes=100,
                               n_genes=n_genes,
                               p_mutation=0.3)

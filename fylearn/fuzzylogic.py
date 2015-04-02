@@ -134,11 +134,11 @@ class AndnessDirectedAveraging:
         self.alpha = (1.0 - p) / p if self.tnorm else p / (1.0 - p)
 
     def __call__(self, X):
-        X = np.array(X)
+        X = np.array(X, copy=False)
         if self.tnorm:
-            return (np.sum(X ** self.alpha) / len(X)) ** (1.0 / self.alpha)
+            return (np.sum(X ** self.alpha, -1) / X.shape[-1]) ** (1.0 / self.alpha)
         else:
-            return 1.0 - ((np.sum((1.0 - X) ** (1.0 / self.alpha)) / len(X)) ** self.alpha)
+            return 1.0 - ((np.sum((1.0 - X) ** (1.0 / self.alpha), -1) / X.shape[-1]) ** self.alpha)
 
 def aa(p):
     assert 0 < p and p < 1

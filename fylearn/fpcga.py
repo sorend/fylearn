@@ -28,11 +28,11 @@ from fylearn.ga import GeneticAlgorithm, helper_fitness, UniformCrossover
 AGGREGATION_RULES = (fl.prod, fl.mean)
 
 # requires 1 gene
-def build_aggregation(rules, chromosome, idx):
+def build_aggregation(X, y, rules, chromosome, idx):
     i = int(chromosome[idx] * len(rules))
     if i < 0: i = 0
     if i >= len(rules): i = len(rules) - 1
-    return rules[i]
+    return rules[i](X, y)
 
 # requires 3 genes
 def build_pi_membership(chromosome, idx):
@@ -69,8 +69,8 @@ def build_membership(mu_factories, chromosome, idx):
     return mu_factories[i](chromosome, idx+1)
 
 # decodes aggregation and protos from chromosome
-def _decode(m, aggregation_rules, mu_factories, classes, chromosome):
-    aggregation = build_aggregation(aggregation_rules, chromosome, 0)
+def _decode(m, X, y, aggregation_rules, mu_factories, classes, chromosome):
+    aggregation = build_aggregation(X, y, aggregation_rules, chromosome, 0)
     protos = {}
     idx = 2
     for i in range(len(classes)):
@@ -98,6 +98,15 @@ def _predict(prototypes, aggregation, classes, X):
 
 logger = logging.getLogger("fpcga")
 
+class AggregationRuleFactory:
+    pass
+
+class DummyAggregationRuleFactory(AggregationRuleFactory):
+    def __init__(self, aggregation_rule):
+        self.aggregation_rule = aggregation_rule
+    def __call__(self, X, y):
+        return self.aggregation_rule
+    
 class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
     def get_params(self, deep=False):
@@ -113,10 +122,22 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
     
     def __init__(self, mu_factories=MEMBERSHIP_FACTORIES, aggregation_rules=AGGREGATION_RULES,
                  iterations=10, epsilon=0.0001):
+
+        if mu_factories is None or len(mu_factories) == 0:
+            raise ValueError("no mu_factories specified")
+
+        if aggregation_rules is None or len(aggregation_rules) == 0:
+            raise ValueError("no aggregation_rules specified")
+
+        if iterations <= 0:
+            raise ValueError("iterations must be > 0")
+
         self.mu_factories = mu_factories
-        self.aggregation_rules = aggregation_rules
         self.iterations = iterations
         self.epsilon = epsilon
+
+        as_factory = lambda r: r if isinstance(r, AggregationRuleFactory) else DummyAggregationRuleFactory(r)
+        self.aggregation_rules = [ as_factory(r) for r in aggregation_rules ]
 
     def fit(self, X, y_orig):
 
@@ -163,7 +184,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         # accuracy fitness function
         def accuracy_fitness_function(chromosome):
             # decode the class model from gene
-            aggregation, mus = _decode(self.m, self.aggregation_rules, self.mu_factories, self.classes_, chromosome)
+            aggregation, mus = _decode(self.m, X, y, self.aggregation_rules, self.mu_factories, self.classes_, chromosome)
             y_pred = _predict(mus, aggregation, self.classes_, X)
             return 1.0 - accuracy_score(y, y_pred)
 
@@ -188,7 +209,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
             ga.next()
             logger.info("GA iteration %d Fitness (top-4) %s" % (generation, str(np.sort(ga.fitness_)[:4])))
             chromosomes, fitnesses = ga.best(10)
-            aggregation, protos = _decode(self.m, self.aggregation_rules, self.mu_factories, self.classes_, chromosomes[0])
+            aggregation, protos = _decode(self.m, X, y, self.aggregation_rules, self.mu_factories, self.classes_, chromosomes[0])
             self.aggregation = aggregation
             self.protos_ = protos
 
@@ -208,7 +229,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
             logger.info("`- Membership-fs %s" % (str([ x.__str__() for x in value ]),))
 
 
-class FuzzyPatternClassifierGA2(FuzzyPatternClassifierGA):
+class FuzzyPatternClassifierLGA(FuzzyPatternClassifierGA):
 
     def decode(self, chromosome):
         return [ build_membership(self.mu_factories, chromosome, i * 5) for i in range(self.m) ]
@@ -261,7 +282,7 @@ class FuzzyPatternClassifierGA2(FuzzyPatternClassifierGA):
         return proto
     
     def build_with_ga(self, X, y):
-        self.aggregation = self.aggregation_rules[0]
+        self.aggregation = self.aggregation_rules[0](X, y)
         self.protos_ = {}
         for class_no, class_value in enumerate(self.classes_):
             class_idx = np.array(y == class_value)

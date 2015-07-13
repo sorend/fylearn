@@ -10,18 +10,19 @@ import numpy as np
 # Authors: Søren A. Davidsen <sorend@cs.svuni.in>
 #
 
+
 def tournament_selection(tournament_size=10):
     def tournament_sel(rs, P, f):
-        participants = rs.choice(len(f), size=tournament_size) # select the tournament participants
-        winners = np.argsort(f[participants]) # sort them by fitness
-        return participants[winners[0]], participants[winners[1]] # take two with min fitness
+        participants = rs.choice(len(f), size=tournament_size)  # select the tournament participants
+        winners = np.argsort(f[participants])  # sort them by fitness
+        return participants[winners[0]], participants[winners[1]]  # take two with min fitness
 
     return tournament_sel
 
 def top_n_selection(n=25):
     def top_n_sel(rs, P, f):
-        top_n = np.argsort(f)[:n] # select top-n fitness.
-        parents = rs.choice(top_n, size=2) # pick two randomly
+        top_n = np.argsort(f)[:n]  # select top-n fitness.
+        parents = rs.choice(top_n, size=2)  # pick two randomly
         return parents[0], parents[1]
 
     return top_n_sel
@@ -46,9 +47,9 @@ class UniformCrossover:
         self.p1_proba = p1_proba
 
     def __call__(self, P1, P2, random_state):
-        C = np.array(P1) # clone p1
-        R = random_state.random_sample(C.shape) > self.p1_proba # create filter
-        C[R] = np.array(P2, copy=False)[R] # mixin P2 values
+        C = np.array(P1)  # clone p1
+        R = random_state.random_sample(C.shape) > self.p1_proba  # create filter
+        C[R] = np.array(P2, copy=False)[R]  # mixin P2 values
         return C
 
 class PointwiseCrossover:
@@ -87,15 +88,15 @@ class PointwiseCrossover:
             # use python to merge
             selected = start + selected.tolist() + end
             index = zip(selected, selected[1:], [0, 1] * len(selected))
-            merged = np.array([ item for i in index for item in pick(a, b, i)])
+            merged = np.array([ item for i in index for item in pick(a, b, i) ])
             # add merged child
-            C[idx,:] = merged
+            C[idx, :] = merged
 
         if is_1d:
             return C.ravel()
         else:
             return C
-    
+
 def helper_min_fitness_decrease(ga, epsilon=0.001, top_n=10):
     last_fitness = None
     while True:
@@ -179,10 +180,10 @@ class BaseGeneticAlgorithm(object):
         self.fitness_ = self.fitness_function(self.population_)
 
     def initialize_population(self, n_chromosomes, n_genes, random_state):
-        raise Error("initialize_population not implemented")
+        raise Exception("initialize_population not implemented")
 
     def mutate(self, chromosomes, mutation_idx, random_state):
-        raise Error("initialize_population not implemented")
+        raise Exception("initialize_population not implemented")
 
     def next(self):
         # create new population
@@ -199,7 +200,7 @@ class BaseGeneticAlgorithm(object):
         for idx in range(self.elitism, self.n_chromosomes):
             father_idx, mother_idx = self.selection_function(self.random_state, self.population_, self.fitness_)
             fathers[idx], mothers[idx] = self.population_[father_idx], self.population_[mother_idx]
-            
+
         # generate new children
         new_population[self.elitism:] = self.crossover_function(fathers[self.elitism:],
                                                                 mothers[self.elitism:],
@@ -268,11 +269,11 @@ class DiscreteGeneticAlgorithm(GeneticAlgorithm):
     def initialize_population(self, n_chromosomes, n_genes, random_state):
         P = np.zeros((n_chromosomes, n_genes))
         for i in range(n_genes):
-            P[:,i] = random_state.choice(self.ranges[i], P.shape[0])
+            P[:, i] = random_state.choice(self.ranges[i], P.shape[0])
         return P
 
     def mutate(self, chromosomes, mutation_idx, random_state):
         for i in range(self.n_genes):
-            midx_i = mutation_idx[:,i]
-            chromosomes[midx_i,i] = random_state.choice(self.ranges[i], np.sum(midx_i))
+            midx_i = mutation_idx[:, i]
+            chromosomes[midx_i, i] = random_state.choice(self.ranges[i], np.sum(midx_i))
         return chromosomes

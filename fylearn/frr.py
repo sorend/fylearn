@@ -15,7 +15,7 @@ References:
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_arrays, column_or_1d
+from sklearn.utils import check_arrays
 import fylearn.fuzzylogic as fl
 
 #

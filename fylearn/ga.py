@@ -5,7 +5,6 @@ Genetic algorithm implementation.
 
 """
 import numpy as np
-from numpy.random import RandomState
 
 #
 # Authors: Søren A. Davidsen <sorend@cs.svuni.in>

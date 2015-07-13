@@ -15,7 +15,7 @@ References:
 import logging
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_arrays, column_or_1d, array2d
+from sklearn.utils import check_arrays, array2d
 from sklearn.metrics import accuracy_score, mean_squared_error
 import fylearn.fuzzylogic as fl
 from fylearn.ga import GeneticAlgorithm, helper_fitness, UniformCrossover

@@ -2,6 +2,16 @@
 """
 Genetic algorithm implementation.
 
+The main classes are:
+
+- PointwiseCrossover: Allows to restrict crossover to a selected number of crossover-points.
+
+- UniformCrossover: Performs crossover uniformly for each gene.
+
+Has two selection methods implemented:
+
+- Tournament selection (selects top from a randomly selected tournament)
+- Top-n selection (selects top n)
 
 """
 import numpy as np

@@ -11,7 +11,7 @@ The module structure is the following:
 References:
 
 [1] Stoean, Stoean, Preuss and Dumitrescu, 2005.
-[2] Davidsen, Sreedevi, 2015.
+[2] Davidsen, Padmavathamma, 2015.
   
 """
 
@@ -21,6 +21,7 @@ from numpy.random import RandomState
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_arrays, array2d
 from sklearn.neighbors import DistanceMetric
+from sklearn.preprocessing import normalize
 from fylearn.ga import GeneticAlgorithm, helper_n_generations, helper_fitness
 
 logger = logging.getLogger("garules")
@@ -36,12 +37,13 @@ def distancemetric_f(name, **kwargs):
 class StoeanDistance(DistanceMetric):
     def __init__(self, d):
         self.d = d
+
     def pairwise(self, X, Y=None):
         if Y is None:
             Y = X
         R = np.zeros((len(X), len(Y)))
         for idx, x in enumerate(X):
-            R[idx,:] = np.sum(np.abs(Y - x) / self.d, 1)
+            R[idx, :] = np.sum(np.abs(Y - x) / self.d, 1)
         return R
 
 class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
@@ -73,12 +75,12 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
                               n_genes=X.shape[1],
                               p_mutation=0.3)
 
-        ga = helper_n_generations(ga, self.n_iterations) # advance the GA
+        ga = helper_n_generations(ga, self.n_iterations)  # advance the GA
 
         # return the best found parameters for this class.
         chromosomes, fitness = ga.best(1)
         return chromosomes[0]
-        
+
     def fit(self, X, y):
         X = array2d(X)
         X, y = check_arrays(X, y)
@@ -91,21 +93,25 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         # build models
         models = np.zeros((len(self.classes_), X.shape[1]))
         for c_idx, c_value in enumerate(self.classes_):
-            models[c_idx,:] = self.build_for_class(X[y == c_value])
+            models[c_idx, :] = self.build_for_class(X[y == c_value])
 
         self.models_ = models
 
         return self
 
-    def predict(self, X):
+    def predict_(self, X):
         X = array2d(X)
-
         # calculate similarity for the inputs
-        R = self.distance_.pairwise(X, self.models_)
-        
+        return self.distance_.pairwise(X, self.models_)
+
+    def predict(self, X):
+        R = self.predict_(X)
         # reduce by taking the one with minimum distance
         return self.classes_.take(np.argmin(R, 1))
 
+    def predict_proba(self, X):
+        R = self.predict_(X)
+        return 1.0 - normalize(R, 'l1')
 
 class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
@@ -117,20 +123,20 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
     def get_params(self, deep=False):
         return {"n_iterations": self.n_iterations,
-                "n_models"    : self.n_models,
+                "n_models": self.n_models,
                 "random_state": self.random_state,
-                "sample_size" : self.sample_size}
+                "sample_size": self.sample_size}
 
     def set_params(self, **kwargs):
-        for key, value in params.items():
+        for key, value in kwargs.items():
             self.setattr(key, value)
         return self
 
     def build_for_class(self, rs, X):
-        
+
         # distance based fitness function
         distance_fitness = lambda c: np.sum(np.abs(X - c))
-        
+
         # setup GA
         ga = GeneticAlgorithm(fitness_function=helper_fitness(distance_fitness),
                               elitism=3,
@@ -139,12 +145,12 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
                               p_mutation=0.3,
                               random_state=rs)
 
-        ga = helper_n_generations(ga, self.n_iterations) # advance the GA
+        ga = helper_n_generations(ga, self.n_iterations)  # advance the GA
 
         # return the best found parameters for this class.
         chromosomes, fitness = ga.best(1)
         return chromosomes[0]
-        
+
     def fit(self, X, y):
         X = array2d(X)
         X, y = check_arrays(X, y)
@@ -172,7 +178,7 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
         return self
 
-    def predict(self, X):
+    def predict_(self, X):
         X = array2d(X)
 
         M = np.zeros((len(X), len(self.classes_)))
@@ -181,8 +187,20 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         # calculate similarity for the inputs
         for c_idx, c_value in enumerate(self.classes_):
             for m_idx, model in enumerate(self.models_[c_value]):
-                R[:,m_idx] = np.sum(np.abs(X - model), 1)
-            M[:,c_idx] = np.sum(R, 1)
+                R[:, m_idx] = np.sum(np.abs(X - model), 1)
+            M[:, c_idx] = np.sum(R, 1)
+
+        return M
+
+    def predict(self, X):
+
+        M = self.predict_(X)
 
         # reduce by taking the one with minimum distance
         return self.classes_.take(np.argmin(M, 1))
+
+    def predict_proba(self, X):
+
+        M = self.predict_(X)
+
+        return 1.0 - normalize(M, 'l1')

@@ -162,6 +162,9 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
         self.classes_, y_reverse = np.unique(y, return_inverse=True)
 
+        if np.nan in self.classes_:
+            raise ValueError("Nan class not supported.")
+
         # build models
         models = {}
         for c_idx, c_value in enumerate(self.classes_):

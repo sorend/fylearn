@@ -4,18 +4,18 @@
 The module structure is the following:
 
 - The "FuzzyPatternClassifierGA" is a FPC where the membership
-  functions are learned using genetic algorithms.
+  functions are learned using genetic algorithms in global scheme [1]
+- The "FuzzyPatternClassifierLGA" also learns mus using a GA, but in
+  local scheme [1].
 
 References:
-
-[1] Davidsen, 2014.
-  
+[1] Davidsen, 2015.
 """
 
 import logging
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_arrays, array2d
+from sklearn.utils.validation import check_array
 from sklearn.metrics import accuracy_score, mean_squared_error
 import fylearn.fuzzylogic as fl
 from fylearn.ga import GeneticAlgorithm, helper_fitness, UniformCrossover
@@ -30,27 +30,30 @@ AGGREGATION_RULES = (fl.prod, fl.mean)
 # requires 1 gene
 def build_aggregation(X, y, rules, chromosome, idx):
     i = int(chromosome[idx] * len(rules))
-    if i < 0: i = 0
-    if i >= len(rules): i = len(rules) - 1
+    if i < 0:
+        i = 0
+    if i >= len(rules):
+        i = len(rules) - 1
     return rules[i](X, y)
 
 # requires 3 genes
 def build_pi_membership(chromosome, idx):
-    a, r, b = sorted(chromosome[idx:idx+3])
+    a, r, b = sorted(chromosome[idx:idx + 3])
     return fl.PiSet(a, r, b)
 
 # requires 4 genes
 def build_trapezoidal_membership(chromosome, idx):
-    a, b, c, d = sorted(chromosome[idx:idx+4])
+    a, b, c, d = sorted(chromosome[idx:idx + 4])
     return fl.TrapezoidalSet(a, b, c, d)
 
 def build_t_membership(chromosome, idx):
-    a, b, c = sorted(chromosome[idx:idx+3])
+    a, b, c = sorted(chromosome[idx:idx + 3])
     return fl.TriangularSet(a, b, c)
 
 class StaticFunction:
     def __call__(self, X):
         return 0.5
+
     def __str__(self):
         return "S(0.5)"
 
@@ -64,15 +67,16 @@ MEMBERSHIP_FACTORIES = (build_pi_membership,)
 # requires 1 gene
 def build_membership(mu_factories, chromosome, idx):
     i = int(chromosome[idx] * len(mu_factories))
-    if i < 0: i = 0
-    if i >= len(mu_factories): i = len(mu_factories) - 1
-    return mu_factories[i](chromosome, idx+1)
+    if i < 0:
+        i = 0
+    if i >= len(mu_factories):
+        i = len(mu_factories) - 1
+    return mu_factories[i](chromosome, idx + 1)
 
 # decodes aggregation and protos from chromosome
 def _decode(m, X, y, aggregation_rules, mu_factories, classes, chromosome):
     aggregation = build_aggregation(X, y, aggregation_rules, chromosome, 0)
     protos = {}
-    idx = 2
     for i in range(len(classes)):
         protos[i] = [ build_membership(mu_factories, chromosome, 2 + (i * m * 5) + (j * 4)) for j in range(m) ]
     return aggregation, protos
@@ -80,19 +84,19 @@ def _decode(m, X, y, aggregation_rules, mu_factories, classes, chromosome):
 def _predict_one(prototype, aggregation, X):
     Mus = np.zeros(X.shape)
     for i in range(X.shape[1]):
-        Mus[:,i] = prototype[i](X[:,i])
+        Mus[:, i] = prototype[i](X[:, i])
     return aggregation(Mus)
 
 def _predict(prototypes, aggregation, classes, X):
     Mus = np.zeros(X.shape)
-    R = np.zeros((X.shape[0], len(classes))) # holds output for each class
+    R = np.zeros((X.shape[0], len(classes)))  # holds output for each class
     attribute_idxs = range(X.shape[1])
 
     # class_idx has class_prototypes membership functions
     for class_idx, class_prototypes in prototypes.items():
         for i in attribute_idxs:
-            Mus[:,i] = class_prototypes[i](X[:,i])
-        R[:,class_idx] = aggregation(Mus)
+            Mus[:, i] = class_prototypes[i](X[:, i])
+        R[:, class_idx] = aggregation(Mus)
 
     return classes.take(np.argmax(R, 1))
 
@@ -104,9 +108,10 @@ class AggregationRuleFactory:
 class DummyAggregationRuleFactory(AggregationRuleFactory):
     def __init__(self, aggregation_rule):
         self.aggregation_rule = aggregation_rule
+
     def __call__(self, X, y):
         return self.aggregation_rule
-    
+
 class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
     def get_params(self, deep=False):
@@ -116,10 +121,10 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
                 "aggregation_rules": self.aggregation_rules}
 
     def set_params(self, **kwargs):
-        for key, value in params.items():
+        for key, value in kwargs.items():
             self.setattr(key, value)
         return self
-    
+
     def __init__(self, mu_factories=MEMBERSHIP_FACTORIES, aggregation_rules=AGGREGATION_RULES,
                  iterations=10, epsilon=0.0001):
 
@@ -141,8 +146,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y_orig):
 
-        X = array2d(X)
-        X, = check_arrays(X)
+        X = check_array(X)
 
         self.classes_, y = np.unique(y_orig, return_inverse=True)
         self.m = X.shape[1]
@@ -168,13 +172,12 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         --------
 
         y_pred : Predicted values for each row in matrix.
-        
+
         """
         if self.protos_ is None:
             raise Exception("Prototypes not initialized. Perform a fit first.")
 
-        X = array2d(X)        
-        X, = check_arrays(X)
+        X = check_array(X)
 
         # predict
         return _predict(self.protos_, self.aggregation, self.classes_, X)
@@ -184,7 +187,8 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         # accuracy fitness function
         def accuracy_fitness_function(chromosome):
             # decode the class model from gene
-            aggregation, mus = _decode(self.m, X, y, self.aggregation_rules, self.mu_factories, self.classes_, chromosome)
+            aggregation, mus = _decode(self.m, X, y, self.aggregation_rules,
+                                       self.mu_factories, self.classes_, chromosome)
             y_pred = _predict(mus, aggregation, self.classes_, X)
             return 1.0 - accuracy_score(y, y_pred)
 
@@ -197,19 +201,20 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
                               scaling=1.0,
                               crossover_function=UniformCrossover(0.5),
                               # crossover_points=range(2, n_genes, 5),
-                              elitism=5, # no elitism
+                              elitism=5,  # no elitism
                               n_chromosomes=100,
                               n_genes=n_genes,
                               p_mutation=0.3)
 
         last_fitness = None
-        
+
         #
         for generation in range(self.iterations):
             ga.next()
             logger.info("GA iteration %d Fitness (top-4) %s" % (generation, str(np.sort(ga.fitness_)[:4])))
             chromosomes, fitnesses = ga.best(10)
-            aggregation, protos = _decode(self.m, X, y, self.aggregation_rules, self.mu_factories, self.classes_, chromosomes[0])
+            aggregation, protos = _decode(self.m, X, y, self.aggregation_rules,
+                                          self.mu_factories, self.classes_, chromosomes[0])
             self.aggregation = aggregation
             self.protos_ = protos
 
@@ -233,10 +238,10 @@ class FuzzyPatternClassifierLGA(FuzzyPatternClassifierGA):
 
     def decode(self, chromosome):
         return [ build_membership(self.mu_factories, chromosome, i * 5) for i in range(self.m) ]
-    
+
     def build_for_class(self, X, y, class_idx):
 
-        y_target = np.zeros(y.shape) # create the target of 1 and 0.
+        y_target = np.zeros(y.shape)  # create the target of 1 and 0.
         y_target[class_idx] = 1.0
 
         n_genes = 5 * self.m
@@ -251,14 +256,14 @@ class FuzzyPatternClassifierLGA(FuzzyPatternClassifierGA):
         ga = GeneticAlgorithm(fitness_function=helper_fitness(rmse_fitness_function),
                               scaling=1.0,
                               crossover_function=UniformCrossover(0.5),
-                              #crossover_points=range(0, n_genes, 5),
-                              elitism=5, # no elitism
+                              # crossover_points=range(0, n_genes, 5),
+                              elitism=5,  # no elitism
                               n_chromosomes=100,
                               n_genes=n_genes,
                               p_mutation=0.3)
 
-        #print "population", ga.population_
-        #print "fitness", ga.fitness_
+        # print "population", ga.population_
+        # print "fitness", ga.fitness_
 
         chromosomes, fitnesses = ga.best(10)
         last_fitness = np.mean(fitnesses)
@@ -280,7 +285,7 @@ class FuzzyPatternClassifierLGA(FuzzyPatternClassifierGA):
             last_fitness = new_fitness
 
         return proto
-    
+
     def build_with_ga(self, X, y):
         self.aggregation = self.aggregation_rules[0](X, y)
         self.protos_ = {}
@@ -295,4 +300,3 @@ class FuzzyPatternClassifierLGA(FuzzyPatternClassifierGA):
         for key, value in self.protos_.items():
             logger.info("`- Class-%d" % (key,))
             logger.info("`- Membership-fs %s" % (str([ x.__str__() for x in value ]),))
-

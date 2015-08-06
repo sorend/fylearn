@@ -13,20 +13,16 @@ The module structure is the following:
   top-down constructed fuzzy pattern tree [3].
 
 References:
-
 [1] Hwong, 2009.
-
 [2] Senge and Huellemeier, 2009.
-
 [3] Senge and Huellemeier, 2010.
-  
 """
 
 import numpy as np
 import heapq
 from sklearn.metrics import mean_squared_error
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_arrays, column_or_1d, array2d
+from sklearn.utils.validation import check_array
 import fylearn.fuzzylogic as fl
 
 # aggregation operators to use
@@ -81,9 +77,9 @@ def default_fuzzifier(idx, F):
     v_min = np.nanmin(F)
     v_max = np.nanmax(F)
     # blarg
-    return [ Leaf(idx, "low", fl.TriangularSet(v_min - (v_max - v_min)**2, v_min, v_max)),
+    return [ Leaf(idx, "low", fl.TriangularSet(v_min - (v_max - v_min) ** 2, v_min, v_max)),
              Leaf(idx, "med", fl.TriangularSet(v_min, v_min + ((v_max - v_min) / 2), v_max)),
-             Leaf(idx, "hig", fl.TriangularSet(v_min, v_max, v_max + (v_max - v_min)**2)) ]
+             Leaf(idx, "hig", fl.TriangularSet(v_min, v_max, v_max + (v_max - v_min) ** 2)) ]
 
 def _select_candidates(candidates, n_select, class_vector, similarity_measure, X):
     """Select a number of candidate trees with the best similarity to the class vector."""
@@ -94,7 +90,7 @@ def _evaluate_similarity(candidate, class_vector, similarity_measure, X):
     y_pred = candidate(X)
     s = similarity_measure(y_pred, class_vector)
     return (s, candidate)
-        
+
 class Tree:
     pass
 
@@ -109,8 +105,8 @@ class Leaf(Tree):
         return "Leaf(" + repr(self.idx) + "_" + self.name + ")"
 
     def __call__(self, X):
-        return self.mu(X[:,self.idx]) # apply the membership function to the specific feature idx
-    
+        return self.mu(X[:, self.idx])  # apply the membership function to the specific feature idx
+
 class Inner(Tree):
     """Branching node in the tree """
     def __init__(self, aggregation, branches):
@@ -124,7 +120,7 @@ class Inner(Tree):
         # output for each branches
         R = np.zeros((X.shape[0], len(self.branches_)))
         for idx, branch in enumerate(self.branches_):
-            R[:,idx] = branch(X)
+            R[:, idx] = branch(X)
         return self.aggregation_(R)
 
 class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
@@ -155,8 +151,7 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y):
 
-        X = array2d(X)
-        X, = check_arrays(X)
+        X = check_array(X)
 
         self.classes_, y = np.unique(y, return_inverse=True)
 
@@ -252,15 +247,14 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
             The predicted classes.
         """
 
-        X = array2d(X)
+        X = check_array(X)
 
         if self.trees_ is None:
             raise Exception("Pattern trees not initialized. Perform a fit first.")
-        
-        # 
+
         y_classes = np.zeros((X.shape[0], len(self.classes_)))
         for i, c in enumerate(self.classes_):
-            y_classes[:,i] = self.trees_[i](X)
+            y_classes[:, i] = self.trees_[i](X)
 
         # predict the maximum value
         return self.classes_.take(np.argmax(y_classes, -1))
@@ -269,9 +263,8 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
 class FuzzyPatternTreeTopDownClassifier(FuzzyPatternTreeClassifier):
     """
     Fuzzy Pattern Tree with Top Down induction algorithm.
-    
     """
-        
+
     def __init__(self,
                  similarity_measure=default_rmse,
                  relative_improvement=0.01,
@@ -302,9 +295,9 @@ class FuzzyPatternTreeTopDownClassifier(FuzzyPatternTreeClassifier):
                         modified.append(_tree_clone_replace_leaf(c, c_leaf, Inner(aggr, [ c_leaf, p_leaf ])))
 
             R.extend(_select_candidates(modified, self.num_candidates, class_vector, self.similarity_measure, X))
-            
+
             R = list(heapq.nlargest(self.num_candidates, R, key=lambda x: x[0]))
-        
+
         return list(reversed(sorted(R, key=lambda x: x[0])))
 
     def build_for_class(self, X, y, class_vector, P):
@@ -328,4 +321,3 @@ class FuzzyPatternTreeTopDownClassifier(FuzzyPatternTreeClassifier):
             C = new_candidates
 
         return C[0][1]
-

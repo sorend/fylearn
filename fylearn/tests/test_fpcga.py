@@ -3,26 +3,32 @@ import numpy as np
 from sklearn.utils.testing import assert_equal, assert_true
 
 import fylearn.fpcga as fpcga
-    
+
 def test_classifier():
 
-    l = fpcga.FuzzyPatternClassifierGA(iterations=25, epsilon=None)
+    l = fpcga.FuzzyPatternClassifierLGA(iterations=8, epsilon=None)
 
     X = np.array([
         [0.1, 0.2, 0.4],
         [0.11, 0.3, 0.5],
+        [0.07, 0.18, 0.38],
         [0.2, 0.4, 0.8],
-        [0.18, 0.42, 0.88]
+        [0.18, 0.42, 0.88],
+        [0.22, 0.38, 0.78],
     ])
 
     y = np.array([
         1,
         1,
+        1,
         0,
-        0
+        0,
+        0,
     ])
-    
+
     l.fit(X, y)
+
+    print "protos_", l.protos_
 
     y_pred = l.predict([[0.0, 0.3, 0.35],
                         [0.1, 0.4, 0.78]])
@@ -50,14 +56,13 @@ def test_classifier_single():
         10,
         10
     ])
-    
+
     l.fit(X, y)
 
     y_pred = l.predict([0.15, 0.45, 0.78])
 
     assert_equal(10, y_pred)
-        
-        
+
 def test_classifier_iris():
 
     import os
@@ -80,4 +85,3 @@ def test_classifier_iris():
     print "mean", mean
 
     assert_true(0.90 < mean)
-

@@ -9,17 +9,15 @@ The module structure is the following:
   extended from [1] where more than one prototype is allowed per class, see [2].
 
 References:
-
 [1] Stoean, Stoean, Preuss and Dumitrescu, 2005.
 [2] Davidsen, Padmavathamma, 2015.
-  
 """
 
 import logging
 import numpy as np
 from numpy.random import RandomState
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_arrays, array2d
+from sklearn.utils.validation import check_array
 from sklearn.neighbors import DistanceMetric
 from sklearn.preprocessing import normalize
 from fylearn.ga import GeneticAlgorithm, helper_n_generations, helper_fitness
@@ -82,8 +80,7 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         return chromosomes[0]
 
     def fit(self, X, y):
-        X = array2d(X)
-        X, y = check_arrays(X, y)
+        X = check_array(X)
 
         self.classes_, y_reverse = np.unique(y, return_inverse=True)
 
@@ -100,7 +97,7 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         return self
 
     def predict_(self, X):
-        X = array2d(X)
+        X = check_array(X)
         # calculate similarity for the inputs
         return self.distance_.pairwise(X, self.models_)
 
@@ -152,8 +149,7 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         return chromosomes[0]
 
     def fit(self, X, y):
-        X = array2d(X)
-        X, y = check_arrays(X, y)
+        X = check_array(X)
 
         if self.random_state is None:
             random_state = RandomState()
@@ -182,7 +178,7 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         return self
 
     def predict_(self, X):
-        X = array2d(X)
+        X = check_array(X)
 
         M = np.zeros((len(X), len(self.classes_)))
         R = np.zeros((len(X), self.n_models))

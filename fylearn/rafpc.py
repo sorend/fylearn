@@ -8,7 +8,6 @@ The module structure is the following:
 References:
 
 [1] Davidsen, 2014.
-  
 """
 import logging
 import numpy as np
@@ -16,14 +15,13 @@ from numpy.random import RandomState
 import scipy.stats as stats
 
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_arrays, column_or_1d, array2d, check_random_state
+from sklearn.utils.validation import check_array
 
 import fylearn.fuzzylogic as fl
 
 def agreement_t_test(a, b):
     """ Check agreement based on means of two samples, using the t-statistic. """
-    means1, stds1 = np.nanmean(a, 0), np.nanstd(a, 0)
-    means2, stds2 = np.nanmean(b, 0), np.nanstd(b, 0)
+    means1 = np.nanmean(a, 0)
 
     t1, p1 = stats.ttest_1samp(b, means1)
     # t2, p2 = stats.ttest_1samp(a, means2)
@@ -46,7 +44,7 @@ def fuzzify_partitions(p):
             offset = cmin[i]
             for j in range(p):
                 f = fl.TriangularSet(offset - psize[i], offset, offset + psize[i])
-                R[:,(i*p)+j] = f(A[:,i])
+                R[:, (i * p) + j] = f(A[:, i])
                 mu_i.append(f)
                 offset += psize[i]
             mus.append(mu_i)
@@ -167,19 +165,16 @@ def _predict(prototypes, aggregation, classes, X, n_features):
     for class_idx, class_prototypes in prototypes.items():
         for i in attribute_idxs:
             fidx, cp = class_prototypes[i]
-            Mus[:,i] = cp(X[:,fidx])
-        R[:,class_idx] = aggregation(Mus)
+            Mus[:, i] = cp(X[:, fidx])
+        R[:, class_idx] = aggregation(Mus)
 
     return classes.take(np.argmax(R, 1))
 
 def _predict_multi(prototypes, aggregation, classes, X, n_features):
-    
-    Mus = np.zeros(X.shape)                  # holds output per prototype
-    R = np.zeros((X.shape[0], len(classes))) # holds output for each class
-    feature_nos = range(n_features)          # index for agreements
 
-    #for k, v in self.protos_.items():
-    #    logger.info("class %d prototypes %d min-v-len %d" % (k, len(v), min(map(lambda x: len(x), v))))
+    Mus = np.zeros(X.shape)                   # holds output per prototype
+    R = np.zeros((X.shape[0], len(classes)))  # holds output for each class
+    feature_nos = range(n_features)           # index for agreements
 
     # class_idx has class_prototypes membership functions
     for class_idx, class_prototypes in prototypes.items():
@@ -187,13 +182,13 @@ def _predict_multi(prototypes, aggregation, classes, X, n_features):
         for j, cp in enumerate(class_prototypes):
             for i in feature_nos:
                 f_idx, mu_f = cp[i]
-                Mus[:,i] = mu_f(X[:,f_idx])
-            C[:,j] = aggregation(Mus)
-        R[:,class_idx] = np.max(C, 1)
+                Mus[:, i] = mu_f(X[:, f_idx])
+            C[:, j] = aggregation(Mus)
+        R[:, class_idx] = np.max(C, 1)
 
     return classes.take(np.argmax(R, 1))
-    
-                
+
+
 logger = logging.getLogger("rafpc")
 
 class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
@@ -208,10 +203,10 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
                 "random_state": self.random_state}
 
     def set_params(self, **kwargs):
-        for key, value in params.items():
+        for key, value in kwargs.items():
             self.setattr(key, value)
         return self
-    
+
     def __init__(self, n_protos=5, n_features=None,
                  max_samples=100, epsilon=0.95,
                  aggregation=fl.mean, membership_factory=triangular_factory,
@@ -225,7 +220,7 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         n_features : the number of features to include in each prototype.
                      None means use all features.
-        
+
         max_samples : the number of samples to draw in finding agreement.
 
         epsilon : the minimum agreement needed before eliminiation.
@@ -251,10 +246,7 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         # get random
         rs = RandomState(self.random_state)
 
-        X = array2d(X)
-        
-        X, y = check_arrays(X, y)
-        n = len(X)
+        X = check_array(X)
 
         self.classes_, y = np.unique(y, return_inverse=True)
 
@@ -283,8 +275,6 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
                                     self.n_features, rs, self.membership_factory,
                                     self.n_protos)
 
-        # logger.info("trained %s" % ( str(self.protos_), ))
-                                
         return self
 
     def predict(self, X):
@@ -301,14 +291,12 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         --------
 
         y_pred : Predicted values for each row in matrix.
-        
+
         """
         if self.protos_ is None:
             raise Exception("Prototypes not initialized. Perform a fit first.")
 
-        X = array2d(X)        
-        X, = check_arrays(X)
+        X = check_array(X)
 
         # predict
         return _predict_multi(self.protos_, self.aggregation, self.classes_, X, self.n_features)
-    

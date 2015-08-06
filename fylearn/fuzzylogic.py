@@ -4,6 +4,10 @@ Fuzzy sets and aggregation utils
 
 """
 
+#
+# Author: Soren A. Davidsen <sorend@gmail.com>
+#
+
 import numpy as np
 
 class TriangularSet:
@@ -13,11 +17,11 @@ class TriangularSet:
         self.c = c
 
     def __call__(self, X):
-        y = np.zeros(X.shape) # allocate output (y)
-        left  = (self.a < X) & (X < self.b) # find where to apply left
-        right = (self.b < X) & (X < self.c) # find where to apply right
+        y = np.zeros(X.shape)  # allocate output (y)
+        left = (self.a < X) & (X < self.b)  # find where to apply left
+        right = (self.b < X) & (X < self.c)  # find where to apply right
         y[left] = (X[left] - self.a) / (self.b - self.a)
-        y[X == self.b] = 1.0 # at top
+        y[X == self.b] = 1.0  # at top
         y[right] = (self.c - X[right]) / (self.c - self.b)
         return y
 
@@ -36,9 +40,9 @@ class TrapezoidalSet:
 
     def __call__(self, X):
         y = np.zeros(X.shape)
-        left   = (self.a < X) & (X < self.b)
+        left = (self.a < X) & (X < self.b)
         center = (self.b <= X) & (X <= self.c)
-        right  = (self.c < X) & (X < self.d)
+        right = (self.c < X) & (X < self.d)
         y[left] = (X[left] - self.a) / (self.b - self.a)
         y[center] = 1.0
         y[right] = (self.d - X[right]) / (self.d - self.c)
@@ -55,7 +59,7 @@ class PiSet:
         self.m = m
         self.p = (r + a) / 2.0
         self.q = (b + r) / 2.0
-        self.S = (2**(m - 1.0))
+        self.S = (2 ** (m - 1.0))
 
         self.r_a = self.r - self.a
         self.b_r = self.b - self.r
@@ -63,10 +67,10 @@ class PiSet:
     def __call__(self, X):
         y = np.zeros(X.shape)
 
-        l1 = (self.a < X) & (X <= self.p) # left lower
-        l2 = (self.p < X) & (X <= self.r) # left upper
-        r1 = (self.r < X) & (X <= self.q) # right upper
-        r2 = (self.q < X) & (X <= self.b) # right lower
+        l1 = (self.a < X) & (X <= self.p)  # left lower
+        l2 = (self.p < X) & (X <= self.r)  # left upper
+        r1 = (self.r < X) & (X <= self.q)  # right upper
+        r2 = (self.q < X) & (X <= self.b)  # right lower
 
         y[l1] = self.S * (((X[l1] - self.a) / (self.r_a)) ** self.m)
         y[l2] = 1.0 - (self.S * (((self.r - X[l2]) / (self.r_a)) ** self.m))
@@ -95,17 +99,17 @@ def max(X):
     return np.nanmin(X, -1)
 
 def lukasiewicz_i(X):
-    return np.maximum(0.0, X[:,0] + X[:,1] - 1)
+    return np.maximum(0.0, X[:, 0] + X[:, 1] - 1)
 
 def lukasiewicz_u(X):
-    return np.minimum(1.0, X[:,0] + X[:,1])
+    return np.minimum(1.0, X[:, 0] + X[:, 1])
 
 def einstein_i(X):
-    a, b = X[:,0], X[:,1]
+    a, b = X[:, 0], X[:, 1]
     return (a * b) / (2.0 - (a + b - (a * b)))
 
 def einstein_u(X):
-    a, b = X[:,0], X[:,1]
+    a, b = X[:, 0], X[:, 1]
     return (a + b) / (1.0 + (a * b))
 
 def algebraic_sum(X):

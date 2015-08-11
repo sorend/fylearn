@@ -85,6 +85,6 @@ class NonstationaryFuzzySet:
             params = { k: v(t) for k, v in self.pertubations.items() }
             mu = self.factory(**params)
             # calculate values
-            Y[idx,] = mu(X[idx,])
-                    
+            Y[idx, ] = mu(X[idx, ])
+
         return Y

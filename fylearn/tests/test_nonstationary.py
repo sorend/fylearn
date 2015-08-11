@@ -128,7 +128,7 @@ def test_paper():
             self.rho = rho
 
         def __call__(self, X):
-            return np.exp(-(((X - self.c)**2) / ((2*self.rho)**2)))
+            return np.exp(-(((X - self.c) ** 2) / ((2 * self.rho) ** 2)))
 
     s = NonstationaryFuzzySet(GaussianSample, c=f_c, rho=f_rho)
 
@@ -136,4 +136,4 @@ def test_paper():
     X = [ range(100), range(100), range(100), range(100), range(100) ]
 
     Y = s(T, X)
-
+    print "Y", Y

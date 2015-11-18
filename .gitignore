@@ -4,3 +4,4 @@ venv
 #*
 tmp
 *ipynb*
+.cache

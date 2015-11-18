@@ -1,6 +1,5 @@
 
 import numpy as np
-from sklearn.utils.testing import assert_true, assert_equal
 from fylearn.ga import *
 
 
@@ -12,17 +11,17 @@ def test_uniform_crossover():
 
     a = c([1, 2, 3], [1, 2, 3], rs)
 
-    assert_equal(len(a.shape), 1)
-    assert_equal(a.shape[0], 3)
-    assert_equal(1, a[0])
-    assert_equal(2, a[1])
-    assert_equal(3, a[2])
+    assert len(a.shape) == 1
+    assert a.shape[0] == 3
+    assert 1 == a[0]
+    assert 2 == a[1]
+    assert 3 == a[2]
 
     b = c([[1, 2, 3], [4, 5, 6]], [[1, 2, 3], [4, 5, 6]], rs)
 
-    assert_equal(len(b.shape), 2)
-    assert_equal(b.shape[0], 2)
-    assert_equal(b.shape[1], 3)
+    assert len(b.shape) == 2
+    assert b.shape[0] == 2
+    assert b.shape[1] == 3
 
 
 def test_pointwise_crossover():
@@ -36,17 +35,14 @@ def test_pointwise_crossover():
 
     a = c(p1, p2, rs)
 
-    assert_equal(len(a.shape), 1)
-    assert_equal(a.shape[0], 10)
-    #assert_equal(1, a[0])
-    #assert_equal(2, a[1])
-    #assert_equal(3, a[2])
+    assert len(a.shape) == 1
+    assert a.shape[0] == 10
 
     b = c([[1, 2, 3], [4, 5, 6]], [[1, 2, 3], [4, 5, 6]], rs)
 
-    assert_equal(len(b.shape), 2)
-    assert_equal(b.shape[0], 2)
-    assert_equal(b.shape[1], 3)
+    assert len(b.shape) == 2
+    assert b.shape[0] == 2
+    assert b.shape[1] == 3
 
 
 def test_discrete():
@@ -59,7 +55,7 @@ def test_discrete():
         range(40, 50),
         range(2),
     )
-        
+
     ga = DiscreteGeneticAlgorithm(fitness_function=helper_fitness(ff),
                                   n_genes=4, n_chromosomes=100, p_mutation=0.1,
                                   ranges=ranges)
@@ -68,7 +64,7 @@ def test_discrete():
         print ga.best()
         ga.next()
 
-    assert_true(ga.best()[1] <= np.var([9, 20, 40, 1])) # assume we find the solution
+    assert ga.best()[1] <= np.var([9, 20, 40, 1])  # assume we find the solution
 
 
 def test_tournament_selection():
@@ -84,7 +80,7 @@ def test_tournament_selection():
 
     print "p", p, "q", q, "f[p]", f[p], "f[q]", f[q]
 
-    assert_true(f[p] <= f[q])
+    assert f[p] <= f[q]
 
 
 def test_sreedevi():
@@ -106,7 +102,7 @@ def test_sreedevi():
     print "c", c
     print "f(c)", c[0] + (2 * c[1]) + (3 * c[2]) + (4 * c[3])
 
-    assert_true((c[0] + (2 * c[1]) + (3 * c[2]) + (4 * c[3]) - 30.0) < 0.1)
+    assert (c[0] + (2 * c[1]) + (3 * c[2]) + (4 * c[3]) - 30.0) < 0.1
 
 
 def test_ga_variance():
@@ -114,11 +110,11 @@ def test_ga_variance():
     # fitness function is the variance (means, prefer with small variance)
     ff = lambda x: np.var(x)
     # create instance
-    ga = GeneticAlgorithm(fitness_function=helper_fitness(ff), n_genes=10, n_chromosomes=1000, elitism=10, p_mutation=0.1)
+    ga = GeneticAlgorithm(fitness_function=helper_fitness(ff), n_genes=10,
+                          n_chromosomes=1000, elitism=10, p_mutation=0.1)
 
     for i in range(100):
         print "next generation", i
         ga.next()
 
-    assert_true(0.01 > ga.best(1)[1])
-
+    assert 0.01 > ga.best(1)[1]

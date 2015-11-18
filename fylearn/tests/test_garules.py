@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.utils.testing import assert_equal, assert_true
 
 from fylearn import garules
 
@@ -16,12 +15,12 @@ def test_classifier():
         0,
         1
     ])
-    
+
     l.fit(X, y)
 
-    assert_equal([0], l.predict([[0.9, 1.7, 4.5]]))
+    assert [0] == l.predict([[0.9, 1.7, 4.5]])
 
-    assert_equal([1], l.predict([[2.1, 3.9, 7.8]]))
+    assert [1] == l.predict([[2.1, 3.9, 7.8]])
 
 def test_classifier_single():
 
@@ -36,11 +35,11 @@ def test_classifier_single():
         0,
         1
     ])
-    
+
     l.fit(X, y)
 
-    assert_equal(0, l.predict([0.9, 1.7, 4.5]))
-        
+    assert 0 == l.predict([0.9, 1.7, 4.5])
+
 def test_classifier_iris():
 
     import os
@@ -62,7 +61,7 @@ def test_classifier_iris():
 
     print "mean", mean
 
-    assert_true(0.90 < mean)
+    assert 0.90 < mean
 
 
 # def test_compare_diabetes():
@@ -98,5 +97,3 @@ def test_classifier_iris():
 #     print "mean", mean
 
 #     assert_true(0.80 < mean)
-    
-    

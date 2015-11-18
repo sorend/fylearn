@@ -1,6 +1,5 @@
 
 import numpy as np
-from sklearn.utils.testing import assert_equal, assert_true
 
 import fylearn.fpcga as fpcga
 
@@ -35,9 +34,9 @@ def test_classifier():
 
     print "y_pred", y_pred
 
-    assert_equal(len(y_pred), 2)
-    assert_equal(y_pred[0], 1)
-    assert_equal(y_pred[1], 0)
+    assert len(y_pred) == 2
+    assert y_pred[0] == 1
+    assert y_pred[1] == 0
 
 def test_classifier_single():
 
@@ -61,7 +60,7 @@ def test_classifier_single():
 
     y_pred = l.predict([0.15, 0.45, 0.78])
 
-    assert_equal(10, y_pred)
+    assert 10 == y_pred
 
 def test_classifier_iris():
 
@@ -84,4 +83,4 @@ def test_classifier_iris():
 
     print "mean", mean
 
-    assert_true(0.90 < mean)
+    assert 0.90 < mean

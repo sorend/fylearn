@@ -2,7 +2,6 @@ import numpy as np
 
 from fylearn.fuzzylogic import *
 from fylearn.nonstationary import *
-from sklearn.utils.testing import assert_equal, assert_true, assert_almost_equal
 
 
 def test_simple_stationary():
@@ -19,9 +18,9 @@ def test_simple_stationary():
     X = [1., 2., 3.]
     Y = s(T, X)
 
-    assert_equal(0, Y[0][0])
-    assert_equal(1, Y[0][1])
-    assert_equal(0, Y[0][2])
+    assert 0 == Y[0][0]
+    assert 1 == Y[0][1]
+    assert 0 == Y[0][2]
 
 def test_simple():
     """
@@ -33,7 +32,7 @@ def test_simple():
 
     def helper_increasing(val):
         return lambda t: val + t
-    
+
     s = NonstationaryFuzzySet(TriangularSet,
                               a=helper_decreasing(1),
                               b=helper_decreasing(2),
@@ -49,20 +48,24 @@ def test_simple():
 
     print "Y", Y
 
-    assert_equal(2, Y.ndim)
+    assert 2 == Y.ndim
 
-    assert_equal(0, Y[0][0])
-    assert_equal(0, Y[0][1])
-    assert_equal(1, Y[0][2])
-    assert_equal(0, Y[0][3])
-    assert_equal(0, Y[0][4])
+    assert 0 == Y[0][0]
+    assert 0 == Y[0][1]
+    assert 1 == Y[0][2]
+    assert 0 == Y[0][3]
+    assert 0 == Y[0][4]
 
     # set = T(0, 1, 4)
-    assert_equal(0, Y[1][0])
-    assert_equal(1, Y[1][1])
-    assert_almost_equal(0.67, Y[1][2], 2)
-    assert_almost_equal(0.33, Y[1][3], 2)
-    assert_equal(0, Y[1][4])
+    assert 0 == Y[1][0]
+    assert 1 == Y[1][1]
+
+    diff = 0.67 - Y[1][2]
+    assert diff < 0.01
+    diff = 0.33 - Y[1][3]
+    assert diff < 0.01
+
+    assert 0 == Y[1][4]
 
 def test_n_dim():
 
@@ -96,9 +99,9 @@ def test_n_dim():
         ]
     Y = s(T, X)
 
-    assert_equal(len(Y), len(T))
-    assert_equal(Y.ndim, 3)
-    assert_equal(len(Y[0]), len(X[0]))
+    assert len(Y) == len(T)
+    assert Y.ndim == 3
+    assert len(Y[0]) == len(X[0])
 
 def test_paper():
 

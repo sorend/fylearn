@@ -1,6 +1,5 @@
 
 import numpy as np
-from sklearn.utils.testing import assert_equal
 
 import fylearn.fpt as fpt
 
@@ -9,7 +8,7 @@ def test_tree_iterator():
 
     def f(x):
         return 1.0
-    
+
     l1, l2 = fpt.Leaf(0, "l1", f), fpt.Leaf(1, "l2", f)
     root = fpt.Inner(max, [l1, l2])
 
@@ -18,15 +17,15 @@ def test_tree_iterator():
         i += 1
 
     # check all have been iterated
-    assert_equal(3, i)
+    assert 3 == i
 
-    # check we really got preorder    
+    # check we really got preorder
     t = list(fpt._tree_iterator(root))
-    assert_equal(3, len(t))
-    assert_equal(root, t[0])
-    assert_equal(l1, t[1])
-    assert_equal(l2, t[2])
-    
+    assert 3 == len(t)
+    assert root == t[0]
+    assert l1 == t[1]
+    assert l2 == t[2]
+
 def test_classifier():
 
     l = fpt.FuzzyPatternTreeClassifier()
@@ -40,10 +39,10 @@ def test_classifier():
         0,
         1
     ])
-    
+
     l.fit(X, y)
 
-    assert_equal([0], l.predict([[0.9, 1.7, 4.5]]))
+    assert [0] == l.predict([[0.9, 1.7, 4.5]])
 
 def test_classifier_single():
 
@@ -58,11 +57,11 @@ def test_classifier_single():
         0,
         1
     ])
-    
+
     l.fit(X, y)
 
-    assert_equal(0, l.predict([0.9, 1.7, 4.5]))
-        
+    assert 0 == l.predict([0.9, 1.7, 4.5])
+
 def test_classifier_topdown():
 
     l = fpt.FuzzyPatternTreeTopDownClassifier()
@@ -76,11 +75,11 @@ def test_classifier_topdown():
         0,
         1
     ])
-    
+
     l.fit(X, y)
 
-    assert_equal(0, l.predict([0.9, 1.7, 4.5]))
-        
+    assert 0 == l.predict([0.9, 1.7, 4.5])
+
 def test_classifier_iris():
 
     import os
@@ -93,5 +92,3 @@ def test_classifier_iris():
     l = fpt.FuzzyPatternTreeClassifier()
     l.fit(X, y)
     print l.score(X, y)
-    
-    

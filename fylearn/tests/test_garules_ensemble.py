@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.utils.testing import assert_equal, assert_true
 
 from fylearn import garules
 
@@ -16,14 +15,14 @@ def test_classifier():
         0,
         1
     ])
-    
+
     l.fit(X, y)
 
     print "models", l.models_
 
-    assert_equal([0], l.predict([[0.9, 1.7, 4.5]]))
+    assert [0] == l.predict([[0.9, 1.7, 4.5]])
 
-    assert_equal([1], l.predict([[2.1, 3.9, 7.8]]))
+    assert [1] == l.predict([[2.1, 3.9, 7.8]])
 
 def test_classifier_single():
 
@@ -38,11 +37,11 @@ def test_classifier_single():
         0,
         1
     ])
-    
+
     l.fit(X, y)
 
-    assert_equal(0, l.predict([0.9, 1.7, 4.5]))
-        
+    assert 0 == l.predict([0.9, 1.7, 4.5])
+
 
 # def test_compare_diabetes():
 #     import os
@@ -73,10 +72,7 @@ def test_classifier_single():
 #     print "mean ensemble", mean
 
 #     l = garules.MultimodalEvolutionaryClassifier(n_iterations=25)
-
 #     scores = cross_validation.cross_val_score(l, X, y, cv=10)
 #     mean = np.mean(scores)
-
 #     print "mean normal", mean
-    
 #     #assert_true(0.68 < mean)

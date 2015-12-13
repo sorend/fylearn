@@ -2,6 +2,49 @@
 import numpy as np
 import fylearn.fuzzylogic as fl
 
+def test_helper_np_array():
+
+    a = fl.helper_np_array(1.0)
+    assert len(a) == 1
+    assert a[0] == 1.0
+
+    a = fl.helper_np_array(432)
+    assert len(a) == 1
+    assert a[0] == 432
+
+    a = fl.helper_np_array((123, 4.5))
+    assert len(a) == 2
+    assert a[0] == 123
+    assert a[1] == 4.5
+
+    a = fl.helper_np_array([234, 5.6, 78])
+    assert len(a) == 3
+    assert a[0] == 234
+    assert a[1] == 5.6
+    assert a[2] == 78
+
+    a = fl.helper_np_array([[1, 2], [3, 4]])
+    assert len(a) == 2 and len(a[0]) == 2 and len(a[1]) == 2
+
+    X = np.array(a)
+    Y = fl.helper_np_array(X)
+    assert X is Y
+
+
+def test_piset():
+
+    s = fl.PiSet(r=0.5, p=0.2, q=0.8)
+
+    print "y", s([0.0, 0.2, 0.35, 0.5, 0.65, 0.8, 1.0])
+
+    assert s(0.19) < 0.5
+    assert abs(s(0.2) - 0.5) < 0.0001
+    assert s(0.45) > 0.5 and s(0.45) < 1.0
+    assert abs(s(0.5) - 1.0) < 0.0001
+    assert s(0.65) > 0.5 and s(0.65) < 1.0
+    assert abs(s(0.8) - 0.5) < 0.0001
+    assert s(0.81) < 0.5
+
 def test_owa():
 
     X = np.array([1.0, 1.0, 1.0, 1.0])

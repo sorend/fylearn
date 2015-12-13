@@ -1,6 +1,6 @@
 
 import numpy as np
-from sklearn.utils.testing import assert_equal, assert_true
+# from sklearn.utils.testing import assert_equal, assert_true
 
 import fylearn.rafpc as rafpc
 
@@ -15,18 +15,17 @@ def test_agreement_hamming():
 
     print "e", e
 
-    assert_true(e[0] > 0.9)
-    assert_true(e[1] < 0.9)
+    assert e[0] > 0.9
+    assert e[1] < 0.9
 
-    
 def test_classifier():
 
     l = rafpc.RandomAgreementFuzzyPatternClassifier(n_protos=1, n_features=2)
 
     X = np.array([
-        [0.1,  0.2,  0.4],
+        [0.10, 0.20, 0.40],
         [0.15, 0.18, 0.43],
-        [0.2,  0.4,  0.8 ],
+        [0.20, 0.40, 0.80],
         [0.25, 0.42, 0.78]
     ])
 
@@ -36,19 +35,19 @@ def test_classifier():
         1,
         1
     ])
-    
+
     l.fit(X, y)
 
-    assert_equal([0], l.predict([[0.9, 1.7, 4.5]]))
+    assert [0] == l.predict([[0.9, 1.7, 4.5]])
 
 def test_classifier_single():
 
     l = rafpc.RandomAgreementFuzzyPatternClassifier(n_protos=1, n_features=2)
 
     X = np.array([
-        [0.1,  0.2,  0.4],
+        [0.10, 0.20, 0.40],
         [0.15, 0.18, 0.43],
-        [0.2,  0.4,  0.8 ],
+        [0.20, 0.40, 0.80],
         [0.25, 0.42, 0.78]
     ])
 
@@ -58,12 +57,11 @@ def test_classifier_single():
         1,
         1
     ])
-    
+
     l.fit(X, y)
 
-    assert_equal(0, l.predict([0.9, 1.7, 4.5]))
-        
-        
+    assert 0 == l.predict([0.9, 1.7, 4.5])
+
 # def test_classifier_iris():
 
 #     import os
@@ -86,4 +84,3 @@ def test_classifier_single():
 #     print "mean", mean
 
 #     assert_true(0.92 < mean and mean < 0.94)
-    

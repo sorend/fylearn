@@ -9,6 +9,18 @@ Fuzzy sets and aggregation utils
 #
 
 import numpy as np
+import collections
+import numbers
+
+def helper_np_array(X):
+    if isinstance(X, (np.ndarray, np.generic)):
+        return X
+    elif isinstance(X, collections.Sequence):
+        return np.array(X)
+    elif isinstance(X, numbers.Number):
+        return np.array([X])
+    else:
+        raise ValueError("unsupported type for building np.array: %s" % (type(X),))
 
 class TriangularSet:
     def __init__(self, a, b, c):
@@ -52,19 +64,39 @@ class TrapezoidalSet:
         return "T(%.2f %.2f %.2f %.2f)" % (self.a, self.b, self.c, self.d)
 
 class PiSet:
-    def __init__(self, a, r, b, m=2.0):
-        self.a = a
+    def __init__(self, r, a=None, b=None, p=None, q=None, m=2.0):
+
+        if a is not None:
+            self.a = a
+            self.p = (r + a) / 2.0  # between r and a
+        elif p is not None:
+            self.p = p
+            self.a = r - (2.0 * (r - p))  # one "p" extra.
+        else:
+            raise ValueError("please specify a or p")
+
+        if b is not None:
+            self.b = b
+            self.q = (r + b) / 2.0
+        elif q is not None:
+            self.q = q
+            self.b = r + (2.0 * (q - r))
+        else:
+            raise ValueError("please specify b or q")
+
+        if a >= r or r >= b:
+            raise ValueError("please ensure a < r < b, got: a=%f, r=%f b=%f" % (self.a, self.r, self.b))
+
         self.r = r
-        self.b = b
         self.m = m
-        self.p = (r + a) / 2.0
-        self.q = (b + r) / 2.0
         self.S = (2 ** (m - 1.0))
 
         self.r_a = self.r - self.a
         self.b_r = self.b - self.r
 
     def __call__(self, X):
+        X = helper_np_array(X)
+
         y = np.zeros(X.shape)
 
         l1 = (self.a < X) & (X <= self.p)  # left lower
@@ -85,18 +117,18 @@ class PiSet:
     def __repr__(self):
         return str(self)
 
-def prod(X):
+def prod(X, axis=-1):
     """Product along dimension 0 or 1 depending on array or matrix"""
-    return np.multiply.reduce(X, -1)
+    return np.multiply.reduce(X, axis)
 
-def mean(X):
-    return np.mean(X, -1)
+def mean(X, axis=-1):
+    return np.mean(X, axis)
 
-def min(X):
-    return np.nanmin(X, -1)
+def min(X, axis=-1):
+    return np.nanmin(X, axis)
 
-def max(X):
-    return np.nanmin(X, -1)
+def max(X, axis=-1):
+    return np.nanmin(X, axis)
 
 def lukasiewicz_i(X):
     return np.maximum(0.0, X[:, 0] + X[:, 1] - 1)
@@ -121,14 +153,14 @@ class OWA:
         self.v = v
         self.lv = len(v)
 
-    def __call__(self, X):
+    def __call__(self, X, axis=-1):
         v, lv = self.v, self.lv
-        if X.shape[-1] < lv:
+        if X.shape[axis] < lv:
             raise ValueError("len(X) < len(w)")
-        elif X.shape[-1] > lv:
-            missing = [ 0. ] * (X.shape[-1] - lv)
+        elif X.shape[axis] > lv:
+            missing = [ 0. ] * (X.shape[axis] - lv)
             v = np.append(missing, v)
-        return np.sum(np.sort(X, -1) * v, -1)
+        return np.sum(np.sort(X, axis) * v, axis)
 
 def owa(*w):
     w = np.array(w, copy=False).ravel()
@@ -140,12 +172,12 @@ class AndnessDirectedAveraging:
         self.tnorm = p <= 0.5
         self.alpha = (1.0 - p) / p if self.tnorm else p / (1.0 - p)
 
-    def __call__(self, X):
+    def __call__(self, X, axis=-1):
         X = np.array(X, copy=False)
         if self.tnorm:
-            return (np.sum(X ** self.alpha, -1) / X.shape[-1]) ** (1.0 / self.alpha)
+            return (np.sum(X ** self.alpha, axis) / X.shape[axis]) ** (1.0 / self.alpha)
         else:
-            return 1.0 - ((np.sum((1.0 - X) ** (1.0 / self.alpha), -1) / X.shape[-1]) ** self.alpha)
+            return 1.0 - ((np.sum((1.0 - X) ** (1.0 / self.alpha), axis) / X.shape[axis]) ** self.alpha)
 
 def aa(p):
     assert 0 < p and p < 1

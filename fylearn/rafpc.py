@@ -91,41 +91,38 @@ def agreement_fuzzy(aggregation, A, B):
     return a, d
 
 def agreement_hamming(p, X, a, b):
-    d = np.abs(X[a,:] - X[b,:])
+    d = np.abs(X[a, :] - X[b, :])
     f = X.shape[1] / p
     E = np.zeros(f)
     for i in range(f):
-        E[i] = np.sum(d[(i*p):(i*p)+p])
+        E[i] = np.sum(d[(i * p):(i * p) + p])
     return 1.0 - ((1.0 / p) * E)
 
 def triangular_factory(*args):
     return fl.TriangularSet(args[0], args[1], args[2])
 
 def pi_factory(*args):
-    return fl.PiSet(args[0], args[1], args[2], 2.0)
+    return fl.PiSet(a=args[0], r=args[1], b=args[2], m=2.0)
 
 def build_memberships(X, factory):
-    mins  = np.nanmin(X, 0)
-    maxs  = np.nanmax(X, 0)
+    mins = np.nanmin(X, 0)
+    maxs = np.nanmax(X, 0)
     means = np.nanmean(X, 0)
-    return [ (i, factory(means[i] - ((maxs[i] - mins[i]) / 2.0), means[i], means[i] + ((maxs[i] - mins[i]) / 2.0))) for i in range(X.shape[1]) ]
-
-def _evaluate(X, proto):
-    y = np.zeros(X.shape)
+    return [ (i, factory(means[i] - ((maxs[i] - mins[i]) / 2.0),
+                         means[i], means[i] + ((maxs[i] - mins[i]) / 2.0))) for i in range(X.shape[1]) ]
 
 def agreement_pruning(X, proto, n_features, rs):
 
-    if len(proto) <= n_features: # nothing to prune.
+    if len(proto) <= n_features:  # nothing to prune.
         return proto
-    
+
     # prune from random samples
     for S in X[rs.choice(len(X), len(proto) - n_features)]:
-        y = np.array([p(S[idx]) for idx, p in proto ]) # evaluate sample using the prototype
-        worst = np.argsort(y)                          # find worst
-        del proto[worst[0]]                            # filter worst
+        y = np.array([p(S[idx]) for idx, p in proto ])  # evaluate sample using the prototype
+        worst = np.argsort(y)                           # find worst
+        del proto[worst[0]]                             # filter worst
 
     # print "proto-after", proto
-        
     return proto
 
 def build_for_class(X, max_samples, n_features, rs, factory):

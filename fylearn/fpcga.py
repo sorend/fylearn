@@ -39,7 +39,7 @@ def build_aggregation(X, y, rules, chromosome, idx):
 # requires 3 genes
 def build_pi_membership(chromosome, idx):
     a, r, b = sorted(chromosome[idx:idx + 3])
-    return fl.PiSet(a, r, b)
+    return fl.PiSet(a=a, r=r, b=b)
 
 # requires 4 genes
 def build_trapezoidal_membership(chromosome, idx):

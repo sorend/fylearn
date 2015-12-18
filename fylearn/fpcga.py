@@ -18,7 +18,8 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array
 from sklearn.metrics import accuracy_score, mean_squared_error
 import fylearn.fuzzylogic as fl
-from fylearn.ga import GeneticAlgorithm, helper_fitness, UniformCrossover
+from fylearn.ga import GeneticAlgorithm, helper_fitness, UniformCrossover, helper_n_generations
+from fylearn.ga import UnitIntervalGeneticAlgorithm
 
 #
 # Authors: Søren Atmakuri Davidsen <sorend@gmail.com>
@@ -141,7 +142,9 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         self.iterations = iterations
         self.epsilon = epsilon
 
-        as_factory = lambda r: r if isinstance(r, AggregationRuleFactory) else DummyAggregationRuleFactory(r)
+        def as_factory(r):
+            return r if isinstance(r, AggregationRuleFactory) else DummyAggregationRuleFactory(r)
+
         self.aggregation_rules = [ as_factory(r) for r in aggregation_rules ]
 
     def fit(self, X, y_orig):
@@ -233,6 +236,11 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
             logger.info("`- Class-%d" % (key,))
             logger.info("`- Membership-fs %s" % (str([ x.__str__() for x in value ]),))
 
+    def __str__(self):
+        if self.protos_ is None:
+            return "Not trained"
+        else:
+            return str(self.aggregation) + str({ "class-" + str(k): v for k, v in self.protos_ })
 
 class FuzzyPatternClassifierLGA(FuzzyPatternClassifierGA):
 
@@ -300,3 +308,98 @@ class FuzzyPatternClassifierLGA(FuzzyPatternClassifierGA):
         for key, value in self.protos_.items():
             logger.info("`- Class-%d" % (key,))
             logger.info("`- Membership-fs %s" % (str([ x.__str__() for x in value ]),))
+
+
+class SEFuzzyPatternClassifier(FuzzyPatternClassifierGA):
+
+    def get_params(self, deep=False):
+        return {"iterations": self.iterations,
+                "aggregation": self.aggregation,
+                "adjust_center": self.adjust_center}
+
+    def set_params(self, **kwargs):
+        for key, value in kwargs.items():
+            self.setattr(key, value)
+        return self
+
+    def __init__(self, aggregation=fl.prod, iterations=25, adjust_center=False):
+        """
+        Constructs classifier
+
+        Parameters:
+        -----------
+
+        aggregation : fuzzy aggregation to use.
+
+        iterations : number of iterations for the GA.
+
+        adjust_center : Allow to adjust center of the membership function.
+        """
+        self.aggregation = aggregation
+        self.iterations = iterations
+        self.adjust_center = adjust_center
+
+        assert iterations > 0
+
+    def build_for_class(self, X, y, class_idx):
+
+        # take column-wise min/mean/max for class
+        mins = np.nanmin(X[class_idx], 0)
+        means = np.nanmean(X[class_idx], 0)
+        maxs = np.nanmax(X[class_idx], 0)
+        ds = (maxs - mins) / 2.0
+
+        n_genes = 2 * self.m  # adjustment for r and shrinking/expanding value for p/q
+
+        B = np.ones(n_genes)
+
+        def decode_with_shrinking_expanding(C):
+            def dcenter(j):
+                return min(1.0, max(0.0, C[j])) - 0.5 if self.adjust_center else 1.0
+
+            return [ fl.PiSet(r=means[j] * dcenter(j),
+                              p=means[j] - (ds[j] * C[j + 1]),
+                              q=means[j] + (ds[j] * C[j + 1]))
+                     for j in range(self.m) ]
+
+        y_target = np.zeros(y.shape)  # create the target of 1 and 0.
+        y_target[class_idx] = 1.0
+
+        def rmse_fitness_function(chromosome):
+            proto = decode_with_shrinking_expanding(chromosome)
+            y_pred = _predict_one(proto, self.aggregation, X)
+            return mean_squared_error(y_target, y_pred)
+
+        logger.info("initializing GA %d iterations" % (self.iterations,))
+        # initialize
+        ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(rmse_fitness_function),
+                                          crossover_function=UniformCrossover(0.5),
+                                          elitism=3,
+                                          n_chromosomes=100,
+                                          n_genes=n_genes,
+                                          p_mutation=0.3)
+
+        ga = helper_n_generations(ga, self.iterations)
+        chromosomes, fitnesses = ga.best(1)
+
+        return decode_with_shrinking_expanding(chromosomes[0]), decode_with_shrinking_expanding(B)
+
+    def build_with_ga(self, X, y):
+        self.protos_ = {}
+        self.bases_ = {}
+        for class_no, class_value in enumerate(self.classes_):
+            class_idx = np.array(y == class_value)
+
+            proto, base = self.build_for_class(X, y, class_idx)
+            self.protos_[class_no] = proto
+            self.bases_[class_no] = base
+
+    def toggle_base(self):
+        if hasattr(self, "backups_"):
+            self.protos_ = self.backups_
+            del self.backups_
+        else:
+            self.backups_ = self.protos_
+            self.protos_ = self.bases_
+        return self
+

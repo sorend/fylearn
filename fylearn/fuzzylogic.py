@@ -29,6 +29,7 @@ class TriangularSet:
         self.c = c
 
     def __call__(self, X):
+        X = helper_np_array(X)
         y = np.zeros(X.shape)  # allocate output (y)
         left = (self.a < X) & (X < self.b)  # find where to apply left
         right = (self.b < X) & (X < self.c)  # find where to apply right
@@ -51,6 +52,7 @@ class TrapezoidalSet:
         self.d = d
 
     def __call__(self, X):
+        X = helper_np_array(X)
         y = np.zeros(X.shape)
         left = (self.a < X) & (X < self.b)
         center = (self.b <= X) & (X <= self.c)
@@ -84,8 +86,8 @@ class PiSet:
         else:
             raise ValueError("please specify b or q")
 
-        if a >= r or r >= b:
-            raise ValueError("please ensure a < r < b, got: a=%f, r=%f b=%f" % (self.a, self.r, self.b))
+        # if a >= r or r >= b:
+        #     raise ValueError("please ensure a < r < b, got: a=%f, r=%f b=%f" % (self.a, self.r, self.b))
 
         self.r = r
         self.m = m

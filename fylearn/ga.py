@@ -256,6 +256,16 @@ class GeneticAlgorithm(BaseGeneticAlgorithm):
         chromosomes[mutation_idx] += mutations
         return chromosomes
 
+class UnitIntervalGeneticAlgorithm(GeneticAlgorithm):
+    """
+    Genetic algorithm where gene values are chosen from the unit interval [0, 1]. Mutation
+    randomly selects a new value in this interval.
+    """
+    def mutate(self, chromosomes, mutation_idx, random_state):
+        mutations = random_state.rand(np.sum(mutation_idx)) * self.scaling
+        chromosomes[mutation_idx] = mutations
+        return chromosomes
+
 class DiscreteGeneticAlgorithm(GeneticAlgorithm):
     """
     Discrete genetic algorithm is a genetic algorithm where the gene values are

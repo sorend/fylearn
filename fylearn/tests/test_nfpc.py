@@ -4,8 +4,8 @@ import numpy as np
 import fylearn.nfpc as nfpc
 import fylearn.fuzzylogic as fl
 
-def t_factory(min, mean, max):
-    return fl.TriangularSet(min, mean, max)
+def t_factory(**k):
+    return fl.TriangularSet(k["min"], k["mean"], k["max"])
 
 def test_build_shrinking():
 
@@ -13,7 +13,8 @@ def test_build_shrinking():
     X[:, 1] = X[:, 1] * 10
     X[:, 2] = X[:, 2] * 50
 
-    s = nfpc.build_shrinking_memberships(X, t_factory, 0.1, 2)
+    impl = nfpc.IterativeShrinking(alpha_cut=0.1, iterations=2)
+    s = impl(X, t_factory)
 
     assert len(s) == 3
     assert s[0].b - 0.5 < 0.05
@@ -33,8 +34,8 @@ def test_build_shrinking_data():
     from sklearn.preprocessing import MinMaxScaler
     X = MinMaxScaler().fit_transform(X)
 
-    l = nfpc.ShrinkingPositiveFuzzyPatternClassifier(iterations=2, alpha_cut=0.25,
-                                                     membership_factory=t_factory)
+    l = nfpc.ShrinkingFuzzyPatternClassifier(shrinking=nfpc.IterativeShrinking(iterations=2, alpha_cut=0.05),
+                                             membership_factory=t_factory)
 
     from sklearn import cross_validation
 
@@ -43,4 +44,4 @@ def test_build_shrinking_data():
 
     print "mean", mean
 
-    assert 0.90 < mean
+    assert 0.80 < mean

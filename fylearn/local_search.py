@@ -124,7 +124,7 @@ def helper_num_runs(optimizer, num_runs=100, refine=None):
 class BaseOptimizer(object):
 
     def __init__(self, f, lower_bound, upper_bound, lower_init=None, upper_init=None,
-                 random_state=None, max_evaluations=100, num_runs=100, refine_function=None):
+                 random_state=None, max_evaluations=100):
 
         self.f = f
 
@@ -139,8 +139,6 @@ class BaseOptimizer(object):
             self.random_state = random_state
 
         self.max_evaluations = int(max_evaluations)
-        self.num_runs = int(num_runs)
-        self.refine_function = refine_function
 
         self.optimize_function_args = {}
 

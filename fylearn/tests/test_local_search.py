@@ -16,15 +16,14 @@ def test_ps():
     upper_bound = np.array([20.0] * 10)
     lower_bound = np.array([10.0] * 10)
 
-    o = ls.PatternSearchOptimizer(fitness, lower_bound, upper_bound, max_evaluations=50,
-                                  num_runs=100, refine_function=ls.scipy_refine)
+    o = ls.PatternSearchOptimizer(fitness, lower_bound, upper_bound, max_evaluations=50)
 
     best_sol, best_fit = o()
 
     print "best", best_sol
     print "fitness", best_fit
 
-    assert best_fit < 0.01
+    assert best_fit < 0.05
     
 def test_lus():
 
@@ -32,12 +31,43 @@ def test_lus():
     lower_bound = np.array([10.0] * 10)
 
     o = ls.LocalUnimodalSamplingOptimizer(fitness, lower_bound, upper_bound,
-                                          max_evaluations=50, num_runs=100,
-                                          gamma=3.0)
+                                          max_evaluations=50, gamma=3.0)
 
     best_sol, best_fit = o()
 
     print "best", best_sol
     print "fitness", best_fit
 
-    assert best_fit < 0.01
+    assert best_fit < 0.05
+
+def test_helper_num_runs():
+
+    upper_bound = np.array([20.0] * 10)
+    lower_bound = np.array([10.0] * 10)
+
+    o = ls.LocalUnimodalSamplingOptimizer(fitness, lower_bound, upper_bound,
+                                          max_evaluations=25, gamma=3.0)
+
+    best_sol, best_fit = o()
+
+    print "best", best_sol
+    print "fitness", best_fit
+
+    new_sol, new_fit = ls.helper_num_runs(o, num_runs=100)
+
+    # assume we can find better solution in 100 tries.
+    assert new_fit < best_fit
+
+    #
+    # try pattern search with refine method
+    #
+
+    o = ls.PatternSearchOptimizer(fitness, lower_bound, upper_bound, max_evaluations=25)
+    best_sol, best_fit = o()
+
+    print "best", best_sol
+    print "fitness", best_fit
+
+    new_sol, new_fit = ls.helper_num_runs(o, num_runs=100, refine=ls.scipy_refine)
+
+    assert new_fit < best_fit

@@ -402,4 +402,3 @@ class SEFuzzyPatternClassifier(FuzzyPatternClassifierGA):
             self.backups_ = self.protos_
             self.protos_ = self.bases_
         return self
-

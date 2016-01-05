@@ -13,9 +13,11 @@ import logging
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array
+from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import normalize
 from sklearn.neighbors import DistanceMetric
 import fuzzylogic as fl
+from ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations, UniformCrossover
 
 logger = logging.getLogger("fylearn.nfpc")
 
@@ -38,29 +40,36 @@ def distancemetric_f(name, **kwargs):
         return DistanceMetric.get_metric(name)
     return _distancemetric_factory
 
+def build_memberships(X, class_idx, factory):
+    # take column-wise min/mean/max for class
+    mins = np.nanmin(X[class_idx], 0)
+    means = np.nanmean(X[class_idx], 0)
+    maxs = np.nanmax(X[class_idx], 0)
+    return [ factory(min=mins[i], mean=means[i], max=maxs[i]) for i in range(X.shape[1]) ]
+
 #
 # Authors: Søren Atmakuri Davidsen <sorend@gmail.com>
 #
 
+def predict_proto(X, proto, aggregation, A):
+    for col_no in range(X.shape[1]):
+        A[:, col_no] = proto[col_no](X[:, col_no])
+    return aggregation(A, axis=1)
+
 def predict_protos(X, protos, aggregation):
     y = np.zeros((X.shape[0], len(protos)))
-    A = np.zeros(X.shape)
+    A = np.zeros(X.shape)  # re-use this matrix
     for clz_no, proto in enumerate(protos):
-        for col_no in range(X.shape[1]):
-            A[:, col_no] = proto[col_no](X[:, col_no])
-        # print "A", A
-        # print "y", y[:, clz_no]
-        y[:, clz_no] = aggregation(A, axis=1)
+        y[:, clz_no] = predict_proto(X, proto, aggregation, A)
     return y
-
 
 class IterativeShrinking:
     def __init__(self, iterations=3, alpha_cut=0.1):
         self.iterations = iterations
         self.alpha_cut = alpha_cut
 
-    def __call__(self, X, mu_factory):
-        return [ self.shrink_for_feature(X[:, i], mu_factory, self.alpha_cut, self.iterations)
+    def __call__(self, X, class_idx, mu_factory, aggregation):
+        return [ self.shrink_for_feature(X[class_idx, i], mu_factory, self.alpha_cut, self.iterations)
                  for i in range(X.shape[1]) ]
 
     def shrink_for_feature(self, C, factory, alpha_cut, iterations):
@@ -85,12 +94,82 @@ class IterativeShrinking:
 
         return mu
 
+class GAShrinking:
+    """
+    A shrinking method using GA.
+    """
+    def __init__(self, iterations=25, adjust_center=True, adjust_symmetric=True):
+        """
+        Constructor
+
+        Parameters:
+        -----------
+
+        iterations : number of iterations to use for the GA.
+
+        adjust_center : allow the GA to adjust center of set.
+
+        adjust_symmetric : symmetric adjustment of set.
+        """
+        self.iterations = iterations
+        self.adjust_center = adjust_center
+        self.adjust_symmetric = adjust_symmetric
+
+    def __call__(self, X, class_idx, mu_factory, aggregation):
+
+        # take column-wise min/mean/max for class
+        mins = np.nanmin(X[class_idx], 0)
+        means = np.nanmean(X[class_idx], 0)
+        maxs = np.nanmax(X[class_idx], 0)
+        ds = (maxs - mins) / 2.0
+
+        m = X.shape[1]
+        n_genes = 2 * m if self.adjust_symmetric else 3 * m
+
+        def decode_with_shrinking_expanding(C):
+            def dcenter(j):
+                return C[j * 2] - 0.5 if self.adjust_center else 0.0
+
+            def left(j):
+                return ds[j] * C[(j * 2) + 1]
+
+            def right(j):
+                return ds[j] * C[(j * 2) + 1] if self.adjust_symmetric else ds[j] * C[(j * 2) + 2]
+
+            return [ fl.PiSet(r=means[j] + dcenter(j),
+                              p=means[j] - left(j),
+                              q=means[j] + right(j))
+                     for j in range(m) ]
+
+        y_target = np.zeros(X.shape[0])  # create the target of 1 and 0.
+        y_target[class_idx] = 1.0
+
+        A = np.zeros(X.shape)  # use for calculating memberships values.
+
+        def rmse_fitness_function(chromosome):
+            proto = decode_with_shrinking_expanding(chromosome)
+            y_pred = predict_proto(X, proto, aggregation, A)
+            return mean_squared_error(y_target, y_pred)
+
+        logger.info("initializing GA %d iterations" % (self.iterations,))
+        # initialize
+        ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(rmse_fitness_function),
+                                          crossover_function=UniformCrossover(0.5),
+                                          elitism=3,
+                                          n_chromosomes=100,
+                                          n_genes=n_genes,
+                                          p_mutation=0.3)
+
+        ga = helper_n_generations(ga, self.iterations)
+        chromosomes, fitnesses = ga.best(1)
+
+        return decode_with_shrinking_expanding(chromosomes[0])
 
 class ShrinkingFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
     def __init__(self, aggregation=np.mean,
                  membership_factory=pi_factory,
-                 shrinking=IterativeShrinking(3, 0.85),
+                 shrinking=IterativeShrinking(iterations=3, alpha_cut=0.05),
                  arg_select=np.nanargmax,
                  **kwargs):
         """
@@ -133,7 +212,7 @@ class ShrinkingFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         # build membership functions for each feature for each class
         self.protos_ = [
-            self.shrinking(X[y == idx], self.membership_factory)
+            self.shrinking(X, y == idx, self.membership_factory, self.aggregation)
             for idx, class_value in enumerate(self.classes_)
         ]
 
@@ -152,9 +231,9 @@ class ShrinkingFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         y_mu = predict_protos(X, self.protos_, self.aggregation)
 
-        print "X", X.shape
-        print "predicted", y_mu
-        print "take", self.arg_select(y_mu, 1)
+        # print "X", X.shape
+        # print "predicted", y_mu
+        # print "take", self.arg_select(y_mu, 1)
 
         return self.classes_.take(self.arg_select(y_mu, 1))
 
@@ -168,5 +247,119 @@ class ShrinkingFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
             raise ValueError("Number of features do not match trained number of features")
 
         y_mu = predict_protos(X, self.protos_, self.aggregation)
+
+        return 1.0 - normalize(y_mu, 'l1')
+
+class OWAGAFactory:
+
+    def __init__(self, iterations=100, n_chromosomes=100):
+        self.iterations = iterations
+        self.n_chromosomes = n_chromosomes
+
+    def __call__(self, protos, X, y, classes):
+
+        y_target = np.zeros((X.shape[0], len(classes)))
+        for i, c in enumerate(classes):
+            y_target[y == c, i] = 1.0
+
+        def fitness(c):
+            aggr = fl.owa(normalize(c, 'l1'))
+            y_pred = predict_protos(X, protos, aggr)
+            return mean_squared_error(y_target, y_pred)
+
+        ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(fitness),
+                                          n_chromosomes=self.n_chromosomes,
+                                          elitism=3,
+                                          p_mutation=0.1,
+                                          n_genes=X.shape[1])
+        ga = helper_n_generations(ga, self.iterations)
+
+        chromosomes, fitnesses = ga.best(1)
+
+        return fl.owa(normalize(chromosomes[0]))
+
+class MEOWAFactory:
+
+    def __init__(self):
+        pass
+
+    def __call__(self, protos, X, y, classes):
+
+        y_target = np.zeros((X.shape[0], len(classes)))
+        for i, c in enumerate(classes):
+            y_target[y == c, i] = 1.0
+
+        best, best_mse = None, 1.0
+        for p in np.linspace(0, 1, 11):
+            aggr = fl.meowa(X.shape[1], p)
+            y_pred = predict_protos(X, protos, aggr)
+            mse = mean_squared_error(y_target, y_pred)
+            if mse < best_mse:
+                best = aggr
+                best_mse = mse
+
+        return best
+
+class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
+    """
+    Fuzzy pattern classifier using OWA as aggregation with weights searched by a GA.
+    """
+    def get_params(self, deep=False):
+        return {"aggregation_factory": self.aggregation_factory,
+                "membership_factory": self.membership_factory}
+
+    def set_params(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        return self
+
+    def __init__(self, membership_factory=pi_factory, aggregation_factory=OWAGAFactory(25)):
+        self.aggregation_factory = aggregation_factory
+        self.membership_factory = membership_factory
+
+    def fit(self, X, y):
+        X = check_array(X)
+
+        self.classes_, y = np.unique(y, return_inverse=True)
+
+        if np.nan in self.classes_:
+            raise ValueError("nan not supported for class values")
+
+        # build membership functions for each feature for each class
+        self.protos_ = [
+            build_memberships(X, y == idx, self.membership_factory)
+            for idx, class_value in enumerate(self.classes_)
+        ]
+
+        # build aggregation
+        self.aggregation_ = self.aggregation_factory(self.protos_, X, y, self.classes_)
+
+        return self
+
+    def predict(self, X):
+        """
+        Predicts if examples in X belong to classifier's class or not.
+
+        Parameters
+        ----------
+        X : examples to predict for.
+        """
+        if not hasattr(self, "protos_"):
+            raise Exception("Perform a fit first.")
+
+        y_mu = predict_protos(X, self.protos_, self.aggregation_)
+
+        return self.classes_.take(np.argmax(y_mu, 1))
+
+    def predict_proba(self, X):
+        if not hasattr(self, "protos_"):
+            raise Exception("Perform a fit first.")
+
+        X = check_array(X)
+
+        if X.shape[1] != len(self.mus_):
+            raise ValueError("Number of features do not match trained number of features")
+
+        y_mu = predict_protos(X, self.protos_, self.aggregation_)
 
         return 1.0 - normalize(y_mu, 'l1')

@@ -149,6 +149,15 @@ def einstein_u(X):
 def algebraic_sum(X):
     return 1.0 - prod(1.0 - X)
 
+def min_max_normalize(X):
+    nmin, nmax = np.nanmin(X), np.nanmax(X)
+    return (X - nmin) / (nmax - nmin)
+
+def p_normalize(X):
+    return X / np.sum(X)
+
+def dispersion(w):
+    return -np.sum(w * np.log(w))
 
 class OWA:
     def __init__(self, v):
@@ -164,9 +173,40 @@ class OWA:
             v = np.append(missing, v)
         return np.sum(np.sort(X, axis) * v, axis)
 
+    def andness(self):
+        return 1.0 - self.orness()
+
+    def orness(self):
+        v = self.v
+        n = len(v)
+        return np.sum(np.array([ n - (i + 1) for i in range(n) ]) * v) / (n - 1.0)
+
+    def dispersion(self):
+        return dispersion(self.v)
+
 def owa(*w):
     w = np.array(w, copy=False).ravel()
     return OWA(w[::-1])
+
+def meowa(n, rho):
+    if 0.0 > rho or rho > 1.0:
+        raise ValueError("rho must be in [0, 1]")
+
+    if rho == 1.0:
+        w = np.zeros(n)
+        w[-1] = 1.0
+        return OWA(w)
+
+    # calc roots
+    t_m = (-(rho - 0.5) - np.sqrt(((rho - 0.5) * (rho - 0.5)) - (4 * (rho - 1.0) * rho))) / (2.0 * (rho - 1.0))
+    t_p = (-(rho - 0.5) + np.sqrt(((rho - 0.5) * (rho - 0.5)) - (4 * (rho - 1.0) * rho))) / (2.0 * (rho - 1.0))
+    t = np.maximum(t_m, t_p)
+
+    w = np.array([ np.power(t, i) for i in range(n) ])
+
+    w = p_normalize(w)
+
+    return OWA(w)
 
 class AndnessDirectedAveraging:
     def __init__(self, p):

@@ -307,10 +307,12 @@ class GAOWAFactory:
 
         weights = self.optimizer(X, fitness, self.iterations)
 
-        logger.info("weights %s owa(%s)" % (str(self.optimizer),
-                                            ", ".join(map(lambda x: "%.3f" % (x,), p_normalize(weights)))))
+        weights = p_normalize(weights)
 
-        return owa(p_normalize(weights))
+        logger.info("trained owa(%s, %s)" % (str(self.optimizer).split(" ")[1],
+                                             ", ".join(map(lambda x: "%.5f" % (x,), weights))))
+
+        return owa(weights)
 
 class MEOWAFactory:
 
@@ -329,6 +331,8 @@ class MEOWAFactory:
             if mse < best_mse:
                 best = aggr
                 best_mse = mse
+
+        logger.info("trained owa(meowa, %s)" % (", ".join(map(lambda x: "%.5f" % (x,), best.v))))
 
         return best
 

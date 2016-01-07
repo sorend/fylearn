@@ -157,7 +157,7 @@ def p_normalize(X):
     return X / np.sum(X)
 
 def dispersion(w):
-    return -np.sum(w * np.log(w))
+    return -np.sum(w[w > 0.0] * np.log(w[w > 0.0]))  # filter 0 as 0 * -inf is undef in NumPy
 
 class OWA:
     def __init__(self, v):
@@ -173,16 +173,22 @@ class OWA:
             v = np.append(missing, v)
         return np.sum(np.sort(X, axis) * v, axis)
 
+    def __str__(self):
+        return "OWA(v=%s)" % (str(self.v),)
+
     def andness(self):
         return 1.0 - self.orness()
 
     def orness(self):
         v = self.v
-        n = len(v)
+        n = self.lv
         return np.sum(np.array([ n - (i + 1) for i in range(n) ]) * v) / (n - 1.0)
 
-    def dispersion(self):
+    def disp(self):
         return dispersion(self.v)
+
+    def ndisp(self):
+        return dispersion(self.v) / np.log(self.lv)
 
 def owa(*w):
     w = np.array(w, copy=False).ravel()

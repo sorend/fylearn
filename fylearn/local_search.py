@@ -15,7 +15,7 @@
 import numpy as np
 import logging
 
-logger = logging.getLogger("local_search")
+logger = logging.getLogger(__name__)
 
 def init_position(rs, lower, upper):
     """

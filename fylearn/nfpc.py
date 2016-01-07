@@ -14,23 +14,23 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array
 from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import normalize
 from sklearn.neighbors import DistanceMetric
-import fuzzylogic as fl
+from fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize
 from ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations, UniformCrossover
+from local_search import PatternSearchOptimizer, helper_num_runs, LocalUnimodalSamplingOptimizer
 
-logger = logging.getLogger("fylearn.nfpc")
+logger = logging.getLogger(__name__)
 
 def pi_factory(**kwargs):
     m = kwargs["m"] if "m" in kwargs else 2.0
     c = kwargs["mean"]
     d = (kwargs["max"] - kwargs["min"]) / 2.0
-    return fl.PiSet(a=c - d, r=c, b=c + d, m=m)
+    return PiSet(a=c - d, r=c, b=c + d, m=m)
 
 def t_factory(**kwargs):
     c = kwargs["mean"]
     d = (kwargs["max"] - kwargs["min"]) / 2.0
-    return fl.TriangularSet(c - d, c, c + d)
+    return TriangularSet(c - d, c, c + d)
 
 def distancemetric_f(name, **kwargs):
     """
@@ -136,10 +136,9 @@ class GAShrinking:
             def right(j):
                 return ds[j] * C[(j * 2) + 1] if self.adjust_symmetric else ds[j] * C[(j * 2) + 2]
 
-            return [ fl.PiSet(r=means[j] + dcenter(j),
-                              p=means[j] - left(j),
-                              q=means[j] + right(j))
-                     for j in range(m) ]
+            return [ PiSet(r=means[j] + dcenter(j),
+                           p=means[j] - left(j),
+                           q=means[j] + right(j)) for j in range(m) ]
 
         y_target = np.zeros(X.shape[0])  # create the target of 1 and 0.
         y_target[class_idx] = 1.0
@@ -203,6 +202,7 @@ class ShrinkingFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         return self
 
     def fit(self, X, y):
+
         X = check_array(X)
 
         self.classes_, y = np.unique(y, return_inverse=True)
@@ -231,10 +231,6 @@ class ShrinkingFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         y_mu = predict_protos(X, self.protos_, self.aggregation)
 
-        # print "X", X.shape
-        # print "predicted", y_mu
-        # print "take", self.arg_select(y_mu, 1)
-
         return self.classes_.take(self.arg_select(y_mu, 1))
 
     def predict_proba(self, X):
@@ -248,35 +244,73 @@ class ShrinkingFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         y_mu = predict_protos(X, self.protos_, self.aggregation)
 
-        return 1.0 - normalize(y_mu, 'l1')
+        return 1.0 - p_normalize(y_mu)
 
-class OWAGAFactory:
+def ga_owa_optimizer(X, fitness, iterations):
 
-    def __init__(self, iterations=100, n_chromosomes=100):
+    ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(fitness),
+                                      n_chromosomes=100,
+                                      elitism=3,
+                                      p_mutation=0.1,
+                                      n_genes=X.shape[1])
+    ga = helper_n_generations(ga, iterations)
+
+    chromosomes, fitnesses = ga.best(1)
+
+    return chromosomes[0]
+
+def ps_owa_optimizer(X, fitness, iterations):
+
+    lower_bounds = np.array([0.0] * X.shape[1])
+    upper_bounds = np.array([1.0] * X.shape[1])
+
+    ps = PatternSearchOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=50)
+
+    best_sol, best_fit = helper_num_runs(ps, num_runs=iterations)
+
+    return best_sol
+
+def lus_owa_optimizer(X, fitness, iterations):
+
+    lower_bounds = np.array([0.0] * X.shape[1])
+    upper_bounds = np.array([1.0] * X.shape[1])
+
+    o = LocalUnimodalSamplingOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=50)
+
+    best_sol, best_fit = helper_num_runs(o, num_runs=iterations)
+
+    return best_sol
+
+def build_y_target(y, classes):
+    y_target = np.zeros((len(y), len(classes)))
+    for i, c in enumerate(classes):
+        y_target[y == i, i] = 1.0
+    return y_target
+
+class GAOWAFactory:
+
+    def __init__(self, optimizer=ga_owa_optimizer, iterations=100):
+        self.optimizer = optimizer
         self.iterations = iterations
-        self.n_chromosomes = n_chromosomes
 
     def __call__(self, protos, X, y, classes):
 
-        y_target = np.zeros((X.shape[0], len(classes)))
-        for i, c in enumerate(classes):
-            y_target[y == c, i] = 1.0
+        y_target = build_y_target(y, classes)
 
         def fitness(c):
-            aggr = fl.owa(normalize(c, 'l1'))
+            aggr = owa(p_normalize(c))
             y_pred = predict_protos(X, protos, aggr)
-            return mean_squared_error(y_target, y_pred)
+            if np.isnan(np.sum(y_pred)):  # quick check if any nan in results.
+                return 1.0
+            else:
+                return mean_squared_error(y_target, y_pred)
 
-        ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(fitness),
-                                          n_chromosomes=self.n_chromosomes,
-                                          elitism=3,
-                                          p_mutation=0.1,
-                                          n_genes=X.shape[1])
-        ga = helper_n_generations(ga, self.iterations)
+        weights = self.optimizer(X, fitness, self.iterations)
 
-        chromosomes, fitnesses = ga.best(1)
+        logger.info("weights %s owa(%s)" % (str(self.optimizer),
+                                            ", ".join(map(lambda x: "%.3f" % (x,), p_normalize(weights)))))
 
-        return fl.owa(normalize(chromosomes[0]))
+        return owa(p_normalize(weights))
 
 class MEOWAFactory:
 
@@ -285,13 +319,11 @@ class MEOWAFactory:
 
     def __call__(self, protos, X, y, classes):
 
-        y_target = np.zeros((X.shape[0], len(classes)))
-        for i, c in enumerate(classes):
-            y_target[y == c, i] = 1.0
+        y_target = build_y_target(y, classes)
 
         best, best_mse = None, 1.0
         for p in np.linspace(0, 1, 11):
-            aggr = fl.meowa(X.shape[1], p)
+            aggr = meowa(X.shape[1], p)
             y_pred = predict_protos(X, protos, aggr)
             mse = mean_squared_error(y_target, y_pred)
             if mse < best_mse:
@@ -313,16 +345,20 @@ class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
             setattr(self, key, value)
         return self
 
-    def __init__(self, membership_factory=pi_factory, aggregation_factory=OWAGAFactory(25)):
+    def __init__(self, membership_factory=pi_factory, aggregation_factory=GAOWAFactory()):
         self.aggregation_factory = aggregation_factory
         self.membership_factory = membership_factory
 
     def fit(self, X, y):
+        if X.ndim == 1:
+            print "X", X
+            1 / 0
+
         X = check_array(X)
 
         self.classes_, y = np.unique(y, return_inverse=True)
 
-        if np.nan in self.classes_:
+        if "?" in self.classes_:
             raise ValueError("nan not supported for class values")
 
         # build membership functions for each feature for each class
@@ -362,4 +398,4 @@ class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         y_mu = predict_protos(X, self.protos_, self.aggregation_)
 
-        return 1.0 - normalize(y_mu, 'l1')
+        return 1.0 - p_normalize(y_mu)

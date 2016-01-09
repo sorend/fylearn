@@ -15,7 +15,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array
 from sklearn.metrics import mean_squared_error
 from sklearn.neighbors import DistanceMetric
-from fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize
+from fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize, prod
 from ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations, UniformCrossover
 from local_search import PatternSearchOptimizer, helper_num_runs, LocalUnimodalSamplingOptimizer
 
@@ -321,10 +321,15 @@ class GAOWAFactory:
 
         return owa(weights)
 
-class MEOWAFactory:
+class StaticFactory:
 
-    def __init__(self):
-        pass
+    def __init__(self, aggregation=prod):
+        self.aggregation = aggregation
+
+    def __call__(self, *args, **kwargs):
+        return self.aggregation
+
+class MEOWAFactory:
 
     def __call__(self, protos, X, y, classes):
 

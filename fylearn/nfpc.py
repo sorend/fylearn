@@ -246,12 +246,12 @@ class ShrinkingFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         return 1.0 - p_normalize(y_mu)
 
-def ga_owa_optimizer(X, fitness, iterations):
+def ga_owa_optimizer(X, fitness):
 
     iterations = X.shape[1] * 10
 
     ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(fitness),
-                                      n_chromosomes=100,
+                                      n_chromosomes=50,
                                       elitism=3,
                                       p_mutation=0.1,
                                       n_genes=X.shape[1])
@@ -261,29 +261,19 @@ def ga_owa_optimizer(X, fitness, iterations):
 
     return chromosomes[0]
 
-def ps_owa_optimizer(X, fitness, iterations):
-
+def pslus_owa_optimizer(cls, f_mul, X, fitness):
     lower_bounds = np.array([0.0] * X.shape[1])
     upper_bounds = np.array([1.0] * X.shape[1])
-    max_evaluations = X.shape[1] * 5
-
-    ps = PatternSearchOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=max_evaluations)
-
+    max_evaluations = X.shape[1] * f_mul
+    ps = cls(fitness, lower_bounds, upper_bounds, max_evaluations=max_evaluations)
     best_sol, best_fit = helper_num_runs(ps, num_runs=10)
-
     return best_sol
 
-def lus_owa_optimizer(X, fitness, iterations):
+def ps_owa_optimizer(X, fitness):
+    return pslus_owa_optimizer(PatternSearchOptimizer, 5, X, fitness)
 
-    lower_bounds = np.array([0.0] * X.shape[1])
-    upper_bounds = np.array([1.0] * X.shape[1])
-    max_evaluations = X.shape[1] * 10
-
-    o = LocalUnimodalSamplingOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=max_evaluations)
-
-    best_sol, best_fit = helper_num_runs(o, num_runs=10)
-
-    return best_sol
+def lus_owa_optimizer(X, fitness):
+    return pslus_owa_optimizer(LocalUnimodalSamplingOptimizer, 10, X, fitness)
 
 def build_y_target(y, classes):
     y_target = np.zeros((len(y), len(classes)))
@@ -293,9 +283,8 @@ def build_y_target(y, classes):
 
 class GAOWAFactory:
 
-    def __init__(self, optimizer=ga_owa_optimizer, iterations=100):
+    def __init__(self, optimizer=ga_owa_optimizer):
         self.optimizer = optimizer
-        self.iterations = iterations
 
     def __call__(self, protos, X, y, classes):
 
@@ -309,7 +298,7 @@ class GAOWAFactory:
             else:
                 return mean_squared_error(y_target, y_pred)
 
-        weights = self.optimizer(X, fitness, self.iterations)
+        weights = self.optimizer(X, fitness)
 
         weights = p_normalize(weights)
 

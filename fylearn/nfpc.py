@@ -244,36 +244,50 @@ class ShrinkingFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         y_mu = predict_protos(X, self.protos_, self.aggregation)
 
-        return 1.0 - p_normalize(y_mu)
+        return p_normalize(y_mu, 1)
 
-def ga_owa_optimizer(X, fitness):
+class ga_owa_optimizer(object):
 
-    iterations = X.shape[1] * 10
+    def __init__(self, f_evals=10):
+        self.f_evals = f_evals
 
-    ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(fitness),
-                                      n_chromosomes=50,
-                                      elitism=3,
-                                      p_mutation=0.1,
-                                      n_genes=X.shape[1])
-    ga = helper_n_generations(ga, iterations)
+    def __call__(self, X, fitness):
+        iterations = X.shape[1] * self.f_evals
+        ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(fitness),
+                                          n_chromosomes=50,
+                                          elitism=3,
+                                          p_mutation=0.1,
+                                          n_genes=X.shape[1])
+        ga = helper_n_generations(ga, iterations)
+        chromosomes, fitnesses = ga.best(1)
+        return chromosomes[0]
 
-    chromosomes, fitnesses = ga.best(1)
+    def __str__(self):
+        return "ga"
 
-    return chromosomes[0]
+class pslus_owa_optimizer(object):
 
-def pslus_owa_optimizer(cls, f_mul, X, fitness):
-    lower_bounds = np.array([0.0] * X.shape[1])
-    upper_bounds = np.array([1.0] * X.shape[1])
-    max_evaluations = X.shape[1] * f_mul
-    ps = cls(fitness, lower_bounds, upper_bounds, max_evaluations=max_evaluations)
-    best_sol, best_fit = helper_num_runs(ps, num_runs=10)
-    return best_sol
+    def __init__(self, name, cls, f_evals):
+        self.name = name
+        self.cls = cls
+        self.f_evals = f_evals
 
-def ps_owa_optimizer(X, fitness):
-    return pslus_owa_optimizer(PatternSearchOptimizer, 5, X, fitness)
+    def __call__(self, X, fitness):
+        lower_bounds = np.array([0.0] * X.shape[1])
+        upper_bounds = np.array([1.0] * X.shape[1])
+        max_evaluations = X.shape[1] * self.f_evals
+        ps = self.cls(fitness, lower_bounds, upper_bounds, max_evaluations=max_evaluations)
+        best_sol, best_fit = helper_num_runs(ps, num_runs=10)
+        return best_sol
 
-def lus_owa_optimizer(X, fitness):
-    return pslus_owa_optimizer(LocalUnimodalSamplingOptimizer, 10, X, fitness)
+    def __str__(self):
+        return self.name
+
+def ps_owa_optimizer(f_evals=5):
+    return pslus_owa_optimizer("ps", PatternSearchOptimizer, f_evals)
+
+def lus_owa_optimizer(f_evals=10):
+    return pslus_owa_optimizer("lus", LocalUnimodalSamplingOptimizer, f_evals)
 
 def build_y_target(y, classes):
     y_target = np.zeros((len(y), len(classes)))
@@ -283,7 +297,7 @@ def build_y_target(y, classes):
 
 class GAOWAFactory:
 
-    def __init__(self, optimizer=ga_owa_optimizer):
+    def __init__(self, optimizer=ga_owa_optimizer()):
         self.optimizer = optimizer
 
     def __call__(self, protos, X, y, classes):
@@ -302,7 +316,7 @@ class GAOWAFactory:
 
         weights = p_normalize(weights)
 
-        logger.info("trained owa(%s, %s)" % (str(self.optimizer).split(" ")[1],
+        logger.info("trained owa(%s, %s)" % (str(self.optimizer),
                                              ", ".join(map(lambda x: "%.5f" % (x,), weights))))
 
         return owa(weights)
@@ -385,14 +399,12 @@ class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         return self.classes_.take(np.argmax(y_mu, 1))
 
     def predict_proba(self, X):
+
         if not hasattr(self, "protos_"):
             raise Exception("Perform a fit first.")
 
         X = check_array(X)
 
-        if X.shape[1] != len(self.mus_):
-            raise ValueError("Number of features do not match trained number of features")
-
         y_mu = predict_protos(X, self.protos_, self.aggregation_)
 
-        return 1.0 - p_normalize(y_mu)
+        return p_normalize(y_mu, 1)  # constrain membership values to probability sum(row) = 1

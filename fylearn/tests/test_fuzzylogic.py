@@ -1,6 +1,7 @@
 
 import numpy as np
 import fylearn.fuzzylogic as fl
+import pytest
 
 def test_helper_np_array():
 
@@ -106,3 +107,89 @@ def test_aa_t():
     # = 0.6649
     diff = 0.6649 - h([0.2, 0.6, 0.7, 0.9])
     assert diff < 0.0001
+
+def test_p_normalize():
+
+    def almost(a, b):
+        return np.abs(a - b) < 0.00001
+
+    X = np.array([1, 2, 3, 4])
+
+    Y = fl.p_normalize(X)
+
+    assert almost(1. / 10, Y[0])
+    assert almost(2. / 10, Y[1])
+    assert almost(3. / 10, Y[2])
+    assert almost(4. / 10, Y[3])
+
+    X = np.array([
+        [1, 2, 3, 4],
+        [4, 4, 2, 0],
+    ])
+
+    Y = fl.p_normalize(X, 1)
+
+    assert almost(1. / 10, Y[0][0])
+    assert almost(2. / 10, Y[0][1])
+    assert almost(3. / 10, Y[0][2])
+    assert almost(4. / 10, Y[0][3])
+
+    assert almost(4. / 10, Y[1][0])
+    assert almost(4. / 10, Y[1][1])
+    assert almost(2. / 10, Y[1][2])
+    assert almost(0. / 10, Y[1][3])
+
+    X = np.array([
+        [3, 9],
+        [3, 1],
+    ])
+
+    Y = fl.p_normalize(X, 0)
+
+    assert 0.5 == Y[0][0]
+    assert 0.5 == Y[1][0]
+
+    assert 0.9 == Y[0][1]
+    assert 0.1 == Y[1][1]
+
+def test_p_normalize_zero_row():
+
+    # no axis given
+    X = np.array([
+        [0, 0, 0],
+        [0, 0, 0]
+    ])
+    Y = fl.p_normalize(X)
+
+    assert Y.shape == (2, 3)
+    assert np.sum(Y) == 0.0
+
+    X = np.array([
+        [0.0, 0.0, 0.0],
+        [0, 0, 0]
+    ])
+
+    Y = fl.p_normalize(X, 1)
+
+    assert Y.shape == (2, 3)
+    assert np.sum(Y) == 0.0
+
+    X = np.array([
+        [0.0, 0.0, 0.0],
+        [0, 0, 0],
+    ])
+
+    Y = fl.p_normalize(X, 0)
+
+    assert Y.shape == (2, 3)
+    assert np.sum(Y) == 0.0
+
+def test_p_normalize_wrong_dimensions():
+
+    with pytest.raises(ValueError):
+        X = np.array([[1, 2, 3]])
+        Y = fl.p_normalize(X, 2)
+
+    with pytest.raises(ValueError):
+        X = np.array([[1, 2, 3]])
+        Y = fl.p_normalize(X, -1)

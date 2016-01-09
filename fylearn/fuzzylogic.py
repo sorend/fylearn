@@ -153,8 +153,25 @@ def min_max_normalize(X):
     nmin, nmax = np.nanmin(X), np.nanmax(X)
     return (X - nmin) / (nmax - nmin)
 
-def p_normalize(X):
-    return X / np.sum(X)
+def p_normalize(X, axis=None):
+
+    s = np.sum(X, axis=axis, dtype="float64")
+
+    def fixzero(x):
+        return 1.0 if x == 0.0 else x
+
+    def afixzero(x):
+        x[x == 0.0] = 1.0
+        return x
+
+    if axis is None:
+        return X / fixzero(s)
+    elif axis == 0:
+        return X / afixzero(s)
+    elif axis == 1:
+        return (X.T / afixzero(s)).T
+    else:
+        raise ValueError("axis must be None or 0 or 1")
 
 def dispersion(w):
     return -np.sum(w[w > 0.0] * np.log(w[w > 0.0]))  # filter 0 as 0 * -inf is undef in NumPy

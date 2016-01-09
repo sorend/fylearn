@@ -407,4 +407,9 @@ class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         y_mu = predict_protos(X, self.protos_, self.aggregation_)
 
-        return p_normalize(y_mu, 1)  # constrain membership values to probability sum(row) = 1
+        v = p_normalize(y_mu, 1)  # constrain membership values to probability sum(row) = 1
+
+        if len(self.classes_) < 3:
+            return v[:, 0]  # binary return only positive class proba
+        else:
+            return v  # else return it all

@@ -248,6 +248,8 @@ class ShrinkingFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
 def ga_owa_optimizer(X, fitness, iterations):
 
+    iterations = X.shape[1] * 10
+
     ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(fitness),
                                       n_chromosomes=100,
                                       elitism=3,
@@ -263,10 +265,11 @@ def ps_owa_optimizer(X, fitness, iterations):
 
     lower_bounds = np.array([0.0] * X.shape[1])
     upper_bounds = np.array([1.0] * X.shape[1])
+    max_evaluations = X.shape[1] * 5
 
-    ps = PatternSearchOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=50)
+    ps = PatternSearchOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=max_evaluations)
 
-    best_sol, best_fit = helper_num_runs(ps, num_runs=iterations)
+    best_sol, best_fit = helper_num_runs(ps, num_runs=10)
 
     return best_sol
 
@@ -274,10 +277,11 @@ def lus_owa_optimizer(X, fitness, iterations):
 
     lower_bounds = np.array([0.0] * X.shape[1])
     upper_bounds = np.array([1.0] * X.shape[1])
+    max_evaluations = X.shape[1] * 10
 
-    o = LocalUnimodalSamplingOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=50)
+    o = LocalUnimodalSamplingOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=max_evaluations)
 
-    best_sol, best_fit = helper_num_runs(o, num_runs=iterations)
+    best_sol, best_fit = helper_num_runs(o, num_runs=10)
 
     return best_sol
 

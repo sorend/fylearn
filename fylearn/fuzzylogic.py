@@ -155,7 +155,7 @@ def min_max_normalize(X):
 
 def p_normalize(X, axis=None):
 
-    s = np.sum(X, axis=axis, dtype="float64")
+    s = np.sum(X, axis=axis, dtype="float")
 
     def fixzero(x):
         return 1.0 if x == 0.0 else x

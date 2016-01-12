@@ -47,7 +47,7 @@ def test_build_shrinking_data():
     assert 0.80 < mean
 
 
-def test_build_ga_owa_factory():
+def test_build_meowa_factory():
 
     import os
     csv_file = os.path.join(os.path.dirname(__file__), "iris.csv")
@@ -84,8 +84,10 @@ def test_build_ps_owa_factory():
     from sklearn.preprocessing import MinMaxScaler
     X = MinMaxScaler().fit_transform(X)
 
-    l = nfpc.OWAFuzzyPatternClassifier(membership_factory=t_factory,
-                                       aggregation_factory=nfpc.GAOWAFactory(nfpc.ps_owa_optimizer, 100))
+    l = nfpc.OWAFuzzyPatternClassifier(
+        membership_factory=t_factory,
+        aggregation_factory=nfpc.GAOWAFactory(optimizer=nfpc.ps_owa_optimizer())
+    )
 
     from sklearn import cross_validation
 
@@ -94,4 +96,4 @@ def test_build_ps_owa_factory():
 
     print "mean", mean
 
-    assert 0.80 < mean
+    assert 0.92 < mean

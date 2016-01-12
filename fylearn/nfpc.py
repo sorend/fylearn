@@ -366,15 +366,12 @@ class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         self.membership_factory = membership_factory
 
     def fit(self, X, y):
-        if X.ndim == 1:
-            print "X", X
-            1 / 0
 
         X = check_array(X)
 
         self.classes_, y = np.unique(y, return_inverse=True)
 
-        if "?" in self.classes_:
+        if "?" in tuple(self.classes_):
             raise ValueError("nan not supported for class values")
 
         # build membership functions for each feature for each class
@@ -396,7 +393,7 @@ class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         ----------
         X : examples to predict for.
         """
-        if not hasattr(self, "protos_"):
+        if not hasattr(self, "classes_"):
             raise Exception("Perform a fit first.")
 
         y_mu = predict_protos(X, self.protos_, self.aggregation_)
@@ -405,16 +402,11 @@ class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
     def predict_proba(self, X):
 
-        if not hasattr(self, "protos_"):
+        if not hasattr(self, "classes_"):
             raise Exception("Perform a fit first.")
 
         X = check_array(X)
 
         y_mu = predict_protos(X, self.protos_, self.aggregation_)
 
-        v = p_normalize(y_mu, 1)  # constrain membership values to probability sum(row) = 1
-
-        if len(self.classes_) < 3:
-            return v[:, 0]  # binary return only positive class proba
-        else:
-            return v  # else return it all
+        return p_normalize(y_mu, 1)  # constrain membership values to probability sum(row) = 1

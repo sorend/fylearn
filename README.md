@@ -43,3 +43,8 @@ About
 
 FyLearn is supposed to mean "FuzzY learning", but in Danish the word "fy" means loosely translated "for shame". It has been created by the Department of Computer Science at Sri Venkateswara University, Tirupati, INDIA by a [PhD student](http://www.cs.svuni.in/~sorend/) as part of his research.
 
+Contributions:
+--------------
+
+ - fylearn.local_search Python code by M. E. H. Pedersen (M. E. H. Pedersen, *Tuning and Simplifying Heuristical Optimization*, PhD Thesis, University of Southampton, U.K., 2010)
+

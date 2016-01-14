@@ -46,5 +46,5 @@ FyLearn is supposed to mean "FuzzY learning", but in Danish the word "fy" means 
 Contributions:
 --------------
 
- - fylearn.local_search Python code by M. E. H. Pedersen (M. E. H. Pedersen, *Tuning and Simplifying Heuristical Optimization*, PhD Thesis, University of Southampton, U.K., 2010)
+ - fylearn.local_search Python code by [M. E. H. Pedersen](http://hvass-labs.org/) (M. E. H. Pedersen, *Tuning and Simplifying Heuristical Optimization*, PhD Thesis, University of Southampton, U.K., 2010)
 

@@ -193,3 +193,61 @@ def test_p_normalize_wrong_dimensions():
     with pytest.raises(ValueError):
         X = np.array([[1, 2, 3]])
         Y = fl.p_normalize(X, -1)
+
+def test_meowa():
+
+    def almost(a, b, prec=0.00001):
+        return np.abs(a - b) < prec
+
+    m = fl.meowa(5, 0.5)
+
+    assert m is not None
+    assert len(m.v) == 5
+    for i in range(5):
+        assert almost(0.2, m.v[i])
+
+    m = fl.meowa(3, 0.5)
+
+    assert m is not None
+    assert len(m.v) == 3
+    for i in range(3):
+        assert almost(0.33, m.v[i], 0.01)
+
+    m = fl.meowa(3, 0.8)  # example from paper
+
+    assert m is not None
+    assert len(m.v) == 3
+
+    print "m", m.v
+
+    assert almost(0.08187, m.v[0], 0.00001)
+    assert almost(0.23627, m.v[1], 0.00001)
+    assert almost(0.68187, m.v[2], 0.00001)
+
+    m = fl.meowa(3, 1.0)
+    assert len(m.v) == 3
+    assert almost(0.0, m.v[0])
+    assert almost(0.0, m.v[1])
+    assert almost(1.0, m.v[2])
+
+    m = fl.meowa(4, 0.0)
+    assert len(m.v) == 4
+    assert almost(1.0, m.v[0])
+    assert almost(0.0, m.v[1])
+    assert almost(0.0, m.v[2])
+    assert almost(0.0, m.v[3])
+
+    with pytest.raises(ValueError) as v:
+        fl.meowa(1, 0.3)
+
+    assert "n must be > 1" in str(v.value)
+
+    with pytest.raises(ValueError) as v:
+        fl.meowa(4, -0.5)
+
+    assert "andness must be" in str(v.value)
+
+    with pytest.raises(ValueError) as v:
+        fl.meowa(1, 1.5)
+
+    assert "andness must be" in str(v.value)

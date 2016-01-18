@@ -176,6 +176,10 @@ def p_normalize(X, axis=None):
 def dispersion(w):
     return -np.sum(w[w > 0.0] * np.log(w[w > 0.0]))  # filter 0 as 0 * -inf is undef in NumPy
 
+def yager_orness(w):
+    n = len(w)
+    return np.sum(np.array([ n - (i + 1) for i in range(n) ]) * w) / (n - 1.0)
+
 class OWA:
     def __init__(self, v):
         self.v = v
@@ -197,9 +201,7 @@ class OWA:
         return 1.0 - self.orness()
 
     def orness(self):
-        v = self.v
-        n = self.lv
-        return np.sum(np.array([ n - (i + 1) for i in range(n) ]) * v) / (n - 1.0)
+        return yager_orness(self.v)
 
     def disp(self):
         return dispersion(self.v)
@@ -211,25 +213,40 @@ def owa(*w):
     w = np.array(w, copy=False).ravel()
     return OWA(w[::-1])
 
-def meowa(n, rho):
-    if 0.0 > rho or rho > 1.0:
-        raise ValueError("rho must be in [0, 1]")
+def meowa(n, andness):
+    if 0.0 > andness or andness > 1.0:
+        raise ValueError("andness must be in [0, 1]")
 
-    if rho == 1.0:
-        w = np.zeros(n)
-        w[-1] = 1.0
-        return OWA(w)
+    if n < 2:
+        raise ValueError("n must be > 1")
 
-    # calc roots
-    t_m = (-(rho - 0.5) - np.sqrt(((rho - 0.5) * (rho - 0.5)) - (4 * (rho - 1.0) * rho))) / (2.0 * (rho - 1.0))
-    t_p = (-(rho - 0.5) + np.sqrt(((rho - 0.5) * (rho - 0.5)) - (4 * (rho - 1.0) * rho))) / (2.0 * (rho - 1.0))
-    t = np.maximum(t_m, t_p)
+    # if andness == 1.0:
+    #     w = np.zeros(n)
+    #     w[-1] = 1.0
+    #     return OWA(w)
 
-    w = np.array([ np.power(t, i) for i in range(n) ])
+    from scipy.optimize import minimize  # use scipy minimize to optimize
 
-    w = p_normalize(w)
+    def negdisp(v):
+        return -dispersion(v)  # we want to maximize, but scipy want to minimize
 
-    return OWA(w)
+    def constraint_has_andness(v):
+        return np.abs((1.0 - yager_orness(v)) - andness)
+
+    def constraint_has_sum(v):
+        return np.abs(np.sum(v) - 1.0)
+
+    bounds = [ [0, 1] for x in range(n) ]  # this is actually a third constraint.
+
+    res = minimize(negdisp, np.zeros(n),
+                   bounds=bounds,
+                   constraints=({"fun": constraint_has_andness, "type": "eq"},
+                                {"fun": constraint_has_sum, "type": "eq"}))
+
+    if res.success:
+        return OWA(res.x)
+    else:
+        raise ValueError("Could not find maximum entropy weights: " + res.message)
 
 class AndnessDirectedAveraging:
     def __init__(self, p):

@@ -16,6 +16,39 @@ Algorithms implemented
  - fylearn.fpt.FuzzyPatternTreeTopDownClassifier
  - fylearn.garules.MultimodalEvolutionaryClassifer
 
+At tiny fuzzy logic library
+---------------------------
+
+Tiny, but hopefully useful. The focus of the library is on providing membership functions and aggregations that work with NumPy, for using in the implemented learning algorithms.
+
+**Membership functions**
+
+ - fylearn.fuzzylogic.TriangularSet
+ - fylearn.fuzzylogic.TrapezoidalSet
+ - fylearn.fuzzylogic.PiSet
+ 
+Example use:
+
+    import numpy as np
+    from fylearn.fuzzylogic import TriangularSet
+    t = TriangularSet(1.0, 4.0, 5.0)
+    print t(3)   # use with singletons
+    print t(np.array([[1, 2, 3], [4, 5, 6]]))  # use with arrays
+
+**Aggregation functions**
+
+Here focus has been on providing aggregation functions that support aggregation along a specified axis for 2-dimensional matrices.
+
+Example use:
+
+    import numpy as np
+    from fylearn.fuzzylogic import meowa, OWA
+    a = OWA([1.0, 0.0, 0.0])  # pure AND in OWA
+    X = np.random.rand(5, 3)
+    print a(X)  # AND row-wise
+    a = meowa(5, 0.2)  # OR, andness = 0.2
+    print a(X.T)  # works column-wise, so apply to transposed X
+
 Installation
 ------------
 

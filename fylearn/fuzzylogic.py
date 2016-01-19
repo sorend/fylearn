@@ -176,6 +176,9 @@ def p_normalize(X, axis=None):
 def dispersion(w):
     return -np.sum(w[w > 0.0] * np.log(w[w > 0.0]))  # filter 0 as 0 * -inf is undef in NumPy
 
+def ndispersion(w):
+    return dispersion(w) / np.log(len(w))
+
 def yager_orness(w):
     n = len(w)
     return np.sum(np.array([ n - (i + 1) for i in range(n) ]) * w) / (n - 1.0)
@@ -187,15 +190,15 @@ class OWA:
 
     def __call__(self, X, axis=-1):
         v, lv = self.v, self.lv
-        if X.shape[axis] < lv:
-            raise ValueError("len(X) < len(w)")
-        elif X.shape[axis] > lv:
-            missing = [ 0. ] * (X.shape[axis] - lv)
-            v = np.append(missing, v)
+        if X.shape[axis] != lv:
+            raise ValueError("len(X) != len(v)")
         return np.sum(np.sort(X, axis) * v, axis)
 
     def __str__(self):
         return "OWA(v=%s)" % (str(self.v),)
+
+    def __repr__(self):
+        return str(self)
 
     def andness(self):
         return 1.0 - self.orness()
@@ -207,7 +210,7 @@ class OWA:
         return dispersion(self.v)
 
     def ndisp(self):
-        return dispersion(self.v) / np.log(self.lv)
+        return ndispersion(self.v)
 
 def owa(*w):
     w = np.array(w, copy=False).ravel()
@@ -236,7 +239,7 @@ def meowa(n, andness):
     def constraint_has_sum(v):
         return np.abs(np.sum(v) - 1.0)
 
-    bounds = [ [0, 1] for x in range(n) ]  # this is actually a third constraint.
+    bounds = [ (0, 1) for x in range(n) ]  # this is actually a third constraint.
 
     res = minimize(negdisp, np.zeros(n),
                    bounds=bounds,

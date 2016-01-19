@@ -48,7 +48,7 @@ def test_piset():
 
 def test_owa():
 
-    X = np.array([1.0, 1.0, 1.0, 1.0])
+    X = np.array([1.0, 1.0, 1.0])
     w = [0.5, 0.3, 0.2]
 
     owa = fl.owa(w)
@@ -61,6 +61,18 @@ def test_owa():
     r2 = owa(X)
 
     assert r == r2
+
+    with pytest.raises(ValueError) as v:
+        owa = fl.owa(0.5, 0.3, 0.2)
+        owa(np.array([0, 1, 0.5, 0.2, 0.3]))
+
+    assert "len(X) != len(v)" in str(v.value)
+
+    with pytest.raises(ValueError) as v:
+        owa = fl.owa(0.5, 0.3, 0.2, 0.4)
+        owa(np.array([0, 1, 0.5]))
+
+    assert "len(X) != len(v)" in str(v.value)
 
 def test_owa_matrix():
 

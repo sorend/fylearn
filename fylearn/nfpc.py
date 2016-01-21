@@ -333,8 +333,9 @@ class GAOWAFactory:
 
         weights = p_normalize(weights)
 
-        logger.info("trained owa(%s, %s)" % (str(self.optimizer),
-                                             ", ".join(map(lambda x: "%.5f" % (x,), weights))))
+        logger.info("trained owa(%s, %s, %s)" % (str(self.optimizer),
+                                                 str(self.decoder).split(" ")[1].split("_")[-1],
+                                                 ", ".join(map(lambda x: "%.5f" % (x,), weights))))
 
         return owa(weights)
 
@@ -374,7 +375,7 @@ class MEOWAFactory:
 
         best = meowa(X.shape[1], best_sol[0])  # construct from optimizer
 
-        logger.info("trained owa(meowa, %s)" % (", ".join(map(lambda x: "%.5f" % (x,), best.v))))
+        logger.info("trained owa(meowa, na, %s)" % (", ".join(map(lambda x: "%.5f" % (x,), best.v))))
 
         return best
 

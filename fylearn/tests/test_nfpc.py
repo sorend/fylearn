@@ -67,6 +67,8 @@ def test_build_meowa_factory():
     scores = cross_validation.cross_val_score(l, X, y, cv=10)
     mean = np.mean(scores)
 
+    fail()
+
     print "mean", mean
 
     assert 0.80 < mean

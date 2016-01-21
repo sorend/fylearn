@@ -295,22 +295,39 @@ def build_y_target(y, classes):
         y_target[y == i, i] = 1.0
     return y_target
 
+def evaluate_rmse(y_target, y_pred):
+    if np.isnan(np.sum(y_pred)):
+        return 1.0
+    else:
+        return mean_squared_error(y_target, y_pred)
+
+def owa_decoder_plain(c):
+    return owa(p_normalize(c))
+
+def owa_decoder_or(c):
+    for i in range(1, len(c)):
+        c[i] += c[i - 1]
+    return owa(p_normalize(c))
+
+def owa_decoder_and(c):
+    for i in range(len(c) - 1, 0, -1):
+        c[i - 1] += c[i]
+    return owa(p_normalize(c))
+
 class GAOWAFactory:
 
-    def __init__(self, optimizer=ga_owa_optimizer()):
+    def __init__(self, optimizer=ga_owa_optimizer(), decoder=owa_decoder_plain):
         self.optimizer = optimizer
+        self.decoder = decoder
 
     def __call__(self, protos, X, y, classes):
 
         y_target = build_y_target(y, classes)
 
         def fitness(c):
-            aggr = owa(p_normalize(c))
+            aggr = self.decoder(c)
             y_pred = predict_protos(X, protos, aggr)
-            if np.isnan(np.sum(y_pred)):  # quick check if any nan in results.
-                return 1.0
-            else:
-                return mean_squared_error(y_target, y_pred)
+            return evaluate_rmse(y_target, y_pred)
 
         weights = self.optimizer(X, fitness)
 
@@ -335,14 +352,27 @@ class MEOWAFactory:
 
         y_target = build_y_target(y, classes)
 
-        best, best_mse = None, 1.0
-        for p in np.linspace(0, 1, 11):
-            aggr = meowa(X.shape[1], p)
+        def fitness(andness):
+            aggr = meowa(X.shape[1], andness)
             y_pred = predict_protos(X, protos, aggr)
-            mse = mean_squared_error(y_target, y_pred)
-            if mse < best_mse:
-                best = aggr
-                best_mse = mse
+            return evaluate_rmse(y_target, y_pred)
+
+        lower_bounds = (0.0,)
+        upper_bounds = (1.0,)
+
+        ps = PatternSearchOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=5)
+        best_sol, best_fit = helper_num_runs(ps, num_runs=10)
+
+        # best, best_mse = None, 1.0
+        # for p in np.linspace(0, 1, 11):
+        #     aggr = meowa(X.shape[1], p)
+        #     y_pred = predict_protos(X, protos, aggr)
+        #     mse = mean_squared_error(y_target, y_pred)
+        #     if mse < best_mse:
+        #         best = aggr
+        #         best_mse = mse
+
+        best = meowa(X.shape[1], best_sol[0])  # construct from optimizer
 
         logger.info("trained owa(meowa, %s)" % (", ".join(map(lambda x: "%.5f" % (x,), best.v))))
 
@@ -382,6 +412,8 @@ class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         # build aggregation
         self.aggregation_ = self.aggregation_factory(self.protos_, X, y, self.classes_)
+
+        print "aggregation_", self.aggregation_
 
         return self
 

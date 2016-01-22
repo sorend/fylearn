@@ -263,3 +263,16 @@ def test_meowa():
         fl.meowa(1, 1.5)
 
     assert "andness must be" in str(v.value)
+
+def test_meowa_many_decimals():
+
+    with pytest.raises(ValueError) as v:
+        m = fl.meowa(n=34, andness=0.91962632217914819)  # cant solve this.
+
+    m = fl.meowa(n=34, andness=0.91962632217914819, maxiter=1000)  # can with more iter
+
+    def almost(a, b, prec=0.00001):
+        return np.abs(a - b) < prec
+
+    assert len(m.v) == 34
+    assert almost(0.91962, m.andness(), 0.00001)

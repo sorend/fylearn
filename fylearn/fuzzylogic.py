@@ -216,7 +216,7 @@ def owa(*w):
     w = np.array(w, copy=False).ravel()
     return OWA(w[::-1])
 
-def meowa(n, andness):
+def meowa(n, andness, **kwargs):
     if 0.0 > andness or andness > 1.0:
         raise ValueError("andness must be in [0, 1]")
 
@@ -243,7 +243,7 @@ def meowa(n, andness):
 
     res = minimize(negdisp, np.zeros(n),
                    bounds=bounds,
-                   # options={"maxiter": max(15000, int(15000.0 * n / 10))},  # adjust for large n
+                   options=kwargs,
                    constraints=({"fun": constraint_has_andness, "type": "eq"},
                                 {"fun": constraint_has_sum, "type": "eq"}))
 

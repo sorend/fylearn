@@ -243,6 +243,7 @@ def meowa(n, andness):
 
     res = minimize(negdisp, np.zeros(n),
                    bounds=bounds,
+                   # options={"maxiter": max(15000, int(15000.0 * n / 10))},  # adjust for large n
                    constraints=({"fun": constraint_has_andness, "type": "eq"},
                                 {"fun": constraint_has_sum, "type": "eq"}))
 

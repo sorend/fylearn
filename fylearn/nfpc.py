@@ -354,8 +354,8 @@ class MEOWAFactory:
         y_target = build_y_target(y, classes)
 
         def fitness(andness):
-            logger.info("creating meowa(%d, %f)" % (X.shape[1], andness))
-            aggr = meowa(X.shape[1], andness)
+            logger.info("creating meowa(%d, %f)" % (X.shape[1], andness[0]))
+            aggr = meowa(X.shape[1], andness[0])
             y_pred = predict_protos(X, protos, aggr)
             return evaluate_rmse(y_target, y_pred)
 

@@ -415,8 +415,6 @@ class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         # build aggregation
         self.aggregation_ = self.aggregation_factory(self.protos_, X, y, self.classes_)
 
-        print "aggregation_", self.aggregation_
-
         return self
 
     def predict(self, X):

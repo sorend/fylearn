@@ -263,4 +263,3 @@ def test_meowa():
         fl.meowa(1, 1.5)
 
     assert "andness must be" in str(v.value)
-

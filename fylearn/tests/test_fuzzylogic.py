@@ -46,7 +46,39 @@ def test_piset():
     assert abs(s(0.8) - 0.5) < 0.0001
     assert s(0.81) < 0.5
 
+def test_yager_orness():
+
+    def almost(a, b, prec=0.00001):
+        return np.abs(a - b) < prec
+
+    w = np.array([1.0, 0, 0, 0, 0, 0])
+    assert almost(1.0, fl.yager_orness(w))
+    assert almost(0.0, fl.yager_andness(w))
+
+    w = np.array([1.0, 0.0])
+    assert almost(1.0, fl.yager_orness(w))
+    assert almost(0.0, fl.yager_andness(w))
+
+    w = np.array([0.0, 0.0, 0.0, 1.0])
+    assert almost(0.0, fl.yager_orness(w))
+    assert almost(1.0, fl.yager_andness(w))
+
+    w = np.array([0.0, 1.0])
+    assert almost(0.0, fl.yager_orness(w))
+    assert almost(1.0, fl.yager_andness(w))
+
+    w = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
+    assert almost(0.5, fl.yager_orness(w))
+    assert almost(0.5, fl.yager_andness(w))
+
+    w = np.array([0.25, 0.25, 0.25, 0.25])
+    assert almost(0.5, fl.yager_orness(w))
+    assert almost(0.5, fl.yager_andness(w))
+
 def test_owa():
+
+    def almost(a, b, prec=0.00001):
+        return np.abs(a - b) < prec
 
     X = np.array([1.0, 1.0, 1.0])
     w = [0.5, 0.3, 0.2]
@@ -217,6 +249,8 @@ def test_meowa():
     assert len(m.v) == 5
     for i in range(5):
         assert almost(0.2, m.v[i])
+    assert almost(0.5, m.andness())
+    assert almost(0.5, m.orness())
 
     m = fl.meowa(3, 0.5)
 
@@ -224,6 +258,7 @@ def test_meowa():
     assert len(m.v) == 3
     for i in range(3):
         assert almost(0.33, m.v[i], 0.01)
+    assert almost(0.5, m.andness())
 
     m = fl.meowa(3, 0.8)  # example from paper
 
@@ -235,12 +270,15 @@ def test_meowa():
     assert almost(0.08187, m.v[0], 0.00001)
     assert almost(0.23627, m.v[1], 0.00001)
     assert almost(0.68187, m.v[2], 0.00001)
+    assert almost(0.8, m.andness())
+    assert almost(0.2, m.orness())
 
     m = fl.meowa(3, 1.0)
     assert len(m.v) == 3
     assert almost(0.0, m.v[0])
     assert almost(0.0, m.v[1])
     assert almost(1.0, m.v[2])
+    assert almost(1.0, m.andness())
 
     m = fl.meowa(4, 0.0)
     assert len(m.v) == 4
@@ -248,6 +286,7 @@ def test_meowa():
     assert almost(0.0, m.v[1])
     assert almost(0.0, m.v[2])
     assert almost(0.0, m.v[3])
+    assert almost(0.0, m.andness())
 
     with pytest.raises(ValueError) as v:
         fl.meowa(1, 0.3)

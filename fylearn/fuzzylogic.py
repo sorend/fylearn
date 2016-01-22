@@ -181,18 +181,36 @@ def ndispersion(w):
 
 def yager_orness(w):
     n = len(w)
-    return np.sum(np.array([ n - (i + 1) for i in range(n) ]) * w) / (n - 1.0)
+    return np.sum(np.arange(n - 1, -1, -1) * w) / (n - 1.0)
+
+def yager_andness(w):
+    return 1.0 - yager_orness(w)
 
 class OWA:
+    """
+    Order weighted averaging operator.
+
+    The order weighted averaging operator aggregates vector of a1, ..., an using a
+    a permutation b1, ... bn for which b1 >= b2 => ... >= bn and a weight vector
+    w, for which that w = w1, ..., wn in [0, 1] and sum w = 1
+
+    Averaging is done with weighted mean: sum(b*w)
+
+    Parameters:
+    -----------
+    v : The weights
+
+    """
     def __init__(self, v):
         self.v = v
+        self.v_ = v[::-1]
         self.lv = len(v)
 
     def __call__(self, X, axis=-1):
-        v, lv = self.v, self.lv
-        if X.shape[axis] != lv:
+        if X.shape[axis] != self.lv:
             raise ValueError("len(X) != len(v)")
-        return np.sum(np.sort(X, axis) * v, axis)
+        b = np.sort(X, axis)  # creates permutation
+        return np.sum(b * self.v_, axis)
 
     def __str__(self):
         return "OWA(v=%s)" % (str(self.v),)
@@ -201,7 +219,7 @@ class OWA:
         return str(self)
 
     def andness(self):
-        return 1.0 - self.orness()
+        return yager_andness(self.v)
 
     def orness(self):
         return yager_orness(self.v)
@@ -234,7 +252,7 @@ def meowa(n, andness, **kwargs):
         return -dispersion(v)  # we want to maximize, but scipy want to minimize
 
     def constraint_has_andness(v):
-        return np.abs((1.0 - yager_orness(v)) - andness)
+        return np.abs(yager_andness(v) - andness)
 
     def constraint_has_sum(v):
         return np.abs(np.sum(v) - 1.0)

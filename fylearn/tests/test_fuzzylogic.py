@@ -3,6 +3,53 @@ import numpy as np
 import fylearn.fuzzylogic as fl
 import pytest
 
+def test_max():
+    a = np.array([0.0, 0.5, 0.4, 0.2])
+
+    m = fl.max(a)
+    assert m == 0.5
+
+    b = np.array([[0.3, 0.2, 0.5],
+                  [0.1, 0.4, 0.4]])
+
+    m = fl.max(b, None)
+    assert m == 0.5
+
+    m = fl.max(b, 1)  # axis=1 -> row-wise
+    assert len(m) == 2
+    assert m[0] == 0.5
+    assert m[1] == 0.4
+
+    m = fl.max(b, 0)
+    assert len(m) == 3
+    assert m[0] == 0.3
+    assert m[1] == 0.4
+    assert m[2] == 0.5
+
+def test_min():
+    a = np.array([0.0, 0.5, 0.4, 0.2])
+
+    m = fl.min(a)
+    assert m == 0.0
+
+    b = np.array([[0.3, 0.2, 0.5],
+                  [0.1, 0.4, 0.4]])
+
+    m = fl.min(b, None)
+    assert m == 0.1
+
+    m = fl.min(b, 1)  # axis=1 -> row-wise
+    assert len(m) == 2
+    assert m[0] == 0.2
+    assert m[1] == 0.1
+
+    m = fl.min(b, 0)
+    assert len(m) == 3
+    assert m[0] == 0.1
+    assert m[1] == 0.2
+    assert m[2] == 0.4
+
+
 def test_helper_np_array():
 
     a = fl.helper_np_array(1.0)

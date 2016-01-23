@@ -124,13 +124,13 @@ def prod(X, axis=-1):
     return np.multiply.reduce(X, axis)
 
 def mean(X, axis=-1):
-    return np.mean(X, axis)
+    return np.nanmean(X, axis)
 
 def min(X, axis=-1):
     return np.nanmin(X, axis)
 
 def max(X, axis=-1):
-    return np.nanmin(X, axis)
+    return np.nanmax(X, axis)
 
 def lukasiewicz_i(X):
     return np.maximum(0.0, X[:, 0] + X[:, 1] - 1)
@@ -146,8 +146,8 @@ def einstein_u(X):
     a, b = X[:, 0], X[:, 1]
     return (a + b) / (1.0 + (a * b))
 
-def algebraic_sum(X):
-    return 1.0 - prod(1.0 - X)
+def algebraic_sum(X, axis=-1):
+    return 1.0 - prod(1.0 - X, axis)
 
 def min_max_normalize(X):
     nmin, nmax = np.nanmin(X), np.nanmax(X)
@@ -186,6 +186,10 @@ def yager_orness(w):
 def yager_andness(w):
     return 1.0 - yager_orness(w)
 
+def weights_mapping(w):
+    s = np.e ** w
+    return s / np.sum(s)
+
 class OWA:
     """
     Order weighted averaging operator.
@@ -203,7 +207,7 @@ class OWA:
     """
     def __init__(self, v):
         self.v = v
-        self.v_ = v[::-1]
+        self.v_ = v[::-1]  # save the inverse so we don't need to reverse np.sort
         self.lv = len(v)
 
     def __call__(self, X, axis=-1):
@@ -213,7 +217,7 @@ class OWA:
         return np.sum(b * self.v_, axis)
 
     def __str__(self):
-        return "OWA(v=%s)" % (str(self.v),)
+        return "OWA(" + " ".join([ "%.4f" % (x,) for x in self.v]) + ")"
 
     def __repr__(self):
         return str(self)

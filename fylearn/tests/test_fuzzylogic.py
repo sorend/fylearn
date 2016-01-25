@@ -362,3 +362,35 @@ def test_meowa_many_decimals():
 
     assert len(m.v) == 34
     assert almost(0.91962, m.andness(), 0.00001)
+
+def test_weights_mapping():
+
+    def almost(a, b, prec=0.00001):
+        return np.abs(a - b) < prec
+
+    X = np.random.rand(10)
+
+    Y = fl.weights_mapping(X)
+
+    assert almost(1.0, np.sum(Y), 0.000001)
+
+    X = np.zeros(10)
+    Y = fl.weights_mapping(X)
+
+    print "Y", Y
+
+    assert almost(1.0, np.sum(Y), 0.000001)
+
+    X = np.ones(10)
+    Y = fl.weights_mapping(X)
+
+    print "Y", Y
+
+    assert almost(1.0, np.sum(Y), 0.000001)
+
+    for i in range(100000):
+        X = np.random.rand(10)
+        Y = fl.weights_mapping(X)
+        if np.nan in np.asarray(Y):
+            print "Y", Y, "X", X
+            fail()

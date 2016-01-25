@@ -224,6 +224,11 @@ class OWA:
         b = np.sort(X, axis)  # creates permutation
         return np.sum(b * self.v_, axis)
 
+    def s_(self, X, axis=-1):
+        if X.shape[axis] != self.lv:
+            raise ValueError("len(X) != len(v)")
+        return np.sum(X * self.v_, axis)
+
     def __str__(self):
         return "OWA(" + " ".join([ "%.4f" % (x,) for x in self.v]) + ")"
 

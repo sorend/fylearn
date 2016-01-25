@@ -305,14 +305,16 @@ def owa_decoder_plain(c):
     return owa(weights_mapping(c))
 
 def owa_decoder_or(c):
-    for i in range(1, len(c)):
-        c[i] += c[i - 1]
-    return owa(weights_mapping(c))
+    w = np.array(c, copy=True)
+    for i in range(1, len(w)):
+        w[i] += w[i - 1]
+    return owa(weights_mapping(w))
 
 def owa_decoder_and(c):
-    for i in range(len(c) - 1, 0, -1):
-        c[i - 1] += c[i]
-    return owa(weights_mapping(c))
+    w = np.array(c, copy=True)
+    for i in range(len(w) - 1, 0, -1):
+        w[i - 1] += w[i]
+    return owa(weights_mapping(w))
 
 class GAOWAFactory:
 

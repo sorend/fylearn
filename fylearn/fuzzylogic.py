@@ -180,10 +180,18 @@ def ndispersion(w):
     return dispersion(w) / np.log(len(w))
 
 def yager_orness(w):
+    """
+    The orness is a measure of how "or-like" a given weight vector is for use in OWA.
+
+    orness(w) = 1/(n-1) * sum( (n-i)*w )
+    """
     n = len(w)
     return np.sum(np.arange(n - 1, -1, -1) * w) / (n - 1.0)
 
 def yager_andness(w):
+    """
+    Yager's andness is 1.0 - Yager's orness for a given weight vector.
+    """
     return 1.0 - yager_orness(w)
 
 def weights_mapping(w):
@@ -238,35 +246,30 @@ def owa(*w):
     w = np.array(w, copy=False).ravel()
     return OWA(w[::-1])
 
-def meowa(n, andness, **kwargs):
-    if 0.0 > andness or andness > 1.0:
-        raise ValueError("andness must be in [0, 1]")
+def meowa(n, orness, **kwargs):
+    if 0.0 > orness or orness > 1.0:
+        raise ValueError("orness must be in [0, 1]")
 
     if n < 2:
         raise ValueError("n must be > 1")
 
-    # if andness == 1.0:
-    #     w = np.zeros(n)
-    #     w[-1] = 1.0
-    #     return OWA(w)
-
-    from scipy.optimize import minimize  # use scipy minimize to optimize
+    from scipy.optimize import minimize
 
     def negdisp(v):
         return -dispersion(v)  # we want to maximize, but scipy want to minimize
 
-    def constraint_has_andness(v):
-        return np.abs(yager_andness(v) - andness)
+    def constraint_has_orness(v):
+        return np.abs(yager_orness(v) - orness)
 
     def constraint_has_sum(v):
         return np.abs(np.sum(v) - 1.0)
 
-    bounds = [ (0, 1) for x in range(n) ]  # this is actually a third constraint.
+    bounds = [ (0, 1) for x in range(n) ]  # this is actually the third constraint.
 
     res = minimize(negdisp, np.zeros(n),
                    bounds=bounds,
                    options=kwargs,
-                   constraints=({"fun": constraint_has_andness, "type": "eq"},
+                   constraints=({"fun": constraint_has_orness, "type": "eq"},
                                 {"fun": constraint_has_sum, "type": "eq"}))
 
     if res.success:

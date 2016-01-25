@@ -305,7 +305,7 @@ def test_meowa():
     assert len(m.v) == 3
     for i in range(3):
         assert almost(0.33, m.v[i], 0.01)
-    assert almost(0.5, m.andness())
+    assert almost(0.5, m.orness())
 
     m = fl.meowa(3, 0.8)  # example from paper
 
@@ -314,26 +314,26 @@ def test_meowa():
 
     print "m", m.v
 
-    assert almost(0.08187, m.v[0], 0.00001)
+    assert almost(0.08187, m.v[2], 0.00001)
     assert almost(0.23627, m.v[1], 0.00001)
-    assert almost(0.68187, m.v[2], 0.00001)
-    assert almost(0.8, m.andness())
-    assert almost(0.2, m.orness())
+    assert almost(0.68187, m.v[0], 0.00001)
+    assert almost(0.2, m.andness())
+    assert almost(0.8, m.orness())
 
     m = fl.meowa(3, 1.0)
     assert len(m.v) == 3
-    assert almost(0.0, m.v[0])
+    assert almost(0.0, m.v[2])
     assert almost(0.0, m.v[1])
-    assert almost(1.0, m.v[2])
-    assert almost(1.0, m.andness())
+    assert almost(1.0, m.v[0])
+    assert almost(0.0, m.andness())
 
     m = fl.meowa(4, 0.0)
     assert len(m.v) == 4
-    assert almost(1.0, m.v[0])
-    assert almost(0.0, m.v[1])
+    assert almost(1.0, m.v[3])
     assert almost(0.0, m.v[2])
-    assert almost(0.0, m.v[3])
-    assert almost(0.0, m.andness())
+    assert almost(0.0, m.v[1])
+    assert almost(0.0, m.v[0])
+    assert almost(1.0, m.andness())
 
     with pytest.raises(ValueError) as v:
         fl.meowa(1, 0.3)
@@ -343,19 +343,19 @@ def test_meowa():
     with pytest.raises(ValueError) as v:
         fl.meowa(4, -0.5)
 
-    assert "andness must be" in str(v.value)
+    assert "orness must be" in str(v.value)
 
     with pytest.raises(ValueError) as v:
         fl.meowa(1, 1.5)
 
-    assert "andness must be" in str(v.value)
+    assert "orness must be" in str(v.value)
 
 def test_meowa_many_decimals():
 
-    with pytest.raises(ValueError) as v:
-        m = fl.meowa(n=34, andness=0.91962632217914819)  # cant solve this.
+#    with pytest.raises(ValueError) as v:
+#        m = fl.meowa(n=34, orness=1.0 - 0.91962632217914819)  # cant solve this.
 
-    m = fl.meowa(n=34, andness=0.91962632217914819, maxiter=1000)  # can with more iter
+    m = fl.meowa(n=34, orness=1.0 - 0.91962632217914819, maxiter=1000)  # can with more iter
 
     def almost(a, b, prec=0.00001):
         return np.abs(a - b) < prec

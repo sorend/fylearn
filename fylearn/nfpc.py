@@ -15,7 +15,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array
 from sklearn.metrics import mean_squared_error
 from sklearn.neighbors import DistanceMetric
-from fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize, prod
+from fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize, prod, weights_mapping
 from ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations, UniformCrossover
 from local_search import PatternSearchOptimizer, helper_num_runs, LocalUnimodalSamplingOptimizer
 
@@ -302,17 +302,17 @@ def evaluate_rmse(y_target, y_pred):
         return mean_squared_error(y_target, y_pred)
 
 def owa_decoder_plain(c):
-    return owa(p_normalize(c))
+    return owa(weights_mapping(c))
 
 def owa_decoder_or(c):
     for i in range(1, len(c)):
         c[i] += c[i - 1]
-    return owa(p_normalize(c))
+    return owa(weights_mapping(c))
 
 def owa_decoder_and(c):
     for i in range(len(c) - 1, 0, -1):
         c[i - 1] += c[i]
-    return owa(p_normalize(c))
+    return owa(weights_mapping(c))
 
 class GAOWAFactory:
 
@@ -331,13 +331,13 @@ class GAOWAFactory:
 
         weights = self.optimizer(X, fitness)
 
-        weights = p_normalize(weights)
+        best = self.decoder(weights)
 
         logger.info("trained owa(%s, %s, %s)" % (str(self.optimizer),
                                                  str(self.decoder).split(" ")[1].split("_")[-1],
-                                                 ", ".join(map(lambda x: "%.5f" % (x,), weights))))
+                                                 ", ".join(map(lambda x: "%.5f" % (x,), best.v))))
 
-        return owa(weights)
+        return best
 
 class StaticFactory:
 
@@ -353,8 +353,8 @@ class MEOWAFactory:
 
         y_target = build_y_target(y, classes)
 
-        def fitness(andness):
-            aggr = meowa(X.shape[1], andness[0], maxiter=1000)
+        def fitness(orness):
+            aggr = meowa(X.shape[1], orness[0], maxiter=1000)
             y_pred = predict_protos(X, protos, aggr)
             return evaluate_rmse(y_target, y_pred)
 
@@ -362,20 +362,11 @@ class MEOWAFactory:
         upper_bounds = (1.0,)
 
         ps = PatternSearchOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=5)
-        best_sol, best_fit = helper_num_runs(ps, num_runs=10)
+        best_orness, best_fit = helper_num_runs(ps, num_runs=10)
 
-        # best, best_mse = None, 1.0
-        # for p in np.linspace(0, 1, 11):
-        #     aggr = meowa(X.shape[1], p)
-        #     y_pred = predict_protos(X, protos, aggr)
-        #     mse = mean_squared_error(y_target, y_pred)
-        #     if mse < best_mse:
-        #         best = aggr
-        #         best_mse = mse
+        best = meowa(X.shape[1], best_orness[0], maxiter=1000)  # construct from optimizer
 
-        best = meowa(X.shape[1], best_sol[0])  # construct from optimizer
-
-        logger.info("trained owa(meowa, na, %s)" % (", ".join(map(lambda x: "%.5f" % (x,), best.v))))
+        logger.info("trained owa(meowa, plain, %s)" % (", ".join(map(lambda x: "%.5f" % (x,), best.v))))
 
         return best
 

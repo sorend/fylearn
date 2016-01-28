@@ -6,8 +6,8 @@ FyLearn is a fuzzy machine learning library, built on top of [SciKit-Learn](http
 
 SciKit-Learn contains many common machine learning algorithms, and is a good place to start if you want to play or program anything related to machine learning in Python. FyLearn is not intended to be a replacement for SciKit-Learn (in fact FyLearn depends on SciKit-Learn), but to provide an extra set of machine learning algorithms from the fuzzy logic community.
 
-Algorithms implemented
-----------------------
+Machine learning algorithms
+---------------------------
 
  - fylearn.frr.FuzzyReductionRuleClassifier
  - fylearn.frrga.FuzzyPatternClassifierGA
@@ -15,13 +15,31 @@ Algorithms implemented
  - fylearn.fpt.FuzzyPatternTreeClassifier
  - fylearn.fpt.FuzzyPatternTreeTopDownClassifier
  - fylearn.garules.MultimodalEvolutionaryClassifer
+ - fylearn.nfpc.FuzzyPatternClassifier
+
+
+### Usage
+
+You can use the classifiers as any other SciKit-Learn classifier:
+
+    import fylearn.frr as frr
+    l1 = frr.FuzzyReductionRuleClassifier()
+    l1.fit(X, y)
+    print l1.predict([1, 2, 3, 4])
+
+    import fylearn.fpcga as fpcga
+    l2 = fpcga.FuzzyPatternClassifierGA()
+    l2.fit(X, y)
+    print l2.predict([1, 2, 3, 4])
+
+
 
 At tiny fuzzy logic library
 ---------------------------
 
 Tiny, but hopefully useful. The focus of the library is on providing membership functions and aggregations that work with NumPy, for using in the implemented learning algorithms.
 
-**Membership functions**
+### Membership functions
 
  - fylearn.fuzzylogic.TriangularSet
  - fylearn.fuzzylogic.TrapezoidalSet
@@ -35,7 +53,7 @@ Example use:
     print t(3)   # use with singletons
     print t(np.array([[1, 2, 3], [4, 5, 6]]))  # use with arrays
 
-**Aggregation functions**
+### Aggregation functions
 
 Here focus has been on providing aggregation functions that support aggregation along a specified axis for 2-dimensional matrices.
 
@@ -55,21 +73,6 @@ Installation
 You can add FyLearn to your project by using pip:
 
     pip install -e git+https://github.com/sorend/fylearn.git#egg=FyLearn-master
-
-Usage
------
-
-You can use the classifiers as any other SciKit-Learn classifier:
-
-    import fylearn.frr as frr
-    l1 = frr.FuzzyReductionRuleClassifier()
-    l1.fit(X, y)
-    print l1.predict([1, 2, 3, 4])
-
-    import fylearn.fpcga as fpcga
-    l2 = fpcga.FuzzyPatternClassifierGA()
-    l2.fit(X, y)
-    print l2.predict([1, 2, 3, 4])
 
 About
 -----

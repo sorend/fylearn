@@ -22,16 +22,16 @@ Machine learning algorithms
 
 You can use the classifiers as any other SciKit-Learn classifier:
 
-    import fylearn.frr as frr
-    l1 = frr.FuzzyReductionRuleClassifier()
-    l1.fit(X, y)
-    print l1.predict([1, 2, 3, 4])
+    from fylearn.nfpc import FuzzyPatternClassifier
+    from fylearn.garules import MultimodalEvolutionaryClassifier
+    from fylearn.fpt import FuzzyPatternTreeTopDownClassifier
 
-    import fylearn.fpcga as fpcga
-    l2 = fpcga.FuzzyPatternClassifierGA()
-    l2.fit(X, y)
-    print l2.predict([1, 2, 3, 4])
+    C = (FuzzyPatternClassifier(),
+         MultimodalEvolutionaryClassifier(),
+         FuzzyPatternTreeTopDownClassifier())
 
+    for c in C:
+        print c.fit(X, y).predict([1, 2, 3, 4])
 
 
 At tiny fuzzy logic library

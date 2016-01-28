@@ -74,6 +74,14 @@ You can add FyLearn to your project by using pip:
 
     pip install -e git+https://github.com/sorend/fylearn.git#egg=FyLearn-master
 
+To Do
+-----
+
+We are working on adding the following algorithms:
+
+ - ANFIS.
+ - FRBCS.
+
 About
 -----
 

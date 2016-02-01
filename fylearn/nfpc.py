@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Fuzzy pattern classifier with negative and positive examples
+Fuzzy Pattern Classifiers.
 
 
 References:
 -----------
 [1] Davidsen 2015.
+
+[2] Monks, 2009.
+
+[3] Davidsen, 2016.
+
+[4] Meher, 2009.
 
 """
 
@@ -372,9 +378,9 @@ class MEOWAFactory:
 
         return best
 
-class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
+class FuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
     """
-    Fuzzy pattern classifier using OWA as aggregation with weights searched by a GA.
+    Fuzzy pattern classifier using aggregation factory and membership factory.
     """
     def get_params(self, deep=False):
         return {"aggregation_factory": self.aggregation_factory,
@@ -385,7 +391,18 @@ class OWAFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
             setattr(self, key, value)
         return self
 
-    def __init__(self, membership_factory=pi_factory, aggregation_factory=GAOWAFactory()):
+    def __init__(self, membership_factory=pi_factory, aggregation_factory=StaticFactory(prod)):
+        """
+        Constructs object
+
+        Parameters:
+        -----------
+
+        membership_factory: the function to use for creating membership function.
+
+        aggregation_factory: the function to use for creating the aggregation function.
+
+        """
         self.aggregation_factory = aggregation_factory
         self.membership_factory = membership_factory
 

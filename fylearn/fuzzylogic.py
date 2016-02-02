@@ -271,7 +271,9 @@ def meowa(n, orness, **kwargs):
 
     bounds = [ (0, 1) for x in range(n) ]  # this is actually the third constraint.
 
-    res = minimize(negdisp, np.zeros(n),
+    initial = np.ones(n) / n
+
+    res = minimize(negdisp, initial,
                    bounds=bounds,
                    options=kwargs,
                    constraints=({"fun": constraint_has_orness, "type": "eq"},

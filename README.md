@@ -39,8 +39,8 @@ Heuristic search methods
 Several heuristic search methods are implemented. These are used in the learning algorithms
 for parameter assignment, but, are also usable directly.
 
- - fylearn.local_search.PatternSearch
- - fylearn.local_search.LocalUnimodalSampling
+ - fylearn.local_search.PatternSearchOptimizer
+ - fylearn.local_search.LocalUnimodalSamplingOptimizer
  - fylearn.ga.GeneticAlgorithm: Search parameters using modification and a scaling
  - fylearn.ga.UnitIntervalGeneticAlgorithm: Search parameters in unit interval universe.
  - fylearn.ga.DiscreteGeneticAlgorithm: Search parameters from discrete universe.

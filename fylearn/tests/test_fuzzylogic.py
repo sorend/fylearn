@@ -314,9 +314,9 @@ def test_meowa():
 
     print "m", m.v
 
-    assert almost(0.08187, m.v[2], 0.00001)
-    assert almost(0.23627, m.v[1], 0.00001)
-    assert almost(0.68187, m.v[0], 0.00001)
+    assert almost(0.08187, m.v[2], 0.001)
+    assert almost(0.23627, m.v[1], 0.001)
+    assert almost(0.68187, m.v[0], 0.001)
     assert almost(0.2, m.andness())
     assert almost(0.8, m.orness())
 

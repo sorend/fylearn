@@ -11,6 +11,7 @@ Fuzzy sets and aggregation utils
 import numpy as np
 import collections
 import numbers
+from scipy.optimize import minimize
 
 def helper_np_array(X):
     if isinstance(X, (np.ndarray, np.generic)):
@@ -198,7 +199,7 @@ def weights_mapping(w):
     s = np.e ** w
     return s / np.sum(s)
 
-class OWA:
+class OWA(object):
     """
     Order weighted averaging operator.
 
@@ -222,11 +223,10 @@ class OWA:
         if X.shape[axis] != self.lv:
             raise ValueError("len(X) != len(v)")
         b = np.sort(X, axis)  # creates permutation
-        return np.sum(b * self.v_, axis)
+        return self.sorted_mean(b, axis)
 
-    def s_(self, X, axis=-1):
-        if X.shape[axis] != self.lv:
-            raise ValueError("len(X) != len(v)")
+    def sorted_mean(self, X, axis=-1):
+        """Use for pre-sorted X"""
         return np.sum(X * self.v_, axis)
 
     def __str__(self):
@@ -247,42 +247,149 @@ class OWA:
     def ndisp(self):
         return ndispersion(self.v)
 
-def owa(*w):
+class GOWA(OWA):
+    """
+    Generalized order weighted averaging operator.
+
+    The generalized order weighted averaging operator aggregates a vector of a1, ..., an using
+    a permutation b1, ..., bn for which b1 >= b2 => ... => bn where b1 is the largest value in
+    a, and which has an related weight vector w = w1, ..., wn in [0, 1] and sum w = 1.
+
+    Averaging is used using the power-mean: sum(w*b^p)^(1/p), where p is the power parameter.
+    """
+    def __init__(self, p, v):
+        """
+        Constructs GOWA operator.
+
+        Parameters:
+        -----------
+        p : power parameter.
+
+        v : weights.
+        """
+        super(GOWA, self).__init__(v)
+        self.p = p
+        self.inv_p = (1.0 / p)
+
+    def sorted_mean(self, X, axis=-1):
+        return np.sum((X ** self.p) * self.v_, axis) ** self.inv_p
+
+    def __str__(self):
+        return ("GOWA(%f, " % (self.p,)) + " ".join([ "%.4f" % (x,) for x in self.v]) + ")"
+
+def gowa(*w):
+    """Create Generalized OWA (GOWA) operator from weights"""
     w = np.array(w, copy=False).ravel()
-    return OWA(w[::-1])
+    return GOWA(w)
+
+def owa(*w):
+    """Create OWA operator from weights"""
+    w = np.array(w, copy=False).ravel()
+    return OWA(w)
 
 def meowa(n, orness, **kwargs):
+    """
+    Maximize dispersion at a specified orness level.
+    """
     if 0.0 > orness or orness > 1.0:
         raise ValueError("orness must be in [0, 1]")
 
     if n < 2:
         raise ValueError("n must be > 1")
 
-    from scipy.optimize import minimize
-
     def negdisp(v):
         return -dispersion(v)  # we want to maximize, but scipy want to minimize
 
     def constraint_has_orness(v):
-        return np.abs(yager_orness(v) - orness)
+        return yager_orness(v) - orness
 
     def constraint_has_sum(v):
-        return np.abs(np.sum(v) - 1.0)
+        return np.sum(v) - 1.0
 
-    bounds = [ (0, 1) for x in range(n) ]  # this is actually the third constraint.
+    return _minimize_owa(negdisp, (constraint_has_orness, constraint_has_sum), n, **kwargs)
+
+def sampling_owa_orness(x, d, **kwargs):
+    """
+    Maximize orness of an owa operator given a given result data point.
+    """
+    n = len(x)
+    if n < 2:
+        raise ValueError("n must be > 1")
+
+    s_ = np.sort(x)[::-1]
+
+    def negorness(v):
+        return -yager_orness(v)
+
+    def constraint_has_output_d(v):
+        return np.sum(s_ * v) - d
+
+    def constraint_has_sum(v):
+        return np.sum(v) - 1.0
+
+    return _minimize_owa(negorness, (constraint_has_sum, constraint_has_output_d), n, **kwargs)
+
+def sampling_owa_ndisp(x, d, **kwargs):
+    """
+    Maximize dispersion of an owa operator given a given result data point.
+    """
+    n = len(x)
+    if n < 2:
+        raise ValueError("n must be > 1")
+
+    s_ = np.sort(x)[::-1]
+
+    def negndisp(v):
+        return -ndispersion(v)
+
+    def constraint_has_output_d(v):
+        return np.sum(s_ * v) - d
+
+    def constraint_has_sum(v):
+        return np.sum(v) - 1.0
+
+    return _minimize_owa(negndisp, (constraint_has_sum, constraint_has_output_d), n, **kwargs)
+
+def mvowa(n, orness, **kwargs):
+    """
+    Maximum variability order weighted aggregation. Construct aggregation with fixed orness
+    but maximized variance. [Fuller and Majlender, 2003]
+    """
+    if 0.0 > orness or orness > 1.0:
+        raise ValueError("orness must be in [0, 1]")
+
+    if n < 2:
+        raise ValueError("n must be > 1")
+
+    def variance(v):
+        n = len(v)
+        return (np.sum(v * v) - (1 - (n * n))) / n
+
+    def constraint_has_orness(v):
+        return yager_orness(v) - orness
+
+    def constraint_has_sum(v):
+        return np.sum(v) - 1.0
+
+    return _minimize_owa(variance, (constraint_has_orness, constraint_has_sum), n, **kwargs)
+
+def _minimize_owa(minfunc, constraints, n, **kwargs):
+
+    bounds = tuple([ (0, 1) for x in range(n) ])  # this is actually the third constraint, but common.
 
     initial = np.ones(n) / n
 
-    res = minimize(negdisp, initial,
+    constraints_ = tuple([ {"fun": c, "type": "eq"} for c in constraints ])
+
+    res = minimize(minfunc, initial,
                    bounds=bounds,
                    options=kwargs,
-                   constraints=({"fun": constraint_has_orness, "type": "eq"},
-                                {"fun": constraint_has_sum, "type": "eq"}))
+                   constraints=constraints_)
 
     if res.success:
         return OWA(res.x)
     else:
-        raise ValueError("Could not find maximum entropy weights: " + res.message)
+        raise ValueError("Could not optimize weights: " + res.message)
 
 class AndnessDirectedAveraging:
     def __init__(self, p):

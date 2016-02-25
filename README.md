@@ -102,7 +102,7 @@ Installation
 
 You can add FyLearn to your project by using pip:
 
-    pip install -e git+https://github.com/sorend/fylearn.git#egg=FyLearn-master
+    pip install fylearn
 
 To Do
 -----

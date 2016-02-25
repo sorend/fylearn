@@ -9,7 +9,7 @@ setup(
     author='Søren Atmakuri Davidsen',
     author_email='sorend@cs.svuni.in',
     url='https://github.com/sorend/fylearn',
-    download_url='https://github.com/sorend/fylearn/tarball/0.1',
+    download_url='https://github.com/sorend/fylearn/tarball/0.1.1',
     license='MIT',
     keywords=['machine learning', 'fuzzy logic', 'scikit-learn'],
     install_requires=[

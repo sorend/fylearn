@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
     name='fylearn',
     packages=['fylearn'],
-    version='0.1',
+    version='0.1.1',
     description='Fuzzy Machine Learning Algorithms',
     author='Søren Atmakuri Davidsen',
     author_email='sorend@cs.svuni.in',

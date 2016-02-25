@@ -21,7 +21,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array
 from sklearn.metrics import mean_squared_error
 from sklearn.neighbors import DistanceMetric
-from fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize, prod, weights_mapping
+from fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize, prod, weights_mapping, mean
 from ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations, UniformCrossover
 from local_search import PatternSearchOptimizer, helper_num_runs, LocalUnimodalSamplingOptimizer
 
@@ -38,20 +38,18 @@ def t_factory(**kwargs):
     d = (kwargs["max"] - kwargs["min"]) / 2.0
     return TriangularSet(c - d, c, c + d)
 
-def distancemetric_f(name, **kwargs):
-    """
-    Factory for a distance metric supported by DistanceMetric
-    """
-    def _distancemetric_factory(X):
-        return DistanceMetric.get_metric(name)
-    return _distancemetric_factory
-
 def build_memberships(X, class_idx, factory):
     # take column-wise min/mean/max for class
     mins = np.nanmin(X[class_idx], 0)
     means = np.nanmean(X[class_idx], 0)
     maxs = np.nanmax(X[class_idx], 0)
     return [ factory(min=mins[i], mean=means[i], max=maxs[i]) for i in range(X.shape[1]) ]
+
+
+def learn_class(X, y, class_idx, membership_factory, aggregation_factory):
+    mus = build_memberships(X, class_idx, membership_factory)
+    aggr = aggregation_factory(mus, X, y, class_idx)
+    return mus, aggr
 
 #
 # Authors: Søren Atmakuri Davidsen <sorend@gmail.com>
@@ -67,6 +65,13 @@ def predict_protos(X, protos, aggregation):
     A = np.zeros(X.shape)  # re-use this matrix
     for clz_no, proto in enumerate(protos):
         y[:, clz_no] = predict_proto(X, proto, aggregation, A)
+    return y
+
+def predict_protos_aggregations(X, protos, aggregations):
+    y = np.zeros((X.shape[0], len(protos)))
+    A = np.zeros(X.shape)  # re-use this matrix
+    for clz_no, proto in enumerate(protos):
+        y[:, clz_no] = predict_proto(X, proto, aggregations[clz_no], A)
     return y
 
 class IterativeShrinking:
@@ -449,5 +454,131 @@ class FuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         X = check_array(X)
 
         y_mu = predict_protos(X, self.protos_, self.aggregation_)
+
+        return p_normalize(y_mu, 1)  # constrain membership values to probability sum(row) = 1
+
+
+class OptimizerOWAFactory:
+
+    def __init__(self, optimizer=ga_owa_optimizer()):
+        self.optimizer = optimizer
+        self.decoder = owa_decoder_plain
+
+    def __call__(self, mus, X, y, class_idx):
+
+        y_target = np.zeros(len(y))
+        y_target[y == class_idx] = 1.0
+
+        A = np.zeros(X.shape)  # re-use this matrix
+
+        def fitness(c):
+            aggr = self.decoder(c)
+            y_pred = predict_proto(X, mus, aggr, A)
+            return evaluate_rmse(y_target, y_pred)
+
+        weights = self.optimizer(X, fitness)
+
+        best = self.decoder(weights)
+
+        logger.info("trained owa(%s, %s, %s)" % (str(self.optimizer),
+                                                 str(self.decoder).split(" ")[1].split("_")[-1],
+                                                 ", ".join(map(lambda x: "%.5f" % (x,), best.v))))
+
+        return best
+
+class static_selection:
+    def __init__(self, selection_method):
+        self.selection_method = selection_method
+
+    def __call__(self, *args, **kwargs):
+        return self.selection_method
+
+class meowa_andness_selection:
+    def __init__(self, andness=0.5):
+        self.andness = andness
+
+    def __call__(self, X, y):
+        return meowa(X.shape[1], self.andness)
+
+class MultipleAggregationsFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
+    """
+    Fuzzy pattern classifier with one aggregation for each class.
+    """
+    def get_params(self, deep=False):
+        return {"aggregation_factory": self.aggregation_factory,
+                "membership_factory": self.membership_factory,
+                "selection_factory": self.selection_factory}
+
+    def set_params(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        return self
+
+    def __init__(self, membership_factory=pi_factory,
+                 aggregation_factory=OptimizerOWAFactory(),
+                 selection_factory=static_selection(np.argmax)):
+        """
+        Constructs object
+
+        Parameters:
+        -----------
+
+        membership_factory: the function to use for creating membership function.
+
+        aggregation_factory: the function to use for creating the aggregation function.
+
+        selection_factory: The method of selecting winner in ensemble of classifiers.
+
+        """
+        self.aggregation_factory = aggregation_factory
+        self.membership_factory = membership_factory
+        self.selection_factory = selection_factory
+
+    def fit(self, X, y):
+
+        X = check_array(X)
+
+        self.classes_, y = np.unique(y, return_inverse=True)
+
+        if "?" in tuple(self.classes_):
+            raise ValueError("nan not supported for class values")
+
+        # build membership functions for each feature for each class
+        learned = [
+            learn_class(X, y, y == idx, self.membership_factory, self.aggregation_factory)
+            for idx, class_value in enumerate(self.classes_)
+        ]
+
+        logger.info("learned %s" % (str(learned),))
+
+        self.protos_ = [ x[0] for x in learned ]
+        self.aggregations_ = [ x[1] for x in learned ]
+        self.selection_method_ = self.selection_factory(X, y)
+
+        return self
+
+    def predict(self, X):
+        """
+        Predicts if examples in X belong to classifier's class or not.
+
+        Parameters
+        ----------
+        X : examples to predict for.
+        """
+        if not hasattr(self, "classes_"):
+            raise Exception("Perform a fit first.")
+
+        y_mu = predict_protos_aggregations(X, self.protos_, self.aggregations_)
+
+        return self.classes_.take(np.argmax(y_mu, 1))
+
+    def predict_proba(self, X):
+
+        if not hasattr(self, "classes_"):
+            raise Exception("Perform a fit first.")
+
+        X = check_array(X)
+
+        y_mu = predict_protos_aggregations(X, self.protos_, self.aggregations_)
 
         return p_normalize(y_mu, 1)  # constrain membership values to probability sum(row) = 1

@@ -5,3 +5,6 @@ venv
 tmp
 *ipynb*
 .cache
+.eggs
+dist
+*egg-info

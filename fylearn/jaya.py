@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Implementation of Teaching-Learning Based Optimization [1].
+Implementation of Jaya Algorithm Optimization [1].
 
-[1] R. V. Rao et al. "Teaching–learning-based optimization: A novel method for constrained
-    mechanical design optimization problems." Computer-Aided Design 43(3): 303-315, 2011.
-
+[1] R. V. Rao, "Jaya: A simple and new optimization algorithm for solving constrained
+    and unconstrained optimization problems." Int J of Industrial Engineering
+     Computations, 2016, 7(1):19-34.
 """
 import numpy as np
 
@@ -12,16 +12,15 @@ import numpy as np
 # Authors: Søren A. Davidsen <soren@atmakuridavidsen.com>
 #
 
-class TeachingLearningBasedOptimizer(object):
+class JayaOptimizer(object):
     """
-    Teaching-Learning based optimizer (TLBO).
+    Jaya Algorithm is a population based optimizer which optimizes a function based on
+    best and worst solutions in the population:
 
-    TLBO is a population based optimizer which works in two phases:
+    1. Move towards the best solution
 
-    1. Teaching phase: Using the best individual as teacher, randomly adjust other individuals
-       using difference between teacher and population mean.
+    2. Avoid the worst solution
 
-    2. Learner phase: Randomly adjust pairs of individuals based on the best one with best fitness.
     """
     def __init__(self, f, lower_bounds, upper_bounds,
                  n_population=50, random_state=None):
@@ -68,39 +67,28 @@ class TeachingLearningBasedOptimizer(object):
 
     def next(self):
         """
-        One iteration of TLBO.
+        One iteration of Jaya Algorithm
         """
-        mean = np.nanmean(self.population_, axis=0)  # column mean.
         rs = self.random_state
 
-        teacher = np.argmin(self.fitness_)  # select teacher
+        # find best and worst
+        fitness_sorted = np.argsort(self.fitness_)
+        best, worst = self.population_[fitness_sorted[0]], self.population_[fitness_sorted[-1]]
 
-        # teaching phase
+        # update using best and worst
         for i in self.pidx:
-            T_F = rs.randint(1, 3)  # teaching factor is randomly 1 or 2.
-            r_i = rs.rand(self.m)  # multiplier also random.
+            r1_i, r2_i = rs.rand(self.m), rs.rand(self.m)  # random modification vectors
 
-            new_solution = self.population_[i] + (r_i * (teacher - (T_F * mean)))
-            new_solution = np.minimum(np.maximum(new_solution, self.lower_bounds), self.upper_bounds)
+            # make new solution
+            new_solution = (
+                self.population_[i] +                            # old position
+                (r1_i * (best - np.abs(self.population_[i]))) -  # move towards best solution
+                (r2_i * (worst - np.abs(self.population_[i])))   # and avoid worst
+            )
 
-            new_fitness = self.f(new_solution)
+            # bounds
+            new_solution = np.minimum(self.upper_bounds, np.maximum(self.lower_bounds, new_solution))
 
-            if new_fitness < self.fitness_[i]:
-                self.population_[i] = new_solution
-                self.fitness_[i] = new_fitness
-
-        # learning phase
-        for i in self.pidx:
-
-            j = rs.choice(self.pidx[:i] + self.pidx[(i + 1):], 1)  # pick another random i!=j
-            r_i = rs.rand(self.m)
-
-            if self.fitness_[i] < self.fitness_[j]:
-                new_solution = self.population_[i] + r_i * (self.population_[i] - self.population_[j])
-            else:
-                new_solution = self.population_[i] + r_i * (self.population_[j] - self.population_[i])
-
-            new_solution = np.minimum(np.maximum(new_solution, self.lower_bounds), self.upper_bounds)
             new_fitness = self.f(new_solution)
 
             if new_fitness < self.fitness_[i]:
@@ -109,5 +97,3 @@ class TeachingLearningBasedOptimizer(object):
 
         self.bestidx_ = np.argmin(self.fitness_)  # update details
         self.bestcosts_.append(self.fitness_[self.bestidx_])
-
-TLBO = TeachingLearningBasedOptimizer  # shortcut to save our fingers

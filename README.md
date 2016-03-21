@@ -45,6 +45,7 @@ for parameter assignment, but, are also usable directly.
  - fylearn.ga.UnitIntervalGeneticAlgorithm: Search parameters in unit interval universe.
  - fylearn.ga.DiscreteGeneticAlgorithm: Search parameters from discrete universe.
  - fylearn.tlbo.TeachingLearningBasedOptimizer: Search using teaching-learning based optimization.
+ - fylearn.jaya.JayaOptimizer: Search based on moving towards best solution while avoiding worst.
 
 Example use:
 
@@ -52,16 +53,17 @@ Example use:
     from fylearn.ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations
     from fylearn.local_search import LocalUnimodalSamplingOptimizer, helper_num_runs
     from fylearn.tlbo import TeachingLearningBasedOptimizer
+    from fylearn.jaya import JayaOptimizer
 
     def fitness(x):  # defined for a single chromosome, so we need helper_fitness for GA
-        return np.var(x)
+        return np.sum(x**2)
 
     ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(fitness), n_chromosomes=100, n_genes=10)
     ga = helper_n_generations(ga, 100)
     best_chromosomes, best_fitness = ga.best(1)
     print "GA solution", best_chromosomes[0], "fitness", best_fitness[0]
 
-    lower_bounds, upper_bounds = np.zeros(10), np.ones(10)
+    lower_bounds, upper_bounds = np.ones(10) * -10., np.ones(10) * 10.
     lus = LocalUnimodalSamplingOptimizer(fitness, lower_bounds, upper_bounds)
     best_solution, best_fitness = helper_num_runs(lus, 100)
     print "LUS solution", best_solution, "fitness", best_fitness
@@ -71,6 +73,10 @@ Example use:
     best_solution, best_fitness = tlbo.best()
     print "TLBO solution", best_solution, "fitness", best_fitness
     
+    jaya = JayaOptimizer(fitness, lower_bounds, upper_bounds)
+    jaya = helper_n_generations(jaya, 100)
+    best_solution, best_fitness = jaya.best()
+    print "Jaya solution", best_solution, "fitness", best_fitness
 
 A tiny fuzzy logic library
 --------------------------

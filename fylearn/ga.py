@@ -230,14 +230,6 @@ class BaseGeneticAlgorithm(object):
         p_sorted = self.population_[f_sorted]
         return p_sorted[:n_best], self.fitness_[f_sorted][:n_best]
 
-    # def new_child(self, P_old, f_old):
-    #     # choose two random parents
-    #     father_idx, mother_idx = self.selection_function(self.random_state, P_old, f_old)
-    #     father, mother = P_old[father_idx], P_old[mother_idx]
-    #     # breed by cross-over
-    #     crossover_idx = self.random_state.choice(self.crossover_locations, self.crossover_points)
-    #     return np.hstack([father[:crossover_idx], mother[crossover_idx:]])
-
 class GeneticAlgorithm(BaseGeneticAlgorithm):
     """
     Continuous genetic algorithm is a genetic algorithm where the gene values

@@ -44,12 +44,14 @@ for parameter assignment, but, are also usable directly.
  - fylearn.ga.GeneticAlgorithm: Search parameters using modification and a scaling
  - fylearn.ga.UnitIntervalGeneticAlgorithm: Search parameters in unit interval universe.
  - fylearn.ga.DiscreteGeneticAlgorithm: Search parameters from discrete universe.
+ - fylearn.tlbo.TeachingLearningBasedOptimizer: Search using teaching-learning based optimization.
 
 Example use:
 
     import numpy as np
     from fylearn.ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations
     from fylearn.local_search import LocalUnimodalSamplingOptimizer, helper_num_runs
+    from fylearn.tlbo import TeachingLearningBasedOptimizer
 
     def fitness(x):  # defined for a single chromosome, so we need helper_fitness for GA
         return np.var(x)
@@ -64,8 +66,14 @@ Example use:
     best_solution, best_fitness = helper_num_runs(lus, 100)
     print "LUS solution", best_solution, "fitness", best_fitness
 
-At tiny fuzzy logic library
----------------------------
+    tlbo = TeachingLearningBasedOptimizer(fitness, lower_bounds, upper_bounds)
+    tlbo = helper_n_generations(tlbo, 100)
+    best_solution, best_fitness = tlbo.best()
+    print "TLBO solution", best_solution, "fitness", best_fitness
+    
+
+A tiny fuzzy logic library
+--------------------------
 
 Tiny, but hopefully useful. The focus of the library is on providing membership functions and aggregations that work with NumPy, for using in the implemented learning algorithms.
 

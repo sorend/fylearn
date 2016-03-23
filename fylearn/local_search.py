@@ -101,6 +101,53 @@ def scipy_refine(f, best_x, best_fitness, lower_bound, upper_bound):
 
     return best_x, best_fitness
 
+class helper_generations(object):
+    """
+    This helper wraps the optimizer, so ga.helper_n_generations can be used for
+    iteratively evaluating the optimizer much like a population based method.
+
+    Example:
+    --------
+
+    >>> import numpy as np
+    >>> from ga import helper_n_generations
+    >>> f = lambda x: np.var(x)
+    >>> lb, ub = np.ones(5) * -10, np.ones(5) * 10
+    >>> ps = PatternSearchOptimizer(f, lower_bound=lb, upper_bound=ub)
+    >>> wrapped = helper_generations(ps)
+    >>> wrapped = helper_n_generations(wrapped, 100)
+    >>> wrapped.best(5)  # get 5 best solutions and their fitness
+    """
+    def __init__(self, optimizer):
+        self.optimizer = optimizer
+        self.X_ = np.zeros((0, optimizer.lower_bound.shape[0]))
+        self.fitness_ = np.zeros((0,))
+
+    def next(self):
+        """Next generation"""
+        X, fitness = self.optimizer()
+        self.X_ = np.append(self.X_, [ X ], axis=0)
+        self.fitness_ = np.append(self.fitness_, fitness)
+
+    def bestidx(self, num=5):
+        """
+        Returns the indexes of the num best solutions.
+        """
+        return np.argsort(self.fitness_)[:num]
+
+    def best(self, num=5):
+        """
+        Returns best solutions and their fitness
+
+        Parameters:
+        -----------
+
+        num : Top-num best solutions.
+
+        """
+        idx = self.bestidx(num)
+        return self.X_[idx], self.fitness_[idx]
+
 def helper_num_runs(optimizer, num_runs=100, refine=None):
     """
     This is a helper function to evaluate an optimizer a specified number

@@ -10,7 +10,7 @@ def test_jaya_variance():
     ub = np.ones(5)
     ub[::2] = 2.2
 
-    o = JayaOptimizer(f=lambda x: np.abs(np.mean(x) - 0.5), lower_bounds=lb, upper_bounds=ub)
+    o = JayaOptimizer(f=lambda x: np.abs(np.mean(x) - 0.5), lower_bound=lb, upper_bound=ub)
 
     o = helper_n_generations(o, 20)
 
@@ -27,8 +27,8 @@ def test_jaya_sphere():
     """Example given in paper"""
 
     o = JayaOptimizer(f=lambda x: np.sum(x**2),
-                      lower_bounds=np.ones(10) * -10.0,
-                      upper_bounds=np.ones(10) * 10.0,
+                      lower_bound=np.ones(10) * -10.0,
+                      upper_bound=np.ones(10) * 10.0,
                       n_population=34)
 
     o = helper_n_generations(o, 100)

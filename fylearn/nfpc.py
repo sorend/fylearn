@@ -20,10 +20,10 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array
 from sklearn.metrics import mean_squared_error
-from sklearn.neighbors import DistanceMetric
 from fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize, prod, weights_mapping, mean
 from ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations, UniformCrossover
-from local_search import PatternSearchOptimizer, helper_num_runs, LocalUnimodalSamplingOptimizer
+from tlbo import TLBO
+from local_search import PatternSearchOptimizer, helper_generations, LocalUnimodalSamplingOptimizer
 
 logger = logging.getLogger(__name__)
 
@@ -257,48 +257,56 @@ class ShrinkingFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         return p_normalize(y_mu, 1)
 
-class ga_owa_optimizer(object):
-
-    def __init__(self, f_evals=10):
-        self.f_evals = f_evals
+class generations_optimizer(object):
+    """Will optimize OWA for any generations based optimizer"""
+    def __init__(self, s, of):
+        self.s = s
+        self.of = of
 
     def __call__(self, X, fitness):
-        iterations = X.shape[1] * self.f_evals
-        ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(fitness),
-                                          n_chromosomes=50,
-                                          elitism=3,
-                                          p_mutation=0.1,
-                                          n_genes=X.shape[1])
-        ga = helper_n_generations(ga, iterations)
-        chromosomes, fitnesses = ga.best(1)
+        iterations, o = self.of(X, fitness)
+        o = helper_n_generations(o, iterations)
+        chromosomes, fitnesses = o.best(1)
         return chromosomes[0]
 
     def __str__(self):
-        return "ga"
+        return self.s
 
-class pslus_owa_optimizer(object):
+def ga_owa_optimizer(f_evals=5):
+    """ GA OWA optimizer """
+    def factory(X, fitness):
+        return f_evals * X.shape[1], UnitIntervalGeneticAlgorithm(
+            fitness_function=helper_fitness(fitness),
+            n_chromosomes=50,
+            elitism=3,
+            p_mutation=0.1,
+            n_genes=X.shape[1])
+    return generations_optimizer("ga", factory)
 
-    def __init__(self, name, cls, f_evals):
-        self.name = name
-        self.cls = cls
-        self.f_evals = f_evals
-
-    def __call__(self, X, fitness):
-        lower_bounds = np.array([0.0] * X.shape[1])
-        upper_bounds = np.array([1.0] * X.shape[1])
-        max_evaluations = X.shape[1] * self.f_evals
-        ps = self.cls(fitness, lower_bounds, upper_bounds, max_evaluations=max_evaluations)
-        best_sol, best_fit = helper_num_runs(ps, num_runs=10)
-        return best_sol
-
-    def __str__(self):
-        return self.name
+def tlbo_owa_optimizer(f_evals=5):
+    """TLBO OWA optimizer"""
+    def factory(X, fitness):
+        return f_evals * X.shape[1], TLBO(
+            f=fitness, lower_bound=np.zeros(X.shape[1]), upper_bound=np.zeros(X.shape[1]))
+    return generations_optimizer("tlbo", factory)
 
 def ps_owa_optimizer(f_evals=5):
-    return pslus_owa_optimizer("ps", PatternSearchOptimizer, f_evals)
+    """Pattern Search OWA optimizer"""
+    def factory(X, fitness):
+        return 10, helper_generations(PatternSearchOptimizer(
+            fitness,
+            np.zeros(X.shape[1]), np.ones(X.shape[1]),
+            max_evaluations=X.shape[1] * f_evals))
+    return generations_optimizer("ps", factory)
 
 def lus_owa_optimizer(f_evals=10):
-    return pslus_owa_optimizer("lus", LocalUnimodalSamplingOptimizer, f_evals)
+    """Local Unimodal Sampling OWA optimizer"""
+    def factory(X, fitness):
+        return 10, helper_generations(LocalUnimodalSamplingOptimizer(
+            fitness,
+            np.zeros(X.shape[1]), np.ones(X.shape[1]),
+            max_evaluations=X.shape[1] * f_evals))
+    return generations_optimizer("lus", factory)
 
 def build_y_target(y, classes):
     y_target = np.zeros((len(y), len(classes)))
@@ -314,18 +322,6 @@ def evaluate_rmse(y_target, y_pred):
 
 def owa_decoder_plain(c):
     return owa(weights_mapping(c))
-
-def owa_decoder_or(c):
-    w = np.array(c, copy=True)
-    for i in range(1, len(w)):
-        w[i] += w[i - 1]
-    return owa(weights_mapping(w))
-
-def owa_decoder_and(c):
-    w = np.array(c, copy=True)
-    for i in range(len(w) - 1, 0, -1):
-        w[i - 1] += w[i]
-    return owa(weights_mapping(w))
 
 class GAOWAFactory:
 
@@ -374,10 +370,11 @@ class MEOWAFactory:
         lower_bounds = (0.0,)
         upper_bounds = (1.0,)
 
-        ps = PatternSearchOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=5)
-        best_orness, best_fit = helper_num_runs(ps, num_runs=10)
+        ps = helper_generations(PatternSearchOptimizer(fitness, lower_bounds, upper_bounds, max_evaluations=5))
+        ps = helper_n_generations(ps, 10)
+        best_orness, best_fit = ps.best(1)
 
-        best = meowa(X.shape[1], best_orness[0], maxiter=1000)  # construct from optimizer
+        best = meowa(X.shape[1], best_orness[0][0], maxiter=1000)  # construct from optimizer
 
         logger.info("trained owa(meowa, plain, %s)" % (", ".join(map(lambda x: "%.5f" % (x,), best.v))))
 

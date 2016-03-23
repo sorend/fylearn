@@ -23,7 +23,7 @@ class TeachingLearningBasedOptimizer(object):
 
     2. Learner phase: Randomly adjust pairs of individuals based on the best one with best fitness.
     """
-    def __init__(self, f, lower_bounds, upper_bounds,
+    def __init__(self, f, lower_bound, upper_bound,
                  n_population=50, random_state=None):
         """
         Constructor
@@ -33,19 +33,19 @@ class TeachingLearningBasedOptimizer(object):
 
         f : function to minimize.
 
-        lower_bounds : Vector with lower bounds of the search space.
+        lower_bound : Vector with lower bound of the search space.
 
-        upper_bounds : Vector with upper bounds of the search space.
+        upper_bound : Vector with upper bound of the search space.
 
         n_population : Number of individuals in the population [Default: 50].
 
         random_state : Specific random state to use [Default: None]
         """
         self.f = f
-        self.lower_bounds = lower_bounds
-        self.upper_bounds = upper_bounds
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
         self.pidx = range(n_population)
-        self.m = lower_bounds.shape[0]  # columns
+        self.m = lower_bound.shape[0]  # columns
         if random_state is None:
             self.random_state = np.random.RandomState()
         elif isinstance(random_state, np.random.RandomState):
@@ -54,17 +54,18 @@ class TeachingLearningBasedOptimizer(object):
             self.random_state = np.random.RandomState(random_state)
 
         # init population and fitness
-        self.population_ = self.random_state.rand(n_population, self.m) * (upper_bounds - lower_bounds) + lower_bounds
+        self.population_ = self.random_state.rand(n_population, self.m) * (upper_bound - lower_bound) + lower_bound
         self.fitness_ = np.apply_along_axis(self.f, 1, self.population_)
         # init bestidx
         self.bestidx_ = np.argmin(self.fitness_)
         self.bestcosts_ = [ self.fitness_[self.bestidx_] ]
 
-    def best(self):
+    def best(self, num=1):
         """
-        Returns the best solution and fitness at current epoch
+        Returns the num best solution and fitness at current epoch
         """
-        return self.population_[self.bestidx_], self.fitness_[self.bestidx_]
+        bestidxs = np.argsort(self.fitness_)[:num]
+        return self.population_[bestidxs], self.fitness_[bestidxs]
 
     def next(self):
         """
@@ -81,7 +82,7 @@ class TeachingLearningBasedOptimizer(object):
             r_i = rs.rand(self.m)  # multiplier also random.
 
             new_solution = self.population_[i] + (r_i * (teacher - (T_F * mean)))
-            new_solution = np.minimum(np.maximum(new_solution, self.lower_bounds), self.upper_bounds)
+            new_solution = np.minimum(np.maximum(new_solution, self.lower_bound), self.upper_bound)
 
             new_fitness = self.f(new_solution)
 
@@ -100,7 +101,7 @@ class TeachingLearningBasedOptimizer(object):
             else:
                 new_solution = self.population_[i] + r_i * (self.population_[j] - self.population_[i])
 
-            new_solution = np.minimum(np.maximum(new_solution, self.lower_bounds), self.upper_bounds)
+            new_solution = np.minimum(np.maximum(new_solution, self.lower_bound), self.upper_bound)
             new_fitness = self.f(new_solution)
 
             if new_fitness < self.fitness_[i]:

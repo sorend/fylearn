@@ -7,6 +7,8 @@ Implementation of Teaching-Learning Based Optimization [1].
 
 """
 import numpy as np
+from sklearn.utils import check_random_state
+
 
 #
 # Authors: Søren A. Davidsen <soren@atmakuridavidsen.com>
@@ -46,12 +48,7 @@ class TeachingLearningBasedOptimizer(object):
         self.upper_bounds = upper_bounds
         self.pidx = range(n_population)
         self.m = lower_bounds.shape[0]  # columns
-        if random_state is None:
-            self.random_state = np.random.RandomState()
-        elif isinstance(random_state, np.random.RandomState):
-            self.random_state = random_state
-        else:
-            self.random_state = np.random.RandomState(random_state)
+        self.random_state = check_random_state(random_state)
 
         # init population and fitness
         self.population_ = self.random_state.rand(n_population, self.m) * (upper_bounds - lower_bounds) + lower_bounds

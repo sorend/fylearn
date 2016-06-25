@@ -1,4 +1,4 @@
-####################################################################
+﻿####################################################################
 #
 # Pattern Search (PS) and Local Unimodal Sampling (LUS).
 # Heuristic optimization methods for real-valued functions.
@@ -14,6 +14,8 @@
 
 import numpy as np
 import logging
+
+from sklearn.utils import check_random_state
 
 logger = logging.getLogger(__name__)
 
@@ -133,10 +135,7 @@ class BaseOptimizer(object):
         self.lower_init = np.array(lower_bound) if lower_init is None else np.array(lower_init)
         self.upper_init = np.array(upper_bound) if upper_init is None else np.array(upper_init)
 
-        if random_state is None:
-            self.random_state = np.random.RandomState()
-        else:
-            self.random_state = random_state
+        self.random_state = check_random_state(random_state)
 
         self.max_evaluations = int(max_evaluations)
 

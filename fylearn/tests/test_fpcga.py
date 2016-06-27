@@ -58,7 +58,7 @@ def test_classifier_single():
 
     l.fit(X, y)
 
-    y_pred = l.predict([0.15, 0.45, 0.78])
+    y_pred = l.predict([0.17, 0.45, 0.85])
 
     assert 10 == y_pred
 

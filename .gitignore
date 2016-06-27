@@ -8,3 +8,6 @@ tmp
 .eggs
 dist
 *egg-info
+/.vs/fylearn/v14/*.suo
+/*.pyproj
+/*.sln

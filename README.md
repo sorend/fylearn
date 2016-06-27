@@ -10,8 +10,8 @@ Machine learning algorithms
 ---------------------------
 
  - fylearn.frr.FuzzyReductionRuleClassifier
- - fylearn.frrga.FuzzyPatternClassifierGA
- - fylearn.frrga.FuzzyPatternClassifierLocalGA
+ - fylearn.fpcga.FuzzyPatternClassifierGA
+ - fylearn.fpcga.FuzzyPatternClassifierLocalGA
  - fylearn.fpt.FuzzyPatternTreeClassifier
  - fylearn.fpt.FuzzyPatternTreeTopDownClassifier
  - fylearn.garules.MultimodalEvolutionaryClassifer

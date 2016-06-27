@@ -11,10 +11,10 @@ References:
 """
 import logging
 import numpy as np
-from numpy.random import RandomState
 import scipy.stats as stats
 
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_array
 
 import fylearn.fuzzylogic as fl
@@ -241,7 +241,7 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
     def fit(self, X, y):
 
         # get random
-        rs = RandomState(self.random_state)
+        rs = check_random_state(self.random_state)
 
         X = check_array(X)
 

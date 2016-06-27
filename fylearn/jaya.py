@@ -7,6 +7,7 @@ Implementation of Jaya Algorithm Optimization [1].
      Computations, 2016, 7(1):19-34.
 """
 import numpy as np
+from sklearn.utils import check_random_state
 
 #
 # Authors: Søren A. Davidsen <soren@atmakuridavidsen.com>
@@ -45,12 +46,7 @@ class JayaOptimizer(object):
         self.upper_bound = upper_bound
         self.pidx = range(n_population)
         self.m = lower_bound.shape[0]  # columns
-        if random_state is None:
-            self.random_state = np.random.RandomState()
-        elif isinstance(random_state, np.random.RandomState):
-            self.random_state = random_state
-        else:
-            self.random_state = np.random.RandomState(random_state)
+        self.random_state = check_random_state(random_state)
 
         # init population and fitness
         self.population_ = self.random_state.rand(n_population, self.m) * (upper_bound - lower_bound) + lower_bound

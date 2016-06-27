@@ -1,6 +1,7 @@
-import numpy as np
+﻿import numpy as np
 from fylearn.jaya import JayaOptimizer
 from fylearn.ga import helper_n_generations
+import pytest
 
 def test_jaya_variance():
 
@@ -42,3 +43,18 @@ def test_jaya_sphere():
     assert len(o.fitness_) == 34
     assert len(o.population_) == 34
     assert len(o.bestcosts_) == 101
+
+
+
+def test_jaya_random_state_wrong_value():
+    """Example given in paper"""
+
+    params = {'f':lambda x: np.sum(x**2),
+             'lower_bound':np.ones(10) * -10.0,
+             'upper_bound':np.ones(10) * 10.0,
+             'n_population':34,
+             'random_state':'wrong_value'
+    }
+
+    with pytest.raises(ValueError):
+        JayaOptimizer(**params)

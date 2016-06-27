@@ -23,6 +23,16 @@ def helper_np_array(X):
     else:
         raise ValueError("unsupported type for building np.array: %s" % (type(X),))
 
+class ZadehNegatedSet:
+    def __init__(self, s):
+        self.s = s
+
+    def __call__(self, X):
+        return 1.0 - self.s(X)
+
+    def __str__(self):
+        return "Not(%s)" % (str(self.s),)
+    
 class TriangularSet:
     def __init__(self, a, b, c):
         self.a = a
@@ -115,7 +125,7 @@ class PiSet:
         return y
 
     def __str__(self):
-        return "π(%.2f %.2f %.2f)" % (self.p, self.r, self.q)
+        return "π(p=%.2f r=%.2f q=%.2f)" % (self.p, self.r, self.q)
 
     def __repr__(self):
         return str(self)

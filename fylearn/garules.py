@@ -134,8 +134,8 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
     def build_for_class(self, rs, X):
 
-        # distance based fitness function
-        distance_fitness = lambda c: np.sum(np.abs(X - c))
+        def distance_fitness(c):
+            return np.sum(np.abs(X - c))
 
         # setup GA
         ga = GeneticAlgorithm(fitness_function=helper_fitness(distance_fitness),

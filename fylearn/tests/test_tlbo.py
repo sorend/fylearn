@@ -1,4 +1,4 @@
-import numpy as np
+﻿import numpy as np
 from fylearn.tlbo import TLBO, TeachingLearningBasedOptimizer
 from fylearn.ga import helper_n_generations
 
@@ -23,6 +23,8 @@ def test_tlbo_variance():
     assert len(o.population_) == 50
     assert len(o.bestcosts_) == 21
 
+
+
 def test_tlbo_sphere():
     """Example given in matlab code"""
 
@@ -41,3 +43,15 @@ def test_tlbo_sphere():
 
     assert len(o.fitness_) == 34
     assert len(o.population_) == 34
+
+
+def test_tlbo_random_state():
+
+    params = {'f':lambda x: np.sum(x**2),
+             'lower_bounds':np.ones(10) * -10.0,
+             'upper_bounds':np.ones(10) * 10.0,
+             'n_population':34,
+             'random_state':'wrong_value'
+    }
+
+    np.testing.assert_raises(ValueError, TLBO, **params)

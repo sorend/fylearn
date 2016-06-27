@@ -15,12 +15,12 @@ References:
 
 import logging
 import numpy as np
-from numpy.random import RandomState
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array
 from sklearn.neighbors import DistanceMetric
 from sklearn.preprocessing import normalize
 from sklearn.metrics import accuracy_score
+from sklearn.utils import check_random_state
 from fylearn.ga import GeneticAlgorithm, helper_n_generations, helper_fitness
 
 logger = logging.getLogger("garules")
@@ -176,10 +176,7 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
     def fit(self, X, y):
         X = check_array(X)
 
-        if self.random_state is None:
-            random_state = RandomState()
-        else:
-            random_state = RandomState(self.random_state)
+        random_state = check_random_state(self.random_state)
 
         self.classes_, y_reverse = np.unique(y, return_inverse=True)
 

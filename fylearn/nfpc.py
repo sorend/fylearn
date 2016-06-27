@@ -18,10 +18,11 @@ References:
 import logging
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_array
 from sklearn.metrics import mean_squared_error
-from sklearn.neighbors import DistanceMetric
-from fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize, prod, weights_mapping, mean
+
+from fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize, prod, weights_mapping
 from ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations, UniformCrossover
 from local_search import PatternSearchOptimizer, helper_num_runs, LocalUnimodalSamplingOptimizer
 

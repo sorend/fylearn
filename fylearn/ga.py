@@ -15,6 +15,7 @@ Has two selection methods implemented:
 
 """
 import numpy as np
+from sklearn.utils import check_random_state
 
 #
 # Authors: Søren A. Davidsen <sorend@cs.svuni.in>
@@ -57,6 +58,7 @@ class UniformCrossover:
         self.p1_proba = p1_proba
 
     def __call__(self, P1, P2, random_state):
+        random_state = check_random_state(random_state)
         C = np.array(P1)  # clone p1
         R = random_state.random_sample(C.shape) > self.p1_proba  # create filter
         C[R] = np.array(P2, copy=False)[R]  # mixin P2 values
@@ -80,6 +82,7 @@ class PointwiseCrossover:
         self.n_crossovers = n_crossovers
 
     def __call__(self, A, B, random_state):
+        random_state = check_random_state(random_state)
         A, B = np.array(A, copy=False), np.array(B, copy=False)
         is_1d = len(A.shape) == 1
         A, B = np.atleast_2d(A), np.atleast_2d(B)
@@ -169,15 +172,11 @@ class BaseGeneticAlgorithm(object):
         self.selection_function = selection_function
         self.elitism = elitism
         self.p_mutation = p_mutation
-        if random_state is None:
-            self.random_state = np.random.RandomState()
-        elif isinstance(random_state, np.random.RandomState):
-            self.random_state = random_state
-        else:
-            self.random_state = np.random.RandomState(random_state)
+        self.random_state = check_random_state(random_state)
+
         # init population
         if population is None:
-            self.population_ = self.initialize_population(n_chromosomes, n_genes, self.random_state)
+            self.population_ = self.initialize_population(n_chromosomes, n_genes)
             self.n_genes = n_genes
             self.n_chromosomes = n_chromosomes
         else:
@@ -189,10 +188,10 @@ class BaseGeneticAlgorithm(object):
         # init fitness
         self.fitness_ = self.fitness_function(self.population_)
 
-    def initialize_population(self, n_chromosomes, n_genes, random_state):
+    def initialize_population(self, n_chromosomes, n_genes):
         raise Exception("initialize_population not implemented")
 
-    def mutate(self, chromosomes, mutation_idx, random_state):
+    def mutate(self, chromosomes, mutation_idx):
         raise Exception("initialize_population not implemented")
 
     def next(self):
@@ -219,7 +218,7 @@ class BaseGeneticAlgorithm(object):
         # mutate
         mutation_idx = self.random_state.random_sample(new_population[self.elitism:].shape) < self.p_mutation
         new_population[self.elitism:] = self.mutate(new_population[self.elitism:],
-                                                    mutation_idx, self.random_state)
+                                                    mutation_idx)
 
         # update pop and fitness
         self.population_ = new_population
@@ -240,11 +239,11 @@ class GeneticAlgorithm(BaseGeneticAlgorithm):
         self.scaling = scaling
         super(GeneticAlgorithm, self).__init__(*args, **kwargs)
 
-    def initialize_population(self, n_chromosomes, n_genes, random_state):
-        return random_state.rand(n_chromosomes, n_genes) * self.scaling
+    def initialize_population(self, n_chromosomes, n_genes):
+        return self.random_state.rand(n_chromosomes, n_genes) * self.scaling
 
-    def mutate(self, chromosomes, mutation_idx, random_state):
-        mutations = (random_state.rand(np.sum(mutation_idx)) - 0.5) * self.scaling
+    def mutate(self, chromosomes, mutation_idx):
+        mutations = (self.random_state.rand(np.sum(mutation_idx)) - 0.5) * self.scaling
         chromosomes[mutation_idx] += mutations
         return chromosomes
 
@@ -253,8 +252,8 @@ class UnitIntervalGeneticAlgorithm(GeneticAlgorithm):
     Genetic algorithm where gene values are chosen from the unit interval [0, 1]. Mutation
     randomly selects a new value in this interval.
     """
-    def mutate(self, chromosomes, mutation_idx, random_state):
-        mutations = random_state.rand(np.sum(mutation_idx)) * self.scaling
+    def mutate(self, chromosomes, mutation_idx):
+        mutations = self.random_state.rand(np.sum(mutation_idx)) * self.scaling
         chromosomes[mutation_idx] = mutations
         return chromosomes
 
@@ -278,14 +277,14 @@ class DiscreteGeneticAlgorithm(GeneticAlgorithm):
         self.ranges = ranges
         super(DiscreteGeneticAlgorithm, self).__init__(*args, **kwargs)
 
-    def initialize_population(self, n_chromosomes, n_genes, random_state):
+    def initialize_population(self, n_chromosomes, n_genes):
         P = np.zeros((n_chromosomes, n_genes))
         for i in range(n_genes):
-            P[:, i] = random_state.choice(self.ranges[i], P.shape[0])
+            P[:, i] = self.random_state.choice(self.ranges[i], P.shape[0])
         return P
 
-    def mutate(self, chromosomes, mutation_idx, random_state):
+    def mutate(self, chromosomes, mutation_idx):
         for i in range(self.n_genes):
             midx_i = mutation_idx[:, i]
-            chromosomes[midx_i, i] = random_state.choice(self.ranges[i], np.sum(midx_i))
+            chromosomes[midx_i, i] = self.random_state.choice(self.ranges[i], np.sum(midx_i))
         return chromosomes

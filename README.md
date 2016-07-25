@@ -9,13 +9,13 @@ SciKit-Learn contains many common machine learning algorithms, and is a good pla
 Machine learning algorithms
 ---------------------------
 
- - fylearn.frr.FuzzyReductionRuleClassifier
- - fylearn.fpcga.FuzzyPatternClassifierGA
- - fylearn.fpcga.FuzzyPatternClassifierLocalGA
- - fylearn.fpt.FuzzyPatternTreeClassifier
- - fylearn.fpt.FuzzyPatternTreeTopDownClassifier
- - fylearn.garules.MultimodalEvolutionaryClassifer
- - fylearn.nfpc.FuzzyPatternClassifier
+ - fylearn.frr.FuzzyReductionRuleClassifier -- based on learning membership functions from min/max.
+ - fylearn.fpcga.FuzzyPatternClassifierGA -- optimizes membership functions globally.
+ - fylearn.fpcga.FuzzyPatternClassifierLocalGA -- optimizes membership functions locally.
+ - fylearn.fpt.FuzzyPatternTreeClassifier -- builds fuzzy pattern trees using bottom-up method.
+ - fylearn.fpt.FuzzyPatternTreeTopDownClassifier -- builds fuzzy pattern trees using top-down method.
+ - fylearn.garules.MultimodalEvolutionaryClassifer -- learns rules using genetic algorithm.
+ - fylearn.nfpc.FuzzyPatternClassifier -- base class for fuzzy pattern classifiers (see parameters).
 
 
 ### Usage

@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import numpy as np
 
@@ -91,4 +92,4 @@ def test_classifier_iris():
 
     l = fpt.FuzzyPatternTreeClassifier()
     l.fit(X, y)
-    print l.score(X, y)
+    print(l.score(X, y))

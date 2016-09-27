@@ -1,4 +1,5 @@
-﻿import numpy as np
+﻿from __future__ import print_function
+import numpy as np
 from fylearn.tlbo import TLBO, TeachingLearningBasedOptimizer
 from fylearn.ga import helper_n_generations
 import pytest
@@ -15,10 +16,10 @@ def test_tlbo_variance():
 
     o = helper_n_generations(o, 20)
 
-    print "costs history", o.bestcosts_
+    print("costs history", o.bestcosts_)
     solution, fitness = o.best()
-    print "best fitness", fitness[0]
-    print "best solution", solution[0]
+    print("best fitness", fitness[0])
+    print("best solution", solution[0])
 
     assert len(o.fitness_) == 50
     assert len(o.population_) == 50
@@ -40,9 +41,9 @@ def test_tlbo_sphere():
 
     solution, fitness = o.best(3)
 
-    print "costs history", o.bestcosts_
-    print "best fitness", fitness[0]
-    print "best solution", solution[0]
+    print("costs history", o.bestcosts_)
+    print("best fitness", fitness[0])
+    print("best solution", solution[0])
 
     assert len(o.fitness_) == 34
     assert len(o.population_) == 34

@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import numpy as np
 # from sklearn.utils.testing import assert_equal, assert_true
@@ -13,7 +14,7 @@ def test_agreement_hamming():
 
     e = rafpc.agreement_hamming(3, X, 0, 1)
 
-    print "e", e
+    print("e", e)
 
     assert e[0] > 0.9
     assert e[1] < 0.9

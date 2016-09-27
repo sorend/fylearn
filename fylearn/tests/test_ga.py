@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import numpy as np
 from fylearn.ga import *
@@ -61,7 +62,7 @@ def test_discrete():
                                   ranges=ranges)
 
     for i in range(10):
-        print ga.best()
+        print(ga.best())
         ga.next()
 
     assert ga.best()[1] <= np.var([9, 20, 40, 1])  # assume we find the solution
@@ -78,7 +79,7 @@ def test_tournament_selection():
 
     p, q = sel(rs, X, f)
 
-    print "p", p, "q", q, "f[p]", f[p], "f[q]", f[q]
+    print("p", p, "q", q, "f[p]", f[p], "f[q]", f[q])
 
     assert f[p] <= f[q]
 
@@ -99,8 +100,8 @@ def test_sreedevi():
     # take first one
     c = chromosomes[0]
 
-    print "c", c
-    print "f(c)", c[0] + (2 * c[1]) + (3 * c[2]) + (4 * c[3])
+    print("c", c)
+    print("f(c)", c[0] + (2 * c[1]) + (3 * c[2]) + (4 * c[3]))
 
     assert (c[0] + (2 * c[1]) + (3 * c[2]) + (4 * c[3]) - 30.0) < 0.1
 
@@ -114,7 +115,7 @@ def test_ga_variance():
                           n_chromosomes=1000, elitism=10, p_mutation=0.1)
 
     for i in range(100):
-        print "next generation", i
+        print("next generation", i)
         ga.next()
 
     assert 0.01 > ga.best(1)[1]

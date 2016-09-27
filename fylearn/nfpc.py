@@ -20,10 +20,10 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array
 from sklearn.metrics import mean_squared_error
-from fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize, prod, weights_mapping
-from ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations
-from tlbo import TLBO
-from local_search import PatternSearchOptimizer, helper_generations, LocalUnimodalSamplingOptimizer
+from .fuzzylogic import PiSet, TriangularSet, owa, meowa, p_normalize, prod, weights_mapping
+from .ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations
+from .tlbo import TLBO
+from .local_search import PatternSearchOptimizer, helper_generations, LocalUnimodalSamplingOptimizer
 
 logger = logging.getLogger(__name__)
 

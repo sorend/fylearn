@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import numpy as np
 
@@ -92,6 +93,6 @@ def test_build_ps_owa_factory():
     scores = cross_validation.cross_val_score(l, X, y, cv=10)
     mean = np.mean(scores)
 
-    print "mean", mean
+    print("mean", mean)
 
     assert 0.92 < mean

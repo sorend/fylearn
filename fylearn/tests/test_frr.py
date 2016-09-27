@@ -1,4 +1,6 @@
 
+from __future__ import print_function
+
 import numpy as np
 
 from fylearn.frr import ModifiedFuzzyPatternClassifier as MFPC
@@ -7,7 +9,7 @@ def test_classifier():
 
     l = MFPC()
 
-    print "l", l.get_params()
+    print("l", l.get_params())
 
     X = np.array([
         [0.1, 0.2, 0.4],
@@ -28,7 +30,7 @@ def test_classifier():
     y_pred = l.predict([[0.0, 0.3, 0.35],
                         [0.1, 0.4, 0.78]])
 
-    print "y_pred", y_pred
+    print("y_pred", y_pred)
 
     assert len(y_pred) == 2
     assert y_pred[0] == 1

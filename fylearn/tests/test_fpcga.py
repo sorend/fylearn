@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import numpy as np
 
@@ -27,12 +28,12 @@ def test_classifier():
 
     l.fit(X, y)
 
-    print "protos_", l.protos_
+    print("protos_", l.protos_)
 
     y_pred = l.predict([[0.0, 0.3, 0.35],
                         [0.1, 0.4, 0.78]])
 
-    print "y_pred", y_pred
+    print("y_pred", y_pred)
 
     assert len(y_pred) == 2
     assert y_pred[0] == 1
@@ -81,6 +82,6 @@ def test_classifier_iris():
     scores = cross_validation.cross_val_score(l, X, y, cv=10)
     mean = np.mean(scores)
 
-    print "mean", mean
+    print("mean", mean)
 
     assert 0.90 < mean

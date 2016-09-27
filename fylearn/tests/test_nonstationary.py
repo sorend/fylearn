@@ -1,7 +1,8 @@
+from __future__ import print_function
 import numpy as np
 
-from fylearn.fuzzylogic import *
-from fylearn.nonstationary import *
+from fylearn.fuzzylogic import TriangularSet
+from fylearn.nonstationary import helper_stationary_value, NonstationaryFuzzySet
 
 
 def test_simple_stationary():
@@ -46,7 +47,7 @@ def test_simple():
 
     Y = s(T, X)
 
-    print "Y", Y
+    print("Y", Y)
 
     assert 2 == Y.ndim
 
@@ -139,4 +140,4 @@ def test_paper():
     X = [ range(100), range(100), range(100), range(100), range(100) ]
 
     Y = s(T, X)
-    print "Y", Y
+    print("Y", Y)

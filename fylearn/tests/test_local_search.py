@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import numpy as np
 import logging
@@ -20,8 +21,8 @@ def test_ps():
 
     best_sol, best_fit = o()
 
-    print "best", best_sol
-    print "fitness", best_fit
+    print("best", best_sol)
+    print("fitness", best_fit)
 
     assert best_fit < 0.05
     
@@ -35,8 +36,8 @@ def test_lus():
 
     best_sol, best_fit = o()
 
-    print "best", best_sol
-    print "fitness", best_fit
+    print("best", best_sol)
+    print("fitness", best_fit)
 
     assert best_fit < 0.1  # it's heuristic, so no guarantees here, we put the threshold a little high.
 
@@ -50,8 +51,8 @@ def test_helper_num_runs():
 
     best_sol, best_fit = o()
 
-    print "best", best_sol
-    print "fitness", best_fit
+    print("best", best_sol)
+    print("fitness", best_fit)
 
     new_sol, new_fit = ls.helper_num_runs(o, num_runs=100)
 
@@ -65,8 +66,8 @@ def test_helper_num_runs():
     o = ls.PatternSearchOptimizer(fitness, lower_bound, upper_bound, max_evaluations=25)
     best_sol, best_fit = o()
 
-    print "best", best_sol
-    print "fitness", best_fit
+    print("best", best_sol)
+    print("fitness", best_fit)
 
     new_sol, new_fit = ls.helper_num_runs(o, num_runs=100, refine=ls.scipy_refine)
 

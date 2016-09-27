@@ -92,7 +92,7 @@ def agreement_fuzzy(aggregation, A, B):
 
 def agreement_hamming(p, X, a, b):
     d = np.abs(X[a, :] - X[b, :])
-    f = X.shape[1] / p
+    f = int(X.shape[1] / p)
     E = np.zeros(f)
     for i in range(f):
         E[i] = np.sum(d[(i * p):(i * p) + p])

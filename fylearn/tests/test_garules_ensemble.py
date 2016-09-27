@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 
 from fylearn import garules
@@ -18,7 +19,7 @@ def test_classifier():
 
     l.fit(X, y)
 
-    print "models", l.models_
+    print("models", l.models_)
 
     assert [0] == l.predict([[0.9, 1.7, 4.5]])
 

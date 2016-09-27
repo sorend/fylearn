@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import numpy as np
 import fylearn.fuzzylogic as fl
@@ -83,7 +84,7 @@ def test_piset():
 
     s = fl.PiSet(r=0.5, p=0.2, q=0.8)
 
-    print "y", s([0.0, 0.2, 0.35, 0.5, 0.65, 0.8, 1.0])
+    print("y", s([0.0, 0.2, 0.35, 0.5, 0.65, 0.8, 1.0]))
 
     assert s(0.19) < 0.5
     assert abs(s(0.2) - 0.5) < 0.0001
@@ -312,7 +313,7 @@ def test_meowa():
     assert m is not None
     assert len(m.v) == 3
 
-    print "m", m.v
+    print("m", m.v)
 
     assert almost(0.08187, m.v[2], 0.001)
     assert almost(0.23627, m.v[1], 0.001)
@@ -377,14 +378,14 @@ def test_weights_mapping():
     X = np.zeros(10)
     Y = fl.weights_mapping(X)
 
-    print "Y", Y
+    print("Y", Y)
 
     assert almost(1.0, np.sum(Y), 0.000001)
 
     X = np.ones(10)
     Y = fl.weights_mapping(X)
 
-    print "Y", Y
+    print("Y", Y)
 
     assert almost(1.0, np.sum(Y), 0.000001)
 
@@ -392,5 +393,5 @@ def test_weights_mapping():
         X = np.random.rand(10)
         Y = fl.weights_mapping(X)
         if np.nan in np.asarray(Y):
-            print "Y", Y, "X", X
+            print("Y", Y, "X", X)
             fail()

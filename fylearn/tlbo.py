@@ -46,7 +46,7 @@ class TeachingLearningBasedOptimizer(object):
         self.f = f
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
-        self.pidx = range(n_population)
+        self.pidx = list(range(n_population))
         self.m = lower_bound.shape[0]  # columns
         self.random_state = check_random_state(random_state)
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 
 from fylearn import garules
@@ -59,7 +60,7 @@ def test_classifier_iris():
     scores = cross_validation.cross_val_score(l, X, y, cv=10)
     mean = np.mean(scores)
 
-    print "mean", mean
+    print("mean", mean)
 
     assert 0.90 < mean
 

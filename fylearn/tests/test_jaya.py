@@ -1,4 +1,5 @@
-﻿import numpy as np
+﻿from __future__ import print_function
+import numpy as np
 from fylearn.jaya import JayaOptimizer
 from fylearn.ga import helper_n_generations
 import pytest
@@ -15,10 +16,10 @@ def test_jaya_variance():
 
     o = helper_n_generations(o, 20)
 
-    print "costs history", o.bestcosts_
+    print("costs history", o.bestcosts_)
     solution, fitness = o.best()
-    print "best fitness", fitness
-    print "best solution", solution
+    print("best fitness", fitness)
+    print("best solution", solution)
 
     assert len(o.fitness_) == 50
     assert len(o.population_) == 50
@@ -36,9 +37,9 @@ def test_jaya_sphere():
 
     solution, fitness = o.best()
 
-    print "costs history", o.bestcosts_
-    print "best fitness", fitness
-    print "best solution", solution
+    print("costs history", o.bestcosts_)
+    print("best fitness", fitness)
+    print("best solution", solution)
 
     assert len(o.fitness_) == 34
     assert len(o.population_) == 34

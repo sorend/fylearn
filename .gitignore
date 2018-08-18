@@ -11,3 +11,4 @@ dist
 /.vs/fylearn/v14/*.suo
 /*.pyproj
 /*.sln
+.pytest_cache

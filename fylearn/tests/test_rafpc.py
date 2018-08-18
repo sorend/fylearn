@@ -41,28 +41,6 @@ def test_classifier():
 
     assert [0] == l.predict([[0.9, 1.7, 4.5]])
 
-def test_classifier_single():
-
-    l = rafpc.RandomAgreementFuzzyPatternClassifier(n_protos=1, n_features=2)
-
-    X = np.array([
-        [0.10, 0.20, 0.40],
-        [0.15, 0.18, 0.43],
-        [0.20, 0.40, 0.80],
-        [0.25, 0.42, 0.78]
-    ])
-
-    y = np.array([
-        0,
-        0,
-        1,
-        1
-    ])
-
-    l.fit(X, y)
-
-    assert 0 == l.predict([0.9, 1.7, 4.5])
-
 # def test_classifier_iris():
 
 #     import os

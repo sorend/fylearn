@@ -63,9 +63,9 @@ def test_build_meowa_factory():
     l = nfpc.FuzzyPatternClassifier(membership_factory=t_factory,
                                     aggregation_factory=nfpc.MEOWAFactory())
 
-    from sklearn import cross_validation
+    from sklearn.model_selection import cross_val_score
 
-    scores = cross_validation.cross_val_score(l, X, y, cv=10)
+    scores = cross_val_score(l, X, y, cv=10)
     mean = np.mean(scores)
 
     assert 0.80 < mean
@@ -88,9 +88,9 @@ def test_build_ps_owa_factory():
         aggregation_factory=nfpc.GAOWAFactory(optimizer=nfpc.ps_owa_optimizer())
     )
 
-    from sklearn import cross_validation
+    from sklearn.model_selection import cross_val_score
 
-    scores = cross_validation.cross_val_score(l, X, y, cv=10)
+    scores = cross_val_score(l, X, y, cv=10)
     mean = np.mean(scores)
 
     print("mean", mean)

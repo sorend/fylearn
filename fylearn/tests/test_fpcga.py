@@ -39,29 +39,6 @@ def test_classifier():
     assert y_pred[0] == 1
     assert y_pred[1] == 0
 
-def test_classifier_single():
-
-    l = fpcga.FuzzyPatternClassifierGA(iterations=25, epsilon=None)
-
-    X = np.array([
-        [0.1, 0.2, 0.4],
-        [0.11, 0.3, 0.5],
-        [0.2, 0.4, 0.8],
-        [0.18, 0.42, 0.88]
-    ])
-
-    y = np.array([
-        3,
-        3,
-        10,
-        10
-    ])
-
-    l.fit(X, y)
-
-    y_pred = l.predict([0.17, 0.45, 0.85])
-
-    assert 10 == y_pred
 
 def test_classifier_iris():
 
@@ -77,9 +54,9 @@ def test_classifier_iris():
 
     l = fpcga.FuzzyPatternClassifierGA(iterations=100)
 
-    from sklearn import cross_validation
+    from sklearn.model_selection import cross_val_score
 
-    scores = cross_validation.cross_val_score(l, X, y, cv=10)
+    scores = cross_val_score(l, X, y, cv=10)
     mean = np.mean(scores)
 
     print("mean", mean)

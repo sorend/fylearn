@@ -45,24 +45,6 @@ def test_classifier():
 
     assert [0] == l.predict([[0.9, 1.7, 4.5]])
 
-def test_classifier_single():
-
-    l = fpt.FuzzyPatternTreeClassifier()
-
-    X = np.array([
-        [1.0, 2.0, 4.0],
-        [2.0, 4.0, 8.0]
-    ])
-
-    y = np.array([
-        0,
-        1
-    ])
-
-    l.fit(X, y)
-
-    assert 0 == l.predict([0.9, 1.7, 4.5])
-
 def test_classifier_topdown():
 
     l = fpt.FuzzyPatternTreeTopDownClassifier()
@@ -79,7 +61,7 @@ def test_classifier_topdown():
 
     l.fit(X, y)
 
-    assert 0 == l.predict([0.9, 1.7, 4.5])
+    assert [0] == l.predict([[0.9, 1.7, 4.5]])
 
 def test_classifier_iris():
 

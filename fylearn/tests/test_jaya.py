@@ -59,3 +59,24 @@ def test_jaya_random_state_wrong_value():
 
     with pytest.raises(ValueError):
         JayaOptimizer(**params)
+
+
+def test_jaya_sphere_bounds():
+    """ Another example with strange domain """
+
+    o = JayaOptimizer(f=lambda x: np.sum(x**2),
+                      lower_bound=np.array([1, 0.001, 100]),
+                      upper_bound=np.array([10, 0.2, 1000]),
+                      n_population=34)
+
+    o = helper_n_generations(o, 100)
+
+    solution, fitness = o.best()
+
+    print("costs history", o.bestcosts_)
+    print("best fitness", fitness)
+    print("best solution", solution)
+
+    assert len(o.fitness_) == 34
+    assert len(o.population_) == 34
+    assert len(o.bestcosts_) == 101

@@ -141,14 +141,15 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         self.mu_factories = mu_factories
         self.iterations = iterations
         self.epsilon = epsilon
+        self.aggregation_rules = aggregation_rules
+
+    def fit(self, X, y_orig):
 
         def as_factory(r):
             return r if isinstance(r, AggregationRuleFactory) else DummyAggregationRuleFactory(r)
 
-        self.aggregation_rules = [ as_factory(r) for r in aggregation_rules ]
-
-    def fit(self, X, y_orig):
-
+        self.aggregation_rules__ = [ as_factory(r) for r in self.aggregation_rules ]
+        
         X = check_array(X)
 
         self.classes_, y = np.unique(y_orig, return_inverse=True)
@@ -190,7 +191,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         # accuracy fitness function
         def accuracy_fitness_function(chromosome):
             # decode the class model from gene
-            aggregation, mus = _decode(self.m, X, y, self.aggregation_rules,
+            aggregation, mus = _decode(self.m, X, y, self.aggregation_rules__,
                                        self.mu_factories, self.classes_, chromosome)
             y_pred = _predict(mus, aggregation, self.classes_, X)
             return 1.0 - accuracy_score(y, y_pred)
@@ -216,7 +217,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
             ga.next()
             logger.info("GA iteration %d Fitness (top-4) %s" % (generation, str(np.sort(ga.fitness_)[:4])))
             chromosomes, fitnesses = ga.best(10)
-            aggregation, protos = _decode(self.m, X, y, self.aggregation_rules,
+            aggregation, protos = _decode(self.m, X, y, self.aggregation_rules__,
                                           self.mu_factories, self.classes_, chromosomes[0])
             self.aggregation = aggregation
             self.protos_ = protos
@@ -295,7 +296,7 @@ class FuzzyPatternClassifierLGA(FuzzyPatternClassifierGA):
         return proto
 
     def build_with_ga(self, X, y):
-        self.aggregation = self.aggregation_rules[0](X, y)
+        self.aggregation = self.aggregation_rules__[0](X, y)
         self.protos_ = {}
         for class_no, class_value in enumerate(self.classes_):
             class_idx = np.array(y == class_value)

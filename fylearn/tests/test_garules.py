@@ -23,24 +23,6 @@ def test_classifier():
 
     assert [1] == l.predict([[2.1, 3.9, 7.8]])
 
-def test_classifier_single():
-
-    l = garules.MultimodalEvolutionaryClassifier(n_iterations=100)
-
-    X = np.array([
-        [1, 2, 4],
-        [2, 4, 8]
-    ])
-
-    y = np.array([
-        0,
-        1
-    ])
-
-    l.fit(X, y)
-
-    assert 0 == l.predict([0.9, 1.7, 4.5])
-
 def test_classifier_iris():
 
     import os
@@ -55,9 +37,9 @@ def test_classifier_iris():
 
     l = garules.MultimodalEvolutionaryClassifier(n_iterations=100)
 
-    from sklearn import cross_validation
+    from sklearn.model_selection import cross_val_score
 
-    scores = cross_validation.cross_val_score(l, X, y, cv=10)
+    scores = cross_val_score(l, X, y, cv=10)
     mean = np.mean(scores)
 
     print("mean", mean)

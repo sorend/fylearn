@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fsorend%2Ffylearn.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fsorend%2Ffylearn?ref=badge_shield)
+
 
 FyLearn
 =======
@@ -136,3 +138,7 @@ Contributions:
 
  - fylearn.local_search Python code by [M. E. H. Pedersen](http://hvass-labs.org/) (M. E. H. Pedersen, *Tuning and Simplifying Heuristical Optimization*, PhD Thesis, University of Southampton, U.K., 2010)
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fsorend%2Ffylearn.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fsorend%2Ffylearn?ref=badge_large)

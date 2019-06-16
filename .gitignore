@@ -12,3 +12,4 @@ dist
 /*.pyproj
 /*.sln
 .pytest_cache
+/.idea

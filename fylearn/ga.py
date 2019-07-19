@@ -192,7 +192,7 @@ class BaseGeneticAlgorithm(object):
         raise Exception("initialize_population not implemented")
 
     def mutate(self, chromosomes, mutation_idx):
-        raise Exception("initialize_population not implemented")
+        raise Exception("mutate not implemented")
 
     def next(self):
         # create new population

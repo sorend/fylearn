@@ -1,15 +1,24 @@
-# -*- coding: utf-8 -*-
-from setuptools import setup
+"""fylearn
 
-MY_VERSION = '0.1.2'
+:author: Soren Atmakuri
+:copyright: 2013-2019
+:license: MIT
+
+fylearn, a Python library for fuzzy machine learning.
+"""
+# -*- coding: utf-8 -*-
+from setuptools import setup, find_packages
+import fylearn
+
+MY_VERSION = fylearn.__version__
 
 setup(
     name='fylearn',
-    packages=['fylearn'],
+    packages=find_packages(),
     version=MY_VERSION,
     description='Fuzzy Machine Learning Algorithms',
     author='Søren Atmakuri Davidsen',
-    author_email='sorend@cs.svuni.in',
+    author_email='sorend@cs.svu-ac.in',
     url='https://github.com/sorend/fylearn',
     download_url='https://github.com/sorend/fylearn/tarball/%s' % (MY_VERSION,),
     license='MIT',

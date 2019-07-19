@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """fylearn
 
 :author: Soren Atmakuri
@@ -6,7 +7,6 @@
 
 fylearn, a Python library for fuzzy machine learning.
 """
-# -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
 import fylearn
 

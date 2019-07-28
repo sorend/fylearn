@@ -4,8 +4,8 @@ python:
   - "3.6"
 
 env:
-  - "NUMPY=1.16 SKLEARN=0.20.3"
-  - "NUMPY=1.16 SKLEARN=0.21.2"
+  - "NUMPY=1.16.4 SKLEARN=0.20.3 SCIPY=1.3.0"
+  - "NUMPY=1.16.4 SKLEARN=0.21.2 SCIPY=1.3.0"
 
 notifications:
   email: false
@@ -20,9 +20,12 @@ before_install:
 install:
   - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
   - source activate test
-  - conda install --yes numpy=$NUMPY scikit-learn=$SKLEARN pip scipy
-  - pip install -r requirements.txt
+  - conda install --yes numpy=$NUMPY scikit-learn=$SKLEARN scipy=$SCIPY
+  - pip install pytest pytest-cov
   - python setup.py install
 
 script:
-  - py.test .
+  - py.test --cov=./
+
+after_success:
+  - codecov

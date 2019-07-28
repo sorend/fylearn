@@ -13,3 +13,4 @@ dist
 /*.sln
 .pytest_cache
 /.idea
+.coverage*

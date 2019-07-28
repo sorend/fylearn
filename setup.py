@@ -24,9 +24,9 @@ setup(
     license='MIT',
     keywords=['machine learning', 'fuzzy logic', 'scikit-learn'],
     install_requires=[
-        'numpy>=1.9',
-        'scipy>=0.16',
-        'scikit-learn>=0.16',
+        'numpy>=1.16',
+        'scipy>=1.3',
+        'scikit-learn>=0.20',
     ],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],

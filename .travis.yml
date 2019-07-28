@@ -21,7 +21,7 @@ install:
   - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
   - source activate test
   - conda install --yes numpy=$NUMPY scikit-learn=$SKLEARN scipy=$SCIPY
-  - pip install pytest pytest-cov
+  - pip install pytest pytest-cov codecov
   - python setup.py install
 
 script:

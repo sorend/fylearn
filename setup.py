@@ -7,10 +7,14 @@
 
 fylearn, a Python library for fuzzy machine learning.
 """
-from setuptools import setup, find_packages
-import fylearn
+from setuptools import setup, Distribution, find_packages
 
-MY_VERSION = fylearn.__version__
+Distribution().fetch_build_eggs('versiontag')
+from versiontag import get_version, cache_git_tag
+
+cache_git_tag()
+
+MY_VERSION = get_version(pypi=True)
 
 setup(
     name='fylearn',

@@ -246,6 +246,9 @@ def test_p_normalize():
 
 def test_p_normalize_zero_row():
 
+    def almost(a, b, prec=0.00001):
+        return np.abs(a - b) < prec
+
     # no axis given
     X = np.array([
         [0, 0, 0],
@@ -254,7 +257,7 @@ def test_p_normalize_zero_row():
     Y = fl.p_normalize(X)
 
     assert Y.shape == (2, 3)
-    assert np.sum(Y) == 0.0
+    assert almost(np.sum(Y), 1.0)
 
     X = np.array([
         [0.0, 0.0, 0.0],
@@ -264,7 +267,7 @@ def test_p_normalize_zero_row():
     Y = fl.p_normalize(X, 1)
 
     assert Y.shape == (2, 3)
-    assert np.sum(Y) == 0.0
+    assert almost(np.sum(Y), 2.0)
 
     X = np.array([
         [0.0, 0.0, 0.0],
@@ -274,15 +277,15 @@ def test_p_normalize_zero_row():
     Y = fl.p_normalize(X, 0)
 
     assert Y.shape == (2, 3)
-    assert np.sum(Y) == 0.0
+    assert almost(np.sum(Y), 3.0)
 
 def test_p_normalize_wrong_dimensions():
 
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         X = np.array([[1, 2, 3]])
         Y = fl.p_normalize(X, 2)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         X = np.array([[1, 2, 3]])
         Y = fl.p_normalize(X, -1)
 

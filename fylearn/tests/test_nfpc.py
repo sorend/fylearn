@@ -4,9 +4,21 @@ import numpy as np
 
 import fylearn.nfpc as nfpc
 import fylearn.fuzzylogic as fl
+from sklearn import datasets
 
 def t_factory(**k):
     return fl.TriangularSet(k["min"], k["mean"], k["max"])
+
+def test_simple_fpc():
+    iris = datasets.load_iris()
+    X = iris.data
+    y = iris.target
+    c = nfpc.FuzzyPatternClassifier()
+    c.fit(X, y)
+    mu = nfpc.predict_protos(X, c.protos_, c.aggregation_)
+    pro = c.predict_proba(X)
+    pro_sum = pro.sum(axis=1)
+    assert np.all(pro_sum > 0.)
 
 # def test_build_shrinking():
 

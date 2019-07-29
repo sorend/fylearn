@@ -9,14 +9,14 @@ Fuzzy sets and aggregation utils
 #
 
 import numpy as np
-import collections
+from collections.abc import Sequence
 import numbers
 from scipy.optimize import minimize
 
 def helper_np_array(X):
     if isinstance(X, (np.ndarray, np.generic)):
         return X
-    elif isinstance(X, collections.Sequence):
+    elif isinstance(X, Sequence):
         return np.array(X)
     elif isinstance(X, numbers.Number):
         return np.array([X])
@@ -165,24 +165,38 @@ def min_max_normalize(X):
     return (X - nmin) / (nmax - nmin)
 
 def p_normalize(X, axis=None):
+    """Normalize values as probabilities (sums to one)
 
-    s = np.sum(X, axis=axis, dtype="float")
+    Parameters:
+    -----------
 
-    def fixzero(x):
-        return 1.0 if x == 0.0 else x
+    X : the numpy array to normalize
 
-    def afixzero(x):
-        x[x == 0.0] = 1.0
-        return x
-
-    if axis is None:
-        return X / fixzero(s)
-    elif axis == 0:
-        return X / afixzero(s)
+    axis : None does not deal with axes (default), 0: probas by row-sums, 1: probas by column-sums
+    """
+    assert axis in [None, 0, 1], "Only axes None, 0 and 1 is supported"
+    
+    def handle_all_zeros(a):
+        b = np.sum(X, dtype='float')
+        if b > 0.0:
+            return a / b
+        else:
+            return np.ones(a.shape) / a.size
+    
+    def handle_zero_rows(a):
+        b = np.sum(a, axis=0, dtype='float')
+        f = (b == 0)
+        y = np.array(a, copy=True)
+        y[:,f] = 1
+        b[f] = y.shape[0]
+        return y / b
+        
+    if axis == 0:
+        return handle_zero_rows(X)
     elif axis == 1:
-        return (X.T / afixzero(s)).T
+        return handle_zero_rows(X.T).T
     else:
-        raise ValueError("axis must be None or 0 or 1")
+        return handle_all_zeros(X)
 
 def dispersion(w):
     return -np.sum(w[w > 0.0] * np.log(w[w > 0.0]))  # filter 0 as 0 * -inf is undef in NumPy

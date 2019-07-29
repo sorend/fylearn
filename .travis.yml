@@ -29,3 +29,14 @@ script:
 
 after_success:
   - codecov
+
+deploy:
+  - provider: pypi
+    distributions: sdist
+    server: https://upload.pypi.org/legacy/
+    user: sorenpypi
+    password:
+      secure: Vv+1XPiwu54hP98z7iuE1Vx03rMk7AJoGDPPzAksRnY9219gWbO4RKwcjEz6RELrKstzKHpQBRjc1XdZvlQ/6jORl212adwjN9eK4M0zjk42X9XgFrbEnGUT2ONIMuPI6sCEyqwQDXkXxNS9xOZlqOhptg8X1pfqg5wChMJxOTk=
+    on:
+      branch: master
+      tags: true

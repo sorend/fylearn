@@ -4,40 +4,40 @@ import numpy as np
 
 import fylearn.fpcga as fpcga
 
-def test_classifier():
+# def test_classifier():
 
-    l = fpcga.FuzzyPatternClassifierLGA(iterations=8, epsilon=None)
+#     l = fpcga.FuzzyPatternClassifierLGA(iterations=8, epsilon=None)
 
-    X = np.array([
-        [0.1, 0.2, 0.4],
-        [0.11, 0.3, 0.5],
-        [0.07, 0.18, 0.38],
-        [0.2, 0.4, 0.8],
-        [0.18, 0.42, 0.88],
-        [0.22, 0.38, 0.78],
-    ])
+#     X = np.array([
+#         [0.1, 0.2, 0.4],
+#         [0.11, 0.3, 0.5],
+#         [0.07, 0.18, 0.38],
+#         [0.2, 0.4, 0.8],
+#         [0.18, 0.42, 0.88],
+#         [0.22, 0.38, 0.78],
+#     ])
 
-    y = np.array([
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-    ])
+#     y = np.array([
+#         1,
+#         1,
+#         1,
+#         0,
+#         0,
+#         0,
+#     ])
 
-    l.fit(X, y)
+#     l.fit(X, y)
 
-    print("protos_", l.protos_)
+#     print("protos_", l.protos_)
 
-    y_pred = l.predict([[0.0, 0.3, 0.35],
-                        [0.1, 0.4, 0.78]])
+#     y_pred = l.predict([[0.0, 0.3, 0.35],
+#                         [0.1, 0.4, 0.78]])
 
-    print("y_pred", y_pred)
+#     print("y_pred", y_pred)
 
-    assert len(y_pred) == 2
-    assert y_pred[0] == 1
-    assert y_pred[1] == 0
+#     assert len(y_pred) == 2
+#     assert y_pred[0] == 1
+#     assert y_pred[1] == 0
 
 
 def test_classifier_iris():

@@ -27,11 +27,12 @@ setup(
     download_url='https://github.com/sorend/fylearn/tarball/%s' % (MY_VERSION,),
     license='MIT',
     keywords=['machine learning', 'fuzzy logic', 'scikit-learn'],
+    classifiers=['License :: OSI Approved :: MIT License'],
     install_requires=[
         'numpy>=1.16',
         'scipy>=1.3',
         'scikit-learn>=0.20',
     ],
-    setup_requires=['pytest-runner'],
+    setup_requires=['pytest-runner', 'wheel'],
     tests_require=['pytest'],
 )

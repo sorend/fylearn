@@ -36,7 +36,7 @@ deploy:
     server: https://upload.pypi.org/legacy/
     user: sorenpypi
     password:
-      secure: Vv+1XPiwu54hP98z7iuE1Vx03rMk7AJoGDPPzAksRnY9219gWbO4RKwcjEz6RELrKstzKHpQBRjc1XdZvlQ/6jORl212adwjN9eK4M0zjk42X9XgFrbEnGUT2ONIMuPI6sCEyqwQDXkXxNS9xOZlqOhptg8X1pfqg5wChMJxOTk=
+      secure: "Vv+1XPiwu54hP98z7iuE1Vx03rMk7AJoGDPPzAksRnY9219gWbO4RKwcjEz6RELrKstzKHpQBRjc1XdZvlQ/6jORl212adwjN9eK4M0zjk42X9XgFrbEnGUT2ONIMuPI6sCEyqwQDXkXxNS9xOZlqOhptg8X1pfqg5wChMJxOTk="
     on:
       branch: master
       tags: true
@@ -46,3 +46,5 @@ deploy:
     user: sorend
     password:
       secure: "AWlM4xK454gZWfxxxYMPVKR3/SlVEhza9mS81ExIa7EVkWiRmR3yFnCxtrISJ8fPGSh/eprC/X8VYa3ShJr+qNbm00q5VyY7qeKEyegM23Ejnf/mCPH5RCQCdeOWPhbWOyPtr5lN9E94Q9w8LNlpyb6mtU0h/RXrHSYuaEmPS1w="
+    on:
+      all_branches: true

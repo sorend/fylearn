@@ -16,11 +16,16 @@ cache_git_tag()
 
 MY_VERSION = get_version(pypi=True)
 
+Distribution().fetch_build_eggs('pypandoc')
+import pypandoc
+
+
 setup(
     name='fylearn',
     packages=find_packages(),
     version=MY_VERSION,
     description='Fuzzy Machine Learning Algorithms',
+    long_description=pypandoc.convert_file('README.md', 'rst'),
     author='Søren Atmakuri Davidsen',
     author_email='sorend@cs.svu-ac.in',
     url='https://github.com/sorend/fylearn',
@@ -33,6 +38,6 @@ setup(
         'scipy>=1.3',
         'scikit-learn>=0.20',
     ],
-    setup_requires=['pytest-runner', 'wheel'],
+    setup_requires=['pytest-runner', 'wheel', 'pypandoc'],
     tests_require=['pytest'],
 )

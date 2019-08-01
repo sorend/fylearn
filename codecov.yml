@@ -21,4 +21,4 @@ flags:
     - "*.txt"
   tests:
     paths:
-    - fylearn/tests/
+    - tests/

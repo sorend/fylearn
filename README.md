@@ -17,6 +17,12 @@ Machine learning algorithms
  - fylearn.garules.MultimodalEvolutionaryClassifer -- learns rules using genetic algorithm.
  - fylearn.nfpc.FuzzyPatternClassifier -- base class for fuzzy pattern classifiers (see parameters).
 
+Installation
+------------
+
+You can add FyLearn to your project by using pip:
+
+    pip install fylearn
 
 ### Usage
 
@@ -72,7 +78,7 @@ Example use:
     tlbo = helper_n_generations(tlbo, 100)
     best_solution, best_fitness = tlbo.best()
     print "TLBO solution", best_solution, "fitness", best_fitness
-    
+
     jaya = JayaOptimizer(fitness, lower_bounds, upper_bounds)
     jaya = helper_n_generations(jaya, 100)
     best_solution, best_fitness = jaya.best()
@@ -88,7 +94,7 @@ Tiny, but hopefully useful. The focus of the library is on providing membership 
  - fylearn.fuzzylogic.TriangularSet
  - fylearn.fuzzylogic.TrapezoidalSet
  - fylearn.fuzzylogic.PiSet
- 
+
 Example use:
 
     import numpy as np
@@ -111,13 +117,6 @@ Example use:
     a = meowa(5, 0.2)  # OR, andness = 0.2
     print a(X.T)  # works column-wise, so apply to transposed X
 
-Installation
-------------
-
-You can add FyLearn to your project by using pip:
-
-    pip install fylearn
-
 To Do
 -----
 
@@ -129,10 +128,9 @@ We are working on adding the following algorithms:
 About
 -----
 
-FyLearn is supposed to mean "FuzzY learning", but in Danish the word "fy" means loosely translated "for shame". It has been created by the Department of Computer Science at Sri Venkateswara University, Tirupati, INDIA by a [PhD student](http://www.cs.svuni.in/~sorend/) as part of his research.
+FyLearn is supposed to mean "FuzzY learning", but in Danish the word "fy" means loosely translated "for shame". It has been created by the Department of Computer Science at Sri Venkateswara University, Tirupati, INDIA by a [PhD student](http://www.cs.svu-ac.in/~sorend/) as part of his research.
 
 Contributions:
 --------------
 
  - fylearn.local_search Python code by [M. E. H. Pedersen](http://hvass-labs.org/) (M. E. H. Pedersen, *Tuning and Simplifying Heuristical Optimization*, PhD Thesis, University of Southampton, U.K., 2010)
-

@@ -1,0 +1,24 @@
+coverage:
+  range: "95..100"
+
+  status:
+    project: no
+
+flags:
+  library:
+    paths:
+    - fylearn/
+  configs:
+    paths:
+    - requirements/
+    - ".git*"
+    - "*.yml"
+  docs:
+    paths:
+    - docs/
+    - "*.md"
+    - "*.rst"
+    - "*.txt"
+  tests:
+    paths:
+    - fylearn/tests/

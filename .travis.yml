@@ -30,7 +30,7 @@ script:
   - pytest --cov=fylearn -v
 
 after_success:
-  - codecov
+  - codecov --file .coverage
 
 stages:
   - test

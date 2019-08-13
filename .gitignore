@@ -16,3 +16,5 @@ dist
 build
 version.txt
 .coverage*
+coverage.xml
+htmlcov

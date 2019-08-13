@@ -27,10 +27,10 @@ install:
   - python setup.py install
 
 script:
-  - pytest --cov=fylearn -v
+  - pytest tests
 
 after_success:
-  - codecov --file .coverage
+  - codecov
 
 stages:
   - test

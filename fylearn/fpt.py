@@ -13,9 +13,12 @@ The module structure is the following:
   top-down constructed fuzzy pattern tree [3].
 
 References:
-[1] Hwong, 2009.
-[2] Senge and Huellemeier, 2009.
-[3] Senge and Huellemeier, 2010.
+[1] Z. Huang, T. D. Gedeon, and M. Nikravesh, "Pattern trees induction: A new machine
+    learning method," IEEE Trans. Fuzzy Syst., vol. 16, no. 4, pp. 958–970, Aug. 2008.
+[2] R. Senge, and E. Hüllermeier, "Top-down induction of fuzzy pattern trees," IEEE
+    Trans. Fuzzy Syst., vol. 19, no. 2, pp. 241-252, Apr. 2011.
+[3] R. Senge, and E. Hüllermeier, "Pattern trees for regression and fuzzy systems
+    modeling," in Proc. IEEE Int. Conf. on Fuzzy Syst., 2010.
 """
 
 import numpy as np

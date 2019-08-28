@@ -9,6 +9,7 @@ The module structure is the following:
 References:
 
 [1] S. K. Meher, "A new fuzzy supervised classification method based on aggregation operator," In Proc. 3rd IEEE Conf on Signal-Image tech and internet-based syst, 2007. url: https://ieeexplore.ieee.org/document/4618866
+
 [2] U. Monks, V. Lohweg, and Larsen, "Aggregation operator based fuzzy pattern classifier design," In Proc. Conf machine learning in real-time applications, 2009. url: https://www.researchgate.net/publication/229035282_Aggregation_Operator_Based_Fuzzy_Pattern_Classifier_Design
 """
 

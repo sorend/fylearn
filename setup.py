@@ -32,7 +32,7 @@ setup(
     download_url='https://github.com/sorend/fylearn/tarball/%s' % (MY_VERSION,),
     license='MIT',
     keywords=['machine learning', 'fuzzy logic', 'scikit-learn'],
-    classifiers=['License :: OSI Approved :: MIT License'],
+    classifiers=['License :: OSI Approved :: MIT License', 'Programming Language :: Python :: 3'],
     install_requires=[
         'numpy>=1.16',
         'scipy>=1.3',

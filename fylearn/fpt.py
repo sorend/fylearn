@@ -13,9 +13,15 @@ The module structure is the following:
   top-down constructed fuzzy pattern tree [3].
 
 References:
-[1] Hwong, 2009.
-[2] Senge and Huellemeier, 2009.
-[3] Senge and Huellemeier, 2010.
+
+[1] Z. Huang, T. D. Gedeon, and M. Nikravesh, "Pattern trees induction: A new machine
+    learning method," IEEE Trans. Fuzzy Syst., vol. 16, no. 4, pp. 958–970, Aug. 2008.
+
+[2] R. Senge, and E. Hüllermeier, "Top-down induction of fuzzy pattern trees," IEEE
+    Trans. Fuzzy Syst., vol. 19, no. 2, pp. 241-252, Apr. 2011.
+
+[3] R. Senge, and E. Hüllermeier, "Pattern trees for regression and fuzzy systems
+    modeling," in Proc. IEEE Int. Conf. on Fuzzy Syst., 2010.
 """
 
 import numpy as np
@@ -73,6 +79,10 @@ def default_rmse(a, b):
     return 1.0 - mean_squared_error(a, b)
 
 def default_fuzzifier(idx, F):
+    """Default fuzzifier function.
+
+    Creates three fuzzy sets with triangular membership functions: (low, med, hig) from min and max data points.
+    """
     # get min/max from data
     v_min = np.nanmin(F)
     v_max = np.nanmax(F)
@@ -95,7 +105,6 @@ class Tree:
     pass
 
 class Leaf(Tree):
-    """Leaf node in the tree, contains index of the feature and the membership function to apply"""
     def __init__(self, idx, name, mu):
         self.idx = idx
         self.name = name
@@ -108,7 +117,6 @@ class Leaf(Tree):
         return self.mu(X[:, self.idx])  # apply the membership function to the specific feature idx
 
 class Inner(Tree):
-    """Branching node in the tree """
     def __init__(self, aggregation, branches):
         self.branches_ = branches
         self.aggregation_ = aggregation
@@ -124,6 +132,7 @@ class Inner(Tree):
         return self.aggregation_(R)
 
 class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
+    """Fuzzy pattern tree classifier"""
 
     def __init__(self,
                  similarity_measure=default_rmse,
@@ -131,6 +140,20 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
                  num_candidates=2,
                  num_slaves=3,
                  fuzzifier=default_fuzzifier):
+        """Construct classifier
+        
+        Params
+        ------
+        similarity_measure : similarity measure to use (default default_rmse)
+
+        max_depth : max depth of tree (default 5)
+
+        num_candidates : number of candidates (default 2)
+
+        num_slaves : number of slaves (default 3)
+
+        fuzzifier : fuzzifier to fuzzify input (default: default_fuzzifier)
+        """
         self.similarity_measure = similarity_measure
         self.max_depth = max_depth
         self.num_candidates = num_candidates

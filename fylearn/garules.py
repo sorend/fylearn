@@ -8,9 +8,15 @@ The module structure is the following:
 - The "EnsembleMultimodalEvolutionaryClassifier" contains an emsemble based classifier
   extended from [1] where more than one prototype is allowed per class, see [2].
 
-References:
-[1] Stoean, Stoean, Preuss and Dumitrescu, 2005.
-[2] Davidsen, Padmavathamma, 2015.
+### References:
+
+[1] C. Stoean, R. Stoean, M. Preuss and D. Dumitrescu, "Diabetes diagnosis through the
+    means of multi-modal evolutionary algorithm," In Proc. 1st East Euro. Conf. on Health
+    Care Modelling and Computation, pages 277-289, 2005.
+
+[2] S. A. Davidsen, and M. Padmavathamma, "Multi-modal evolutionary ensemble
+    classification in medical diagnosis problems," In Proc. Recent Advances in Medical
+    Informatics, Kochi, 2015.
 """
 
 import logging
@@ -46,6 +52,9 @@ class StoeanDistance(DistanceMetric):
         return R
 
 class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
+    """Multi-modal evolutionary classifier learns a reference vector for each class using a GA optimiser.
+
+    """
 
     def __init__(self, n_iterations=10, df=stoean_f):
         self.n_iterations = n_iterations

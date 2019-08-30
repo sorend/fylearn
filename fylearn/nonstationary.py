@@ -17,8 +17,9 @@ drastically, which is up to the pertubation function.
 
 For each call to the membership function, $t$ will be increased (think of it as seconds).
 
-[1] Garibaldi, 2007.
-
+[1] J. Garibaldi, M. Jaroszewski, and S. Musikasuwan, "Nonstationary fuzzy sets," IEEE Trans.
+    on Fuzzy Syst., vol. 16, no. 4, pp. 1072-1086, 2008. url:
+    https://ieeexplore.ieee.org/document/4601106?arnumber=4601106
 """
 
 import numpy as np
@@ -43,7 +44,6 @@ class NonstationaryFuzzySet:
 
         Parameters:
         -----------
-
         factory : the factory method to create the backing set of the nonstationary set.
 
         pertubations : pertubation functions for the arguments of the backing set. Note each
@@ -58,7 +58,6 @@ class NonstationaryFuzzySet:
 
         Parameters:
         -----------
-
         T : The set of timestamps in the nonstationary set to calculate for
 
         X : The values to calculate membership functions for, each row in X

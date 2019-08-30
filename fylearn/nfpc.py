@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Fuzzy Pattern Classifiers.
+Fuzzy Pattern Classifiers with optimised order weighted aggregation functions.
 
 
 References:
 -----------
-[1] Davidsen 2015.
-
-[2] Monks, 2009.
-
-[3] Davidsen, 2016.
-
-[4] Meher, 2009.
+[1] S. A. Davidsen, and M. Padmavathamma, "A novel hybrid fuzzy pattern classifier using order
+    weighted averaging," In Proc. 1st Int. Conf. on Comp. Intel. and Informatics, pp. 535-547, 2016.
+    url: https://link.springer.com/chapter/10.1007/978-981-10-2471-9_52
 
 """
 

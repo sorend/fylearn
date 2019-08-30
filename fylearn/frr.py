@@ -3,15 +3,14 @@
 
 The module structure is the following:
 
-- The "FuzzyReductionRuleClassifier" implements the model learning using the
-  [1] algorithm.
-- The "ModifiedFuzzyPatternClassifier" implements the model learning using the
-  [2] algorithm.
+- The "FuzzyReductionRuleClassifier" implements the model learning using the [1] algorithm.
+- The "ModifiedFuzzyPatternClassifier" implements the model learning using the [2] algorithm.
 
 References:
 
-[1] Meher, 2009.
-[2] Monks and Larsen, 2008.
+[1] S. K. Meher, "A new fuzzy supervised classification method based on aggregation operator," In Proc. 3rd IEEE Conf on Signal-Image tech and internet-based syst, 2007. url: https://ieeexplore.ieee.org/document/4618866
+
+[2] U. Monks, V. Lohweg, and Larsen, "Aggregation operator based fuzzy pattern classifier design," In Proc. Conf machine learning in real-time applications, 2009. url: https://www.researchgate.net/publication/229035282_Aggregation_Operator_Based_Fuzzy_Pattern_Classifier_Design
 """
 
 import numpy as np

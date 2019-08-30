@@ -9,7 +9,11 @@ The module structure is the following:
   local scheme [1].
 
 References:
-[1] Davidsen, 2015.
+-----------
+[1] S. A. Davidsen, E. Sreedevi, and M. Padmavathamma, "Local and global genetic fuzzy pattern
+    classifiers," In Proc. Machine Learning and Data Mining in Pattern Recognition, pp. 55-69,
+    2015. url: https://link.springer.com/chapter/10.1007/978-3-319-21024-7_4
+
 """
 
 import logging

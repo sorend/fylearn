@@ -18,3 +18,4 @@ version.txt
 .coverage*
 coverage.xml
 htmlcov
+_build

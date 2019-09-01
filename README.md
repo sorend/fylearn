@@ -1,28 +1,36 @@
 
-FyLearn
-=======
-
 <img src="docs/img/fylearn.svg" alt="fylearn - fuzzy machine learning" width="300">
 
-FyLearn is a fuzzy machine learning library, built on top of [SciKit-Learn](http://scikit-learn.org/).
+fylearn is a fuzzy machine learning library, built on top of [SciKit-Learn](http://scikit-learn.org/).
 
-SciKit-Learn contains many common machine learning algorithms, and is a good place to start if you want to play or program anything related to machine learning in Python. FyLearn is not intended to be a replacement for SciKit-Learn (in fact FyLearn depends on SciKit-Learn), but to provide an extra set of machine learning algorithms from the fuzzy logic community.
+SciKit-Learn contains many common machine learning algorithms, and is a good place to start if you want to play or program anything related to machine learning in Python. fylearn is not intended to be a replacement for SciKit-Learn (in fact fylearn depends on SciKit-Learn), but to provide an extra set of machine learning algorithms from the fuzzy logic community.
 
 Machine learning algorithms
 ---------------------------
 
+### Fuzzy pattern classifiers
+
+Fuzzy pattern classifiers are classifiers that describe data using fuzzy sets and fuzzy aggregation functions.
+
+Several fuzzy pattern classifiers are implemented in the library:
  - fylearn.frr.FuzzyReductionRuleClassifier -- based on learning membership functions from min/max.
  - fylearn.fpcga.FuzzyPatternClassifierGA -- optimizes membership functions globally.
  - fylearn.fpcga.FuzzyPatternClassifierLocalGA -- optimizes membership functions locally.
  - fylearn.fpt.FuzzyPatternTreeClassifier -- builds fuzzy pattern trees using bottom-up method.
  - fylearn.fpt.FuzzyPatternTreeTopDownClassifier -- builds fuzzy pattern trees using top-down method.
- - fylearn.garules.MultimodalEvolutionaryClassifer -- learns rules using genetic algorithm.
  - fylearn.nfpc.FuzzyPatternClassifier -- base class for fuzzy pattern classifiers (see parameters).
+
+### Genetic Algorithm rule based classifiers
+
+A type of classifier that uses GA to optimize rules
+
+- fylearn.garules.MultimodalEvolutionaryClassifer -- learns rules using genetic algorithm.
+
 
 Installation
 ------------
 
-You can add FyLearn to your project by using pip:
+You can add fylearn to your project by using pip:
 
     pip install fylearn
 
@@ -130,7 +138,7 @@ We are working on adding the following algorithms:
 About
 -----
 
-FyLearn is supposed to mean "FuzzY learning", but in Danish the word "fy" means loosely translated "for shame". It has been created by the Department of Computer Science at Sri Venkateswara University, Tirupati, INDIA by a [PhD student](http://www.cs.svu-ac.in/~sorend/) as part of his research.
+fylearn is supposed to mean "FuzzY learning", but in Danish the word "fy" means loosely translated "for shame". It has been created by the Department of Computer Science at Sri Venkateswara University, Tirupati, INDIA by a [PhD student](http://www.cs.svu-ac.in/~sorend/) as part of his research.
 
 Contributions:
 --------------

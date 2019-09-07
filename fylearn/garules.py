@@ -92,7 +92,7 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
     def fit(self, X, y):
         X = check_array(X)
 
-        self.classes_, y_reverse = np.unique(y, return_inverse=True)
+        self.classes_, _ = np.unique(y, return_inverse=True)
 
         # construct distance measure
         self.distance_ = self.df(X)

@@ -179,7 +179,7 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
         self.classes_, y = np.unique(y, return_inverse=True)
 
         if np.nan in self.classes_:
-            raise "nan not supported for class values"
+            raise Exception("nan not supported for class values")
 
         self.trees_ = {}
 

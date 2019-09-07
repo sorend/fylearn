@@ -301,10 +301,10 @@ class GOWA(OWA):
     def __str__(self):
         return ("GOWA(%f, " % (self.p,)) + " ".join([ "%.4f" % (x,) for x in self.v]) + ")"
 
-def gowa(*w):
+def gowa(p, *w):
     """Create Generalized OWA (GOWA) operator from weights"""
     w = np.array(w, copy=False).ravel()
-    return GOWA(w)
+    return GOWA(p, w)
 
 def owa(*w):
     """Create OWA operator from weights"""

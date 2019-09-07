@@ -156,11 +156,11 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         
         X = check_array(X)
 
-        self.classes_, y = np.unique(y_orig, return_inverse=True)
+        self.classes_, _ = np.unique(y_orig, return_inverse=True)
         self.m = X.shape[1]
 
         if np.nan in self.classes_:
-            raise "nan not supported for class values"
+            raise Exception("nan not supported for class values")
 
         self.build_with_ga(X, y_orig)
 

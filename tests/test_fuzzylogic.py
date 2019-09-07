@@ -398,3 +398,20 @@ def test_weights_mapping():
         if np.nan in np.asarray(Y):
             print("Y", Y, "X", X)
             fail()
+
+def test_gowa_wrapper():
+
+    def almost(a, b, prec=0.01):
+        return np.abs(a - b) < prec
+
+    sut = fl.gowa(0.5, 0.1, 0.9)
+
+    res = sut(np.array([0.2, 0.4]))
+    print("res", res)
+    assert almost(0.22, res)
+
+def test_aa_wrapper():
+
+    sut = fl.aa(0.00000001)
+
+    assert isinstance(sut, fl.AndnessDirectedAveraging)

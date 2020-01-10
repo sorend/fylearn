@@ -35,3 +35,35 @@ def test_classifier():
     assert len(y_pred) == 2
     assert y_pred[0] == 1
     assert y_pred[1] == 0
+
+
+def test_classifier_delta_zero():
+
+    l = MFPC()
+
+    print("l", l.get_params())
+
+    X = np.array([
+        [0.1, 0.1],
+        [0.11, 0.1],
+        [0.2, 0.1],
+        [0.18, 0.1]
+    ])
+
+    y = np.array([
+        1,
+        1,
+        0,
+        0
+    ])
+
+    l.fit(X, y)
+
+    y_pred = l.predict([[0.1, 0.1],
+                        [0.2, 0.1]])
+
+    print("y_pred", y_pred)
+
+    assert len(y_pred) == 2
+    assert y_pred[0] == 1
+    assert y_pred[1] == 0

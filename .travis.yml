@@ -27,18 +27,16 @@ install:
   - pip install pytest pytest-cov codecov
   - python setup.py install
 
-script:
-  - pytest tests
-
-after_success:
-  - codecov
-
 stages:
   - test
   - deploy
 
 jobs:
   include:
+    - stage: test
+      script: pytest tests
+      after_success:
+        - codecov
     - stage: deploy
       deploy:
         - provider: pypi

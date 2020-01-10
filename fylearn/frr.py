@@ -35,6 +35,7 @@ def build_memberships(X, factory):
                      means[i] + ((maxs[i] - mins[i]) / 2.0))
              for i in range(len(X.T)) ]
 
+
 class FuzzyReductionRuleClassifier(BaseEstimator, ClassifierMixin):
 
     def get_params(self, deep=False):
@@ -93,6 +94,7 @@ def build_owa_operator(andness, m):
     w = ((v / m) ** beta) - (((v - 1.0) / m) ** beta)
     return fl.owa(w)
 
+
 class ModifiedFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
     def get_params(self, deep=False):
@@ -112,10 +114,10 @@ class ModifiedFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
             raise ValueError("D must be in {2, 4, 6, 8}")
 
         if pce < 0.0 or pce > 1.0:
-            raise ValueError("pcc must be in [0, 1]")
+            raise ValueError("pce must be within [0, 1]")
 
         if andness < 0.5 or andness > 1.0:
-            raise ValueError("andness must be in [0.5, 1]")
+            raise ValueError("andness must be within [0.5, 1]")
 
         if operator not in ("aiwa", "owa"):
             raise ValueError("operator must be 'aiwa' or 'owa'")
@@ -136,7 +138,7 @@ class ModifiedFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         for idx, clz in enumerate(self.classes_):
             m_max = np.max(X[y == clz], 0)
             m_min = np.min(X[y == clz], 0)
-            delta = (m_max - m_min) / 2.0
+            delta = np.maximum((m_max - m_min) / 2.0, 0.0001)
             self.S_.append(delta + m_min)
             self.C_.append((1.0 + (2.0 * self.pce)) * delta)
 

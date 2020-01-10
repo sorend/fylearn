@@ -1,6 +1,8 @@
 
 <img src="docs/img/fylearn.svg" alt="fylearn - fuzzy machine learning" width="300">
 
+[![Build Status](https://travis-ci.com/sorend/fylearn.svg?branch=master)](https://travis-ci.com/sorend/fylearn)
+
 fylearn is a fuzzy machine learning library, built on top of [SciKit-Learn](http://scikit-learn.org/).
 
 SciKit-Learn contains many common machine learning algorithms, and is a good place to start if you want to play or program anything related to machine learning in Python. fylearn is not intended to be a replacement for SciKit-Learn (in fact fylearn depends on SciKit-Learn), but to provide an extra set of machine learning algorithms from the fuzzy logic community.

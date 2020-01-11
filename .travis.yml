@@ -55,6 +55,7 @@ jobs:
         - provider: pypi
           distributions: sdist bdist_wheel
           server: https://test.pypi.org/legacy/
+          skip_existing: true
           user: sorend
           password:
             secure: "AWlM4xK454gZWfxxxYMPVKR3/SlVEhza9mS81ExIa7EVkWiRmR3yFnCxtrISJ8fPGSh/eprC/X8VYa3ShJr+qNbm00q5VyY7qeKEyegM23Ejnf/mCPH5RCQCdeOWPhbWOyPtr5lN9E94Q9w8LNlpyb6mtU0h/RXrHSYuaEmPS1w="

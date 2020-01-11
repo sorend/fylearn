@@ -17,7 +17,7 @@ def test_ps():
     upper_bound = np.array([20.0] * 10)
     lower_bound = np.array([10.0] * 10)
 
-    o = ls.PatternSearchOptimizer(fitness, lower_bound, upper_bound, max_evaluations=50)
+    o = ls.PatternSearchOptimizer(fitness, lower_bound, upper_bound, max_evaluations=50, random_state=1)
 
     best_sol, best_fit = o()
 
@@ -32,7 +32,7 @@ def test_lus():
     lower_bound = np.array([10.0] * 10)
 
     o = ls.LocalUnimodalSamplingOptimizer(fitness, lower_bound, upper_bound,
-                                          max_evaluations=50, gamma=3.0)
+                                          max_evaluations=50, gamma=3.0, random_state=1)
 
     best_sol, best_fit = o()
 
@@ -47,7 +47,7 @@ def test_helper_num_runs():
     lower_bound = np.array([10.0] * 10)
 
     o = ls.LocalUnimodalSamplingOptimizer(fitness, lower_bound, upper_bound,
-                                          max_evaluations=25, gamma=3.0)
+                                          max_evaluations=25, gamma=3.0, random_state=1)
 
     best_sol, best_fit = o()
 
@@ -63,7 +63,7 @@ def test_helper_num_runs():
     # try pattern search with refine method
     #
 
-    o = ls.PatternSearchOptimizer(fitness, lower_bound, upper_bound, max_evaluations=25)
+    o = ls.PatternSearchOptimizer(fitness, lower_bound, upper_bound, max_evaluations=25, random_state=1)
     best_sol, best_fit = o()
 
     print("best", best_sol)

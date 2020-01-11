@@ -56,12 +56,14 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
     """
 
-    def __init__(self, n_iterations=10, df=stoean_f):
+    def __init__(self, n_iterations=10, df=stoean_f, random_state=None):
         self.n_iterations = n_iterations
         self.df = df
+        self.random_state = check_random_state(random_state)
 
     def get_params(self, deep=False):
         return {"n_iterations": self.n_iterations,
+                "random_state": self.random_state,
                 "df": self.df}
 
     def set_params(self, **kwargs):
@@ -81,7 +83,8 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
                               elitism=3,
                               n_chromosomes=100,
                               n_genes=X.shape[1],
-                              p_mutation=0.3)
+                              p_mutation=0.3,
+                              random_state=self.random_state)
 
         ga = helper_n_generations(ga, self.n_iterations)  # advance the GA
 

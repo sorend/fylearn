@@ -3,6 +3,9 @@ import numpy as np
 
 from fylearn import garules
 
+from sklearn.datasets import load_iris
+import pytest
+
 def test_classifier():
 
     l = garules.MultimodalEvolutionaryClassifier(n_iterations=100)
@@ -25,26 +28,22 @@ def test_classifier():
 
 def test_classifier_iris():
 
-    import os
-    csv_file = os.path.join(os.path.dirname(__file__), "iris.csv")
-    data = np.genfromtxt(csv_file, dtype=float, delimiter=',', names=True)
+    iris = load_iris()
 
-    X = np.array([data["sepallength"], data["sepalwidth"], data["petallength"], data["petalwidth"]]).T
-    y = data["class"]
+    X = iris.data
+    y = iris.target
 
     from sklearn.preprocessing import MinMaxScaler
     X = MinMaxScaler().fit_transform(X)
 
-    l = garules.MultimodalEvolutionaryClassifier(n_iterations=100)
+    l = garules.MultimodalEvolutionaryClassifier(n_iterations=100, random_state=1)
 
     from sklearn.model_selection import cross_val_score
 
     scores = cross_val_score(l, X, y, cv=10)
     mean = np.mean(scores)
 
-    print("mean", mean)
-
-    assert 0.90 < mean
+    assert 0.93 == pytest.approx(mean, 0.01)  # using the same random state expect same
 
 
 # def test_compare_diabetes():

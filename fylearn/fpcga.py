@@ -117,13 +117,15 @@ class DummyAggregationRuleFactory(AggregationRuleFactory):
     def __call__(self, X, y):
         return self.aggregation_rule
 
+
 class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
     def get_params(self, deep=False):
         return {"iterations": self.iterations,
                 "epsilon": self.epsilon,
                 "mu_factories": self.mu_factories,
-                "aggregation_rules": self.aggregation_rules}
+                "aggregation_rules": self.aggregation_rules,
+                "random_state": self.random_state}
 
     def set_params(self, **kwargs):
         for key, value in kwargs.items():
@@ -131,7 +133,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         return self
 
     def __init__(self, mu_factories=MEMBERSHIP_FACTORIES, aggregation_rules=AGGREGATION_RULES,
-                 iterations=10, epsilon=0.0001):
+                 iterations=10, epsilon=0.0001, random_state=None):
 
         if mu_factories is None or len(mu_factories) == 0:
             raise ValueError("no mu_factories specified")
@@ -146,6 +148,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
         self.iterations = iterations
         self.epsilon = epsilon
         self.aggregation_rules = aggregation_rules
+        self.random_state = random_state
 
     def fit(self, X, y_orig):
 
@@ -212,7 +215,8 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
                               elitism=5,  # no elitism
                               n_chromosomes=100,
                               n_genes=n_genes,
-                              p_mutation=0.3)
+                              p_mutation=0.3,
+                              random_state=self.random_state)
 
         last_fitness = None
 
@@ -246,6 +250,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
             return "Not trained"
         else:
             return str(self.aggregation) + str({ "class-" + str(k): v for k, v in self.protos_ })
+
 
 class FuzzyPatternClassifierLGA(FuzzyPatternClassifierGA):
 

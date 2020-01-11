@@ -4,6 +4,10 @@ import numpy as np
 
 import fylearn.fpt as fpt
 
+import pytest
+from sklearn.datasets import load_iris
+
+
 def test_tree_iterator():
     """ tests tree iterator """
 
@@ -65,13 +69,14 @@ def test_classifier_topdown():
 
 def test_classifier_iris():
 
-    import os
-    csv_file = os.path.join(os.path.dirname(__file__), "iris.csv")
-    data = np.genfromtxt(csv_file, dtype=float, delimiter=',', names=True)
+    iris = load_iris()
 
-    X = np.array([data["sepallength"], data["sepalwidth"], data["petallength"], data["petalwidth"]]).T
-    y = data["class"]
+    X = iris.data
+    y = iris.target
 
     l = fpt.FuzzyPatternTreeClassifier()
     l.fit(X, y)
-    print(l.score(X, y))
+    score = l.score(X, y)
+    print("score", score)
+
+    assert 0.97 == pytest.approx(score, 0.01)

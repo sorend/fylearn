@@ -62,12 +62,9 @@ def test_simple_fpc():
 
 def test_build_meowa_factory():
 
-    import os
-    csv_file = os.path.join(os.path.dirname(__file__), "iris.csv")
-    data = np.genfromtxt(csv_file, dtype=float, delimiter=',', names=True)
-
-    X = np.array([data["sepallength"], data["sepalwidth"], data["petallength"], data["petalwidth"]]).T
-    y = data["class"]
+    iris = datasets.load_iris()
+    X = iris.data
+    y = iris.target
 
     from sklearn.preprocessing import MinMaxScaler
     X = MinMaxScaler().fit_transform(X)
@@ -85,12 +82,9 @@ def test_build_meowa_factory():
 
 def test_build_ps_owa_factory():
 
-    import os
-    csv_file = os.path.join(os.path.dirname(__file__), "iris.csv")
-    data = np.genfromtxt(csv_file, dtype=float, delimiter=',', names=True)
-
-    X = np.array([data["sepallength"], data["sepalwidth"], data["petallength"], data["petalwidth"]]).T
-    y = data["class"]
+    iris = datasets.load_iris()
+    X = iris.data
+    y = iris.target
 
     from sklearn.preprocessing import MinMaxScaler
     X = MinMaxScaler().fit_transform(X)

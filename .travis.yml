@@ -41,6 +41,7 @@ jobs:
   include:
     - stage: deploy
       script: skip
+      after_success: true
       deploy:
         - provider: pypi
           distributions: sdist bdist_wheel

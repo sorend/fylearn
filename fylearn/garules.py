@@ -128,7 +128,7 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
     def __init__(self, n_iterations=10, n_models=3, random_state=None, sample_size=10, n_iterations_weights=10):
         self.n_iterations = n_iterations
         self.n_models = n_models
-        self.random_state = random_state
+        self.random_state = check_random_state(random_state)
         self.sample_size = sample_size
         self.n_iterations_weights = n_iterations_weights
 
@@ -188,7 +188,7 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
     def fit(self, X, y):
         X = check_array(X)
 
-        random_state = check_random_state(self.random_state)
+        random_state = self.random_state
 
         self.classes_, y_reverse = np.unique(y, return_inverse=True)
 

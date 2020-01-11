@@ -5,7 +5,7 @@ from fylearn import garules
 
 def test_classifier():
 
-    l = garules.EnsembleMultimodalEvolutionaryClassifier(n_iterations=25)
+    l = garules.EnsembleMultimodalEvolutionaryClassifier(n_iterations=25, random_state=1)
 
     X = np.array([
         [1, 2, 4],
@@ -24,7 +24,7 @@ def test_classifier():
     assert [0] == l.predict([[0.9, 1.7, 4.5]])
 
     assert [1] == l.predict([[2.1, 3.9, 7.8]])
-
+    
 # def test_compare_diabetes():
 #     import os
 #     csv_file = os.path.join(os.path.dirname(__file__), "diabetes.csv")

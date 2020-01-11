@@ -2,6 +2,7 @@
 <img src="docs/img/fylearn.svg" alt="fylearn - fuzzy machine learning" width="300">
 
 [![Build Status](https://travis-ci.com/sorend/fylearn.svg?branch=master)](https://travis-ci.com/sorend/fylearn)
+[![PyPi version](https://pypip.in/v/fylearn/badge.png)](https://crate.io/packages/fylearn/)
 
 fylearn is a fuzzy machine learning library, built on top of [SciKit-Learn](http://scikit-learn.org/).
 

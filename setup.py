@@ -34,9 +34,9 @@ setup(
     keywords=['machine learning', 'fuzzy logic', 'scikit-learn'],
     classifiers=['License :: OSI Approved :: MIT License', 'Programming Language :: Python :: 3'],
     install_requires=[
-        'numpy>=1.16',
+        'numpy>=1.17',
         'scipy>=1.3',
-        'scikit-learn>=0.20',
+        'scikit-learn>=0.22',
     ],
     setup_requires=['pytest-runner', 'wheel', 'pypandoc'],
     tests_require=['pytest'],

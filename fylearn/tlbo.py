@@ -94,13 +94,13 @@ class TeachingLearningBasedOptimizer(object):
             r_i = rs.rand(self.m)
 
             if self.fitness_[i] < self.fitness_[j]:
-                new_solution = self.population_[i] + r_i * (self.population_[i] - self.population_[j])
+                new_solution = self.population_[i] + r_i * (self.population_[i] - self.population_[j]).flatten()
             else:
-                new_solution = self.population_[i] + r_i * (self.population_[j] - self.population_[i])
+                new_solution = self.population_[i] + r_i * (self.population_[j] - self.population_[i]).flatten()
 
             new_solution = np.minimum(np.maximum(new_solution, self.lower_bound), self.upper_bound)
             new_fitness = self.f(new_solution)
-
+            
             if new_fitness < self.fitness_[i]:
                 self.population_[i] = new_solution
                 self.fitness_[i] = new_fitness

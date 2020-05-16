@@ -62,3 +62,17 @@ def test_tlbo_random_state():
 
     with pytest.raises(ValueError):
         TLBO(**params)
+
+def test_tlbo_alan():
+
+    def fitness(X):
+        print("X", X, "len", len(X))
+        x1, x2, x3, x4 = X.tolist()
+        return (0.7*x1) + (.05 * x2) - (0.3*x3) + (0.69 * x4)
+
+    lower_bounds = np.ones(4) * -10
+    upper_bounds = np.ones(4) * 10
+    sut = TLBO(fitness, lower_bounds, upper_bounds)
+    sut = helper_n_generations(sut, 100)
+    best_solution, best_fitness = sut.best()
+    print("solution", best_solution, "fitness", best_fitness)

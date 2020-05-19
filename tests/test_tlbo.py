@@ -73,6 +73,61 @@ def test_tlbo_alan():
     lower_bounds = np.ones(4) * -10
     upper_bounds = np.ones(4) * 10
     sut = TLBO(fitness, lower_bounds, upper_bounds)
-    sut = helper_n_generations(sut, 100)
+    sut = helper_n_generations(sut, 500)
     best_solution, best_fitness = sut.best()
     print("solution", best_solution, "fitness", best_fitness)
+
+def test_tlbo_alan_2():
+
+    def fitness(X):
+        print("X", X, "len", len(X))
+        x1, x2, x3, x4 = X.tolist()
+        return 0.0358 +(0.7349*x1) + (.0578*x2)-(0.3151*x3) + (0.6888*x4) + (0.1803*(x1**2)) -(0.0481*(x2**2)) + (0.1699*(x3**2)) - (0.0494*(x4**2))- (0.3555*(x1*x2)) - (0.6316*(x1*x3)) + (0.5973*(x1*x4)) + (0.0826*(x2*x3)) - (0.4736*(x2*x4)) -  (0.6547*(x3*x4))    
+
+
+    lower_bounds = np.array([-10,-10,-10,-10])
+    upper_bounds = np.array([10,10,10,10])
+
+    tlbo = TeachingLearningBasedOptimizer(fitness, lower_bounds, upper_bounds)
+    tlbo = helper_n_generations(tlbo, 100)
+    best_solution, best_fitness = tlbo.best()
+    print("TLBO solution", best_solution, "fitness", best_fitness)
+
+#
+# Taken from paper:
+# https://drive.google.com/file/d/0B96X2BLz4rx-OVpoaE5ucFEyanM/view
+# See section 3.2 (Constrained optimization problems)
+#
+def test_tlbo_constrained_himmelblau():
+    # function to minimize
+    def f(x):
+        x1, x2 = x
+        return ((x1**2) + x2 - 11)**2 + (x1 + (x2**2) - 7)**2
+
+    # constraint 2
+    def g1(x):
+        x1, x2 = x
+        return 26 - (x1 - 5)**2 - x2**2
+
+    # constraint 1 g2(x) >= 0
+    def g2(x):
+        x1, x2 = x
+        return 20 - (4 * x1) - x2
+
+    # penalty:
+    #   10 * v^2, if v < 0
+    #   0, otherwise
+    def p(v):
+        return 10 * min(v, 0)**2
+    
+    # f'(x) - add penalties for constraints
+    def fp(x):
+        return f(x) + p(g1(x)) + p(g2(x))
+
+    lower_bounds = np.ones(2) * -5
+    upper_bounds = np.ones(2) * 5
+
+    tlbo = TLBO(fp, lower_bounds, upper_bounds, n_population=5)
+    tlbo = helper_n_generations(tlbo, 100)
+    best_solution, best_fitness = tlbo.best()
+    print("TLBO solution", best_solution, "fitness", best_fitness)

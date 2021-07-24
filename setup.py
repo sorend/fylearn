@@ -19,6 +19,7 @@ MY_VERSION = get_version(pypi=True)
 Distribution().fetch_build_eggs('pypandoc')
 import pypandoc
 
+pypandoc.download_pandoc()
 
 setup(
     name='fylearn',

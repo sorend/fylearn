@@ -25,11 +25,11 @@ jobs:
           pip install wheel tox tox-gh-actions
           tox
 
-      - name: Upload codecov
-        uses: codecov/codecov-action@v2
-        with:
-          fail_ci_if_error: true # optional (default = false)
-          verbose: true # optional (default = false)        
+#      - name: Upload codecov
+#        uses: codecov/codecov-action@v2
+#        with:
+#          fail_ci_if_error: true # optional (default = false)
+#          verbose: true # optional (default = false)        
           
       - name: Build wheel
         run: pip wheel -w wheelhouse .

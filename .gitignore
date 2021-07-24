@@ -19,3 +19,5 @@ version.txt
 coverage.xml
 htmlcov
 _build
+.tox
+wheelhouse

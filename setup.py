@@ -11,21 +11,25 @@ from setuptools import setup, Distribution, find_packages
 
 Distribution().fetch_build_eggs('versiontag')
 from versiontag import get_version, cache_git_tag
-
 cache_git_tag()
-
 MY_VERSION = get_version(pypi=True)
 
-Distribution().fetch_build_eggs('pypandoc')
-import pypandoc
+def readme():
+    with open('README.md') as f:
+        return f.read()
 
+test_deps = ['tox', 'tox-gh-actions'] # ['pytest', 'coverage']
+extras = {
+    'test': test_deps,
+}
 
 setup(
     name='fylearn',
     packages=find_packages(),
     version=MY_VERSION,
     description='Fuzzy Machine Learning Algorithms',
-    long_description=pypandoc.convert_file('README.md', 'rst'),
+    long_description=readme(),
+    long_description_content_type="text/markdown",
     author='Søren Atmakuri Davidsen',
     author_email='sorend@cs.svu-ac.in',
     url='https://github.com/sorend/fylearn',
@@ -38,6 +42,6 @@ setup(
         'scipy>=1.3',
         'scikit-learn>=0.22',
     ],
-    setup_requires=['pytest-runner', 'wheel', 'pypandoc'],
-    tests_require=['pytest'],
+    tests_require=test_deps,
+    extras_require=extras,
 )

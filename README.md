@@ -1,9 +1,10 @@
 
 <img src="docs/img/fylearn.svg" alt="fylearn - fuzzy machine learning" width="300">
 
-[![Build status](https://github.com/sorend/fylearn/actions/workflows/build.yml/badge.svg)](https://github.com/sorend/fylearn/actions/)
-[![PyPI version](https://badge.fury.io/py/fylearn.svg)](https://badge.fury.io/py/fylearn)
+[![Build status](https://github.com/sorend/fylearn/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/sorend/fylearn/actions/?query=branch%3Amain)
+[![PyPI version](https://badge.fury.io/py/fylearn.svg?branch=main)](https://badge.fury.io/py/fylearn?branch=main)
 [![CodeQL](https://github.com/sorend/fylearn/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/sorend/fylearn/actions/workflows/codeql-analysis.yml)
+[![Codecov](https://codecov.io/gh/sorend/fylearn/branch/main/graph/badge.svg)](https://codecov.io/gh/sorend/fylearn)
 
 fylearn is a fuzzy machine learning library, built on top of [SciKit-Learn](http://scikit-learn.org/).
 

@@ -11,7 +11,7 @@ import pytest
 def test_diameter_methods_mean_cluster():
 
     data = load_iris()
-    kmeans = KMeans(n_clusters=3)
+    kmeans = KMeans(n_clusters=3, random_state=42)
     c = data['target']
     x = data['data']
     k = kmeans.fit_predict(x)
@@ -31,7 +31,7 @@ def test_diameter_methods_mean_cluster():
 def test_diameter_methods_farthest():
 
     data = load_iris()
-    kmeans = KMeans(n_clusters=3)
+    kmeans = KMeans(n_clusters=3, random_state=42)
     c = data['target']
     x = data['data']
     k = kmeans.fit_predict(x)

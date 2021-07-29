@@ -6,8 +6,8 @@ The module contains the following metrics:
 
 ### References:
 
-[1] Kovács, F., Legány, C., & Babos, A. (2005). Cluster validity measurement techniques. 6th International Symposium of Hungarian Researchers on Computational Intelligence.
-
+[1] Kovács, F., Legány, C., & Babos, A. (2005). Cluster validity measurement techniques. 6th International Symposium of
+    Hungarian Researchers on Computational Intelligence.
 """
 
 import numpy as np
@@ -16,8 +16,10 @@ from sklearn.preprocessing import LabelEncoder
 DIAMETER_METHODS = ['mean_cluster', 'farthest']
 CLUSTER_DISTANCE_METHODS = ['nearest', 'farthest']
 
+
 def inter_cluster_distances(labels, distances, method='nearest'):
-    """Calculates the distances between the two nearest points of each cluster.
+    """Calculate distances between the two nearest points of each cluster.
+
     :param labels: a list containing cluster labels for each of the n elements
     :param distances: an n x n numpy.array containing the pairwise distances between elements
     :param method: `nearest` for the distances between the two nearest points in each cluster, or `farthest`
@@ -53,7 +55,8 @@ def __cluster_distances_by_points(labels, distances, farthest=False):
 
 
 def diameter(labels, distances, method='farthest'):
-    """Calculates cluster diameters
+    """Calculate cluster diameters
+
     :param labels: a list containing cluster labels for each of the n elements
     :param distances: an n x n numpy.array containing the pairwise distances between elements
     :param method: either `mean_cluster` for the mean distance between all elements in each cluster, or `farthest` for the distance between the two points furthest from each other
@@ -82,31 +85,28 @@ def diameter(labels, distances, method='farthest'):
     return diameters
 
 
-def dunn(labels, distances, diameter_method='farthest',
-         cdist_method='nearest'):
-    """
-    Dunn index for cluster validation (larger is better).
+def dunn(labels, distances, diameter_method='farthest', cdist_method='nearest'):
+    r"""Dunn index for cluster validation (larger is better).
 
-    .. math:: D = \min_{i = 1 \ldots n_c; j = i + 1\ldots n_c} \left\lbrace \frac{d \left( c_i,c_j \right)}{\max_{k = 1 \ldots n_c} \left(diam \left(c_k \right) \right)} \right\rbrace
+    .. math:: D = \min_{i = 1 \ldots n_c; j = i + 1\ldots n_c} \left\lbrace
+       \frac{d \left( c_i,c_j \right)}{\max_{k = 1 \ldots n_c} \left(diam \left(c_k \right) \right)} \right\rbrace
 
     where :math:`d(c_i,c_j)` represents the distance between
     clusters :math:`c_i` and :math:`c_j`, and :math:`diam(c_k)` is the diameter of cluster :math:`c_k`.
-    Inter-cluster distance can be defined in many ways, such as the distance between cluster centroids or between their closest elements. Cluster diameter can be defined as the mean distance between all elements in the cluster, between all elements to the cluster centroid, or as the distance between the two furthest elements.
+    Inter-cluster distance can be defined in many ways, such as the distance between cluster centroids or between
+    their closest elements. Cluster diameter can be defined as the mean distance between all elements in the cluster,
+    between all elements to the cluster centroid, or as the distance between the two furthest elements.
     The higher the value of the resulting Dunn index, the better the clustering
     result is considered, since higher values indicate that clusters are
     compact (small :math:`diam(c_k)`) and far apart (large :math:`d \left( c_i,c_j \right)`).
 
     Parameters:
     -----------
-
     labels : a list containing cluster labels for each of the n elements
-
     distances : an n x n numpy.array containing the pairwise distances between elements
-
     diameter_method : diameter method, see :py:function:`diameter` `method` parameter
     cdist_method : cluster distance method, see :py:function:`diameter` `method` parameter
     """
-
     labels = LabelEncoder().fit(labels).transform(labels)
 
     ic_distances = inter_cluster_distances(labels, distances, cdist_method)

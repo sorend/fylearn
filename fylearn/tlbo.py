@@ -25,22 +25,17 @@ class TeachingLearningBasedOptimizer(object):
 
     2. Learner phase: Randomly adjust pairs of individuals based on the best one with best fitness.
     """
+
     def __init__(self, f, lower_bound, upper_bound,
                  n_population=50, random_state=None):
-        """
-        Constructor
+        """Create optimizer.
 
         Parameters:
         -----------
-
         f : function to minimize.
-
         lower_bound : Vector with lower bound of the search space.
-
         upper_bound : Vector with upper bound of the search space.
-
         n_population : Number of individuals in the population [Default: 50].
-
         random_state : Specific random state to use [Default: None]
         """
         self.f = f
@@ -55,19 +50,15 @@ class TeachingLearningBasedOptimizer(object):
         self.fitness_ = np.apply_along_axis(self.f, 1, self.population_)
         # init bestidx
         self.bestidx_ = np.argmin(self.fitness_)
-        self.bestcosts_ = [ self.fitness_[self.bestidx_] ]
+        self.bestcosts_ = [self.fitness_[self.bestidx_]]
 
     def best(self, num=1):
-        """
-        Returns the num best solution and fitness at current epoch
-        """
+        """Return the num best solution and fitness at current epoch."""
         bestidxs = np.argsort(self.fitness_)[:num]
         return self.population_[bestidxs], self.fitness_[bestidxs]
 
     def next(self):
-        """
-        One iteration of TLBO.
-        """
+        """One iteration of TLBO."""
         mean = np.nanmean(self.population_, axis=0)  # column mean.
         rs = self.random_state
 
@@ -100,12 +91,13 @@ class TeachingLearningBasedOptimizer(object):
 
             new_solution = np.minimum(np.maximum(new_solution, self.lower_bound), self.upper_bound)
             new_fitness = self.f(new_solution)
-            
+
             if new_fitness < self.fitness_[i]:
                 self.population_[i] = new_solution
                 self.fitness_[i] = new_fitness
 
         self.bestidx_ = np.argmin(self.fitness_)  # update details
         self.bestcosts_.append(self.fitness_[self.bestidx_])
+
 
 TLBO = TeachingLearningBasedOptimizer  # shortcut to save our fingers

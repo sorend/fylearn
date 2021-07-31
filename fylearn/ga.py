@@ -126,6 +126,7 @@ def helper_min_fitness_decrease(ga, epsilon=0.001, top_n=10):
         last_fitness = new_fitness
     return ga
 
+
 def helper_fitness(chromosome_fitness_function):
     """
     Helper function, will evaluate chromosome_fitness_function for each chromosome
@@ -136,7 +137,9 @@ def helper_fitness(chromosome_fitness_function):
         return np.apply_along_axis(chromosome_fitness_function, 1, population)
     return fitness_function
 
+
 class BaseGeneticAlgorithm(object):
+    """Base for genetic algorithms."""
 
     def __init__(self, fitness_function,
                  selection_function=tournament_selection(),
@@ -146,27 +149,18 @@ class BaseGeneticAlgorithm(object):
                  population=None,
                  crossover_function=UniformCrossover()):
         """
-        Initializes the genetic algorithm.
+        Initialize the genetic algorithm.
 
         Parameters:
         -----------
-
         fitness_function : the function to measure fitness (smaller is more "fit")
-
         n_genes : number of genes (only needed if population is not specified)
-
         n_chromosomes : number of chromosomes (only needed if population is not specified)
-
         elitism : number of parents to keep between each generation
-
         p_mutation : the probability for mutation (applies to each gene)
-
         random_state : the state for the randomization to use
-
         population : Initial population, use this or use n_genes and n_chromosomes
-
         crossover_function : the function to perform crossover between two parents
-
         """
         self.fitness_function = fitness_function
         self.selection_function = selection_function
@@ -189,12 +183,15 @@ class BaseGeneticAlgorithm(object):
         self.fitness_ = self.fitness_function(self.population_)
 
     def initialize_population(self, n_chromosomes, n_genes):
+        """Initialize a population (must be implemented in concrete classes."""
         raise Exception("initialize_population not implemented")
 
     def mutate(self, chromosomes, mutation_idx):
+        """Mutate chromosomes."""
         raise Exception("mutate not implemented")
 
     def next(self):
+        """Advance GA to next generation."""
         # create new population
         new_population = np.array(self.population_)
 
@@ -225,16 +222,23 @@ class BaseGeneticAlgorithm(object):
         self.fitness_ = self.fitness_function(self.population_)
 
     def best(self, n_best=1):
+        """Return best chromosomes from population.
+
+        Parameters
+        ----------
+        n_best : how many to return
+        """
         f_sorted = np.argsort(self.fitness_)
         p_sorted = self.population_[f_sorted]
         return p_sorted[:n_best], self.fitness_[f_sorted][:n_best]
 
+
 class GeneticAlgorithm(BaseGeneticAlgorithm):
-    """
-    Continuous genetic algorithm is a genetic algorithm where the gene values
+    """Continuous genetic algorithm is a genetic algorithm where the gene values
     are chosen from a continous domain. This means the population is randomly
     initialized to [-1.0, 1.0] and mutation modifies the gene value in the range [-1.0, 1.0].
     """
+
     def __init__(self, scaling=1.0, *args, **kwargs):
         self.scaling = scaling
         super(GeneticAlgorithm, self).__init__(*args, **kwargs)
@@ -265,12 +269,10 @@ class DiscreteGeneticAlgorithm(GeneticAlgorithm):
     """
 
     def __init__(self, ranges=None, *args, **kwargs):
-        """
-        Initializes the genetic algorithm.
+        """Initialize the genetic algorithm.
 
         Parameters:
         -----------
-
         ranges : An tuple of tuples describing the values possible for each gene.
                  (ranges[gene_index] are the selectable values for the gene)
         """

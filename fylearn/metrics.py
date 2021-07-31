@@ -20,13 +20,14 @@ CLUSTER_DISTANCE_METHODS = ['nearest', 'farthest']
 def inter_cluster_distances(labels, distances, method='nearest'):
     """Calculate distances between the two nearest points of each cluster.
 
-    :param labels: a list containing cluster labels for each of the n elements
-    :param distances: an n x n numpy.array containing the pairwise distances between elements
-    :param method: `nearest` for the distances between the two nearest points in each cluster, or `farthest`
+    Parameters
+    ----------
+    labels : a list containing cluster labels for each of the n elements
+    distances : an n x n numpy.array containing the pairwise distances between elements
+    method : `nearest` for the distances between the two nearest points in each cluster, or `farthest`
     """
     if method not in CLUSTER_DISTANCE_METHODS:
-        raise ValueError(
-            'method must be one of {}'.format(CLUSTER_DISTANCE_METHODS))
+        raise ValueError('method must be one of {}'.format(CLUSTER_DISTANCE_METHODS))
 
     if method == 'nearest':
         return __cluster_distances_by_points(labels, distances)
@@ -55,11 +56,14 @@ def __cluster_distances_by_points(labels, distances, farthest=False):
 
 
 def diameter(labels, distances, method='farthest'):
-    """Calculate cluster diameters
+    """Calculate cluster diameters.
 
-    :param labels: a list containing cluster labels for each of the n elements
-    :param distances: an n x n numpy.array containing the pairwise distances between elements
-    :param method: either `mean_cluster` for the mean distance between all elements in each cluster, or `farthest` for the distance between the two points furthest from each other
+    Parameters
+    ----------
+    labels : a list containing cluster labels for each of the n elements
+    distances : an n x n numpy.array containing the pairwise distances between elements
+    method : either `mean_cluster` for the mean distance between all elements in each cluster,
+             or `farthest` for the distance between the two points furthest from each other.
     """
     if method not in DIAMETER_METHODS:
         raise ValueError('method must be one of {}'.format(DIAMETER_METHODS))

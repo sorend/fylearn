@@ -315,19 +315,22 @@ class DiverseEnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierM
         n_genes = self.n_models * len(self.classes_)
 
         def single_fitness_function(c, P):
-
-            D = np.mean(P, 0)
-            d = np.sum(np.abs(c - D))
-
+            d = 1.0 / np.sqrt(np.sum(P-c)**2)  # euclidean distance to "c" from population P
             M = self._predict(X, models, c)
             y_pred = np.argmin(M, 1)
-            return d * (1.0 - accuracy_score(y, y_pred))
+            b = d * (1.0 - accuracy_score(y, y_pred))
+            return b
 
         def fitness_function(population):
             res = []
             for row in population:
                 res.append(single_fitness_function(row, population))
             return np.array(res)
+
+        #def fitness_function(c):
+        #    M = self._predict(X, models, c)
+        #    y_pred = np.argmin(M, 1)
+        #    return 1.0 - accuracy_score(y, y_pred)
 
         ga = GeneticAlgorithm(fitness_function=fitness_function,
                               elitism=3,

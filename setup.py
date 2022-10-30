@@ -39,8 +39,7 @@ setup(
     classifiers=[
         'Operating System :: OS Independent',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.11',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Intended Audience :: Science/Research',
@@ -48,11 +47,11 @@ setup(
         'Intended Audience :: Developers',
     ],
     install_requires=[
-        'numpy>=1.17',
-        'scipy>=1.3',
-        'scikit-learn>=0.22',
+        'numpy>=1.23',
+        'scipy>=1.9',
+        'scikit-learn>=1.1',
     ],
-    python_requires='>=3.8',
+    python_requires='>=3.11',
     tests_require=test_deps,
     extras_require=extras,
 )

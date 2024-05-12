@@ -21,4 +21,5 @@ htmlcov
 _build
 .tox
 wheelhouse
-fylearn/__init__.py
+fylearn/_version.py
+*.whl

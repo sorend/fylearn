@@ -45,4 +45,4 @@ dev = [
 exclude = [".gitignore"]
 
 [tool.setuptools_scm]
-version_file = "fylearn/_version.py"
+write_to = "fylearn/_version.py"

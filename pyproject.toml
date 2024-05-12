@@ -4,7 +4,6 @@ requires = [
 ]
 build-backend = "flit_scm:buildapi"
 
-
 [project]
 name = "fylearn"
 maintainers = [
@@ -22,6 +21,7 @@ classifiers = [
   'Intended Audience :: Education',
   'Intended Audience :: Developers',
 ]
+keywords=['machine learning', 'fuzzy logic', 'scikit-learn','fuzzy systems']
 
 dependencies = [
   'numpy>=1.17',

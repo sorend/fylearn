@@ -1,12 +1,14 @@
 [build-system]
-requires = ["flit_scm"]
+requires = [
+  "flit_scm",
+]
 build-backend = "flit_scm:buildapi"
 
 
 [project]
 name = "fylearn"
 maintainers = [
-  {name = "Søren Atmakuri Davidsen", email = "soren@hamisoke.com"},
+  {name = "Søren Atmakuri Davidsen", email = "soren@atmakuridavidsen.com"},
 ]
 description = "Fuzzy Machine Learning Algorithms"
 readme = {file = "README.md", content-type = "text/markdown"}
@@ -43,4 +45,4 @@ dev = [
 exclude = [".gitignore"]
 
 [tool.setuptools_scm]
-write_to = "fylearn/_version.py"
+version_file = "fylearn/_version.py"

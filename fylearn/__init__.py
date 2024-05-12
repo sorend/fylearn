@@ -1,1 +1,3 @@
-__version__ = "0.1.14"
+
+# Import the version after writing the version file, to allow for bootstrapping
+from ._version import version as __version__

@@ -1,6 +1,6 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["flit_scm"]
+build-backend = "flit_scm:buildapi"
 
 
 [project]
@@ -32,3 +32,15 @@ dynamic = ["version"]
 [project.urls]
 Repository = "https://github.com/sorend/fylearn.git"
 Issues = "https://github.com/sorend/fylearn/issues"
+
+[project.optional-dependencies]
+dev = [
+  "tox",
+  "tox-gh-actions",
+]
+
+[tool.flit.sdist]
+exclude = [".gitignore"]
+
+[tool.setuptools_scm]
+write_to = "fylearn/_version.py"

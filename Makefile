@@ -1,11 +1,11 @@
 
 all: build
 
-install_flit:
-	pip install flit
+build:
+	pip install .
 
-build: install_flit
-	flit build
+test:
+	tox
 
 clean:
-	rm -rf dist .pytest_cache build .eggs fylearn.egg-info htmlcov .tox
+	rm -rf dist .pytest_cache build .eggs fylearn.egg-info htmlcov .tox *.whl

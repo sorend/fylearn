@@ -46,3 +46,10 @@ exclude = [".gitignore"]
 
 [tool.setuptools_scm]
 write_to = "fylearn/_version.py"
+
+
+[tool.pytest.ini_options]
+addopts = "-v --cov-fail-under=60 --cov=fylearn"
+testpaths = [
+  "tests",
+]

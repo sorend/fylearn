@@ -23,7 +23,7 @@ import logging
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array
-from sklearn.neighbors import DistanceMetric
+from sklearn.metrics import DistanceMetric
 from sklearn.preprocessing import normalize
 from sklearn.metrics import accuracy_score
 from sklearn.utils import check_random_state

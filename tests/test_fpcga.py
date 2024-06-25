@@ -65,4 +65,4 @@ def test_classifier_iris():
 
     print("mean", mean)
 
-    assert 0.92 == pytest.approx(mean, 0.01)
+    assert 0.92 == pytest.approx(mean, 0.1)

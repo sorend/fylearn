@@ -82,7 +82,7 @@ class PointwiseCrossover:
 
         n_crossovers : Number of crossovers.
         """
-        self.crossover_locations = np.array(crossover_locations, copy=False)
+        self.crossover_locations = np.asarray(crossover_locations)
         self.n_crossovers = n_crossovers
 
     def __call__(self, A, B, random_state):

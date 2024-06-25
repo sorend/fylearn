@@ -64,7 +64,7 @@ class UniformCrossover:
         random_state = check_random_state(random_state)
         C = np.array(P1)  # clone p1
         R = random_state.random_sample(C.shape) > self.p1_proba  # create filter
-        C[R] = np.array(P2, copy=False)[R]  # mixin P2 values
+        C[R] = np.asarray(P2)[R]  # mixin P2 values
         return C
 
 
@@ -87,7 +87,7 @@ class PointwiseCrossover:
 
     def __call__(self, A, B, random_state):
         random_state = check_random_state(random_state)
-        A, B = np.array(A, copy=False), np.array(B, copy=False)
+        A, B = np.asarray(A), np.asarray(B)
         is_1d = len(A.shape) == 1
         A, B = np.atleast_2d(A), np.atleast_2d(B)
         C = np.zeros(A.shape)

@@ -32,7 +32,7 @@ class ZadehNegatedSet:
 
     def __str__(self):
         return "Not(%s)" % (str(self.s),)
-    
+
 class TriangularSet:
     def __init__(self, a, b, c):
         self.a = a
@@ -175,14 +175,14 @@ def p_normalize(X, axis=None):
     axis : None does not deal with axes (default), 0: probas by row-sums, 1: probas by column-sums
     """
     assert axis in [None, 0, 1], "Only axes None, 0 and 1 is supported"
-    
+
     def handle_all_zeros(a):
         b = np.sum(X, dtype='float')
         if b > 0.0:
             return a / b
         else:
             return np.ones(a.shape) / a.size
-    
+
     def handle_zero_rows(a):
         b = np.sum(a, axis=0, dtype='float')
         f = (b == 0)
@@ -190,7 +190,7 @@ def p_normalize(X, axis=None):
         y[:,f] = 1
         b[f] = y.shape[0]
         return y / b
-        
+
     if axis == 0:
         return handle_zero_rows(X)
     elif axis == 1:
@@ -303,12 +303,12 @@ class GOWA(OWA):
 
 def gowa(p, *w):
     """Create Generalized OWA (GOWA) operator from weights"""
-    w = np.array(w, copy=False).ravel()
+    w = np.asarray(w).ravel()
     return GOWA(p, w)
 
 def owa(*w):
     """Create OWA operator from weights"""
-    w = np.array(w, copy=False).ravel()
+    w = np.asarray(w).ravel()
     return OWA(w)
 
 def meowa(n, orness, **kwargs):
@@ -422,7 +422,7 @@ class AndnessDirectedAveraging:
         self.alpha = (1.0 - p) / p if self.tnorm else p / (1.0 - p)
 
     def __call__(self, X, axis=-1):
-        X = np.array(X, copy=False)
+        X = np.asarray(X)
         if self.tnorm:
             return (np.sum(X ** self.alpha, axis) / X.shape[axis]) ** (1.0 / self.alpha)
         else:

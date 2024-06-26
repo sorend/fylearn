@@ -45,7 +45,8 @@ jobs:
           make build
 
       - name: Publish package testpypi
-        run: "make publish FLIT_INDEX_URL=https://test.pypi.org/legacy FLIT_PASSWORD=${{ secrets.TEST_PYPI_TOKEN }} || true"
+        run: |
+          bash -c "make publish FLIT_INDEX_URL=https://test.pypi.org/legacy FLIT_PASSWORD=${{ secrets.TEST_PYPI_TOKEN }} || true"
 
       - name: Publish package pypi
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')

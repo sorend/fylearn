@@ -30,6 +30,7 @@ def tournament_selection(tournament_size=10):
 
     return tournament_sel
 
+
 def top_n_selection(n=25):
     def top_n_sel(rs, P, f):
         top_n = np.argsort(f)[:n]  # select top-n fitness.
@@ -38,10 +39,12 @@ def top_n_selection(n=25):
 
     return top_n_sel
 
+
 def helper_n_generations(ga, n=100):
     for i in range(n):
         ga.next()
     return ga
+
 
 class UniformCrossover:
     """Implements a uniform crossover, with a specific random probability of getting genes
@@ -61,8 +64,9 @@ class UniformCrossover:
         random_state = check_random_state(random_state)
         C = np.array(P1)  # clone p1
         R = random_state.random_sample(C.shape) > self.p1_proba  # create filter
-        C[R] = np.array(P2, copy=False)[R]  # mixin P2 values
+        C[R] = np.asarray(P2)[R]  # mixin P2 values
         return C
+
 
 class PointwiseCrossover:
     """Implements a pointwise crossover operation, meaning crossover operation can only occur
@@ -78,12 +82,12 @@ class PointwiseCrossover:
 
         n_crossovers : Number of crossovers.
         """
-        self.crossover_locations = np.array(crossover_locations, copy=False)
+        self.crossover_locations = np.asarray(crossover_locations)
         self.n_crossovers = n_crossovers
 
     def __call__(self, A, B, random_state):
         random_state = check_random_state(random_state)
-        A, B = np.array(A, copy=False), np.array(B, copy=False)
+        A, B = np.asarray(A), np.asarray(B)
         is_1d = len(A.shape) == 1
         A, B = np.atleast_2d(A), np.atleast_2d(B)
         C = np.zeros(A.shape)
@@ -101,7 +105,7 @@ class PointwiseCrossover:
             # use python to merge
             selected = start + selected.tolist() + end
             index = zip(selected, selected[1:], [0, 1] * len(selected))
-            merged = np.array([ item for i in index for item in pick(a, b, i) ])
+            merged = np.array([item for i in index for item in pick(a, b, i)])
             # add merged child
             C[idx, :] = merged
 
@@ -109,6 +113,7 @@ class PointwiseCrossover:
             return C.ravel()
         else:
             return C
+
 
 def helper_min_fitness_decrease(ga, epsilon=0.001, top_n=10):
     last_fitness = None
@@ -126,6 +131,7 @@ def helper_min_fitness_decrease(ga, epsilon=0.001, top_n=10):
         last_fitness = new_fitness
     return ga
 
+
 def helper_fitness(chromosome_fitness_function):
     """
     Helper function, will evaluate chromosome_fitness_function for each chromosome
@@ -135,6 +141,7 @@ def helper_fitness(chromosome_fitness_function):
     def fitness_function(population):
         return np.apply_along_axis(chromosome_fitness_function, 1, population)
     return fitness_function
+
 
 class BaseGeneticAlgorithm(object):
 
@@ -229,12 +236,14 @@ class BaseGeneticAlgorithm(object):
         p_sorted = self.population_[f_sorted]
         return p_sorted[:n_best], self.fitness_[f_sorted][:n_best]
 
+
 class GeneticAlgorithm(BaseGeneticAlgorithm):
     """
     Continuous genetic algorithm is a genetic algorithm where the gene values
     are chosen from a continous domain. This means the population is randomly
     initialized to [-1.0, 1.0] and mutation modifies the gene value in the range [-1.0, 1.0].
     """
+
     def __init__(self, scaling=1.0, *args, **kwargs):
         self.scaling = scaling
         super(GeneticAlgorithm, self).__init__(*args, **kwargs)
@@ -247,15 +256,18 @@ class GeneticAlgorithm(BaseGeneticAlgorithm):
         chromosomes[mutation_idx] += mutations
         return chromosomes
 
+
 class UnitIntervalGeneticAlgorithm(GeneticAlgorithm):
     """
     Genetic algorithm where gene values are chosen from the unit interval [0, 1]. Mutation
     randomly selects a new value in this interval.
     """
+
     def mutate(self, chromosomes, mutation_idx):
         mutations = self.random_state.rand(np.sum(mutation_idx)) * self.scaling
         chromosomes[mutation_idx] = mutations
         return chromosomes
+
 
 class DiscreteGeneticAlgorithm(GeneticAlgorithm):
     """

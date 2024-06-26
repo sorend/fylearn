@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Implementation of non-stationary fuzzy sets [1]
+r"""Implementation of non-stationary fuzzy sets [1]
 
 A nonstationary fuzzy set can be described as a fuzzy set which changes
 its parameters with a timestamp t.
@@ -87,3 +85,5 @@ class NonstationaryFuzzySet:
             Y[idx, ] = mu(X[idx, ])
 
         return Y
+
+# -*- coding: utf-8 -*-

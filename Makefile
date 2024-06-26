@@ -9,10 +9,10 @@ all: build
 deps:
 	pip install versiontag flit
 
-$(VERSION_FILE):
+$(VERSION_FILE): deps
 	python .ci/versioning.py
 
-local_install: $(VERSION_FILE)
+local_install: $(VERSION_FILE) deps
 	pip install -e '.[dev]'
 
 wheel: local_install

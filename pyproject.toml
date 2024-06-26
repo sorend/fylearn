@@ -1,8 +1,6 @@
 [build-system]
-requires = [
-  "flit_scm",
-]
-build-backend = "flit_scm:buildapi"
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
 [project]
 name = "fylearn"
@@ -42,11 +40,7 @@ dev = [
 ]
 
 [tool.flit.sdist]
-exclude = [".gitignore"]
-
-[tool.setuptools_scm]
-write_to = "fylearn/_version.py"
-
+exclude = [".gitignore", ".github"]
 
 [tool.pytest.ini_options]
 addopts = "-v --cov-fail-under=60 --cov=fylearn"

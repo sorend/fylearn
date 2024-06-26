@@ -43,22 +43,13 @@ jobs:
       - name: Build wheel
         run: |
           python -m pip install --upgrade pip
-          pip install flit
-          pip install -e '.[dev]'
-          flit build --format wheel
-          git status
+          make build
 
       - name: Publish package testpypi
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          skip_existing: true
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+        run: |
+          make publish FLIT_INDEX_URL=https://test.pypi.org/legacy FLIT_PASSWORD=${{ secrets.TEST_PYPI_TOKEN }}
 
       - name: Publish package pypi
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          make publish FLIT_INDEX_URL=https://upload.pypi.org/legacy FLIT_PASSWORD=${{ secrets.PYPI_TOKEN }}

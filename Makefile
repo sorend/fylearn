@@ -29,4 +29,4 @@ test: local_install
 	tox
 
 clean:
-	rm -rf dist .pytest_cache build .eggs fylearn.egg-info htmlcov .tox *.whl
+	rm -rf dist .pytest_cache build .eggs fylearn.egg-info htmlcov .tox *.whl *~ fylearn/*~ fylearn/_version.py

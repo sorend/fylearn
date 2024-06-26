@@ -17,11 +17,13 @@ local_install: $(VERSION_FILE)
 
 wheel: local_install
 	flit build --format wheel
+	flit build --format sdist
 
 build: wheel
 
 publish:
 	@FLIT_USERNAME=$(FLIT_USERNAME) FLIT_PASSWORD=$(FLIT_PASSWORD) FLIT_INDEX_URL=$(FLIT_INDEX_URL) flit publish --format wheel
+	@FLIT_USERNAME=$(FLIT_USERNAME) FLIT_PASSWORD=$(FLIT_PASSWORD) FLIT_INDEX_URL=$(FLIT_INDEX_URL) flit publish --format sdist
 
 test: $(VERSION_FILE)
 	tox

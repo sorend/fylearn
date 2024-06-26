@@ -40,7 +40,7 @@ dev = [
 ]
 
 [tool.flit.sdist]
-exclude = [".gitignore", ".github"]
+exclude = [".gitignore", ".github", ".ci", "codecov.yml", "Makefile"]
 
 [tool.pytest.ini_options]
 addopts = "-v --cov-fail-under=60 --cov=fylearn"

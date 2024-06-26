@@ -46,6 +46,7 @@ jobs:
           pip install flit
           pip install -e '.[dev]'
           flit build --format wheel
+          git status
 
       - name: Publish package testpypi
         uses: pypa/gh-action-pypi-publish@release/v1

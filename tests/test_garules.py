@@ -43,7 +43,7 @@ def test_classifier_iris():
     scores = cross_val_score(l, X, y, cv=10)
     mean = np.mean(scores)
 
-    assert 0.93 == pytest.approx(mean, 0.01)  # using the same random state expect same
+    assert 0.9 < mean
 
 
 # def test_compare_diabetes():

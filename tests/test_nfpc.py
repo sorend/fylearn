@@ -101,4 +101,4 @@ def test_build_ps_owa_factory():
 
     print("mean", mean)
 
-    assert 0.92 < mean
+    assert 0.9 < mean

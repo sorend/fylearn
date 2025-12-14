@@ -44,6 +44,8 @@ Issues = "https://github.com/sorend/fylearn/issues"
 
 [dependency-groups]
 dev = [
+  "pytest>=9.0.2",
+  "pytest-cov>=7.0.0",
   "tox",
   "tox-gh-actions",
   "versiontag>=1.2.0",

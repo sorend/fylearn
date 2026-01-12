@@ -202,7 +202,7 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
 
         # Run Optimization
         # TLBO doesn't have a distinct 'run' method that iterates, we loop manually
-        # or use helper if available. Based on nfpc.py, we iterate manually.
+        # or use helper if available. Based on fpcowa.py, we iterate manually.
 
         self.history_ = []
         for i in range(self.optimizer_iterations):

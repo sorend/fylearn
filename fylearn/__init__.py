@@ -1,3 +1,6 @@
+from importlib.metadata import version as _version
 
-# Import the version after writing the version file, to allow for bootstrapping
-from ._version import version as __version__
+try:
+    __version__ = _version("fylearn")
+except Exception:
+    __version__ = "unknown"

@@ -20,9 +20,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run tests
-        run: |
-          uv tool install tox --with tox-uv
-          CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} tox
+        run: CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} make test
 
   pack-and-publish:
     name: Pack and publish
@@ -41,15 +39,14 @@ jobs:
 
       - name: Build wheel
         run: |
-          python -m pip install --upgrade pip
           make build
 
       - name: Publish package testpypi
         continue-on-error: true
         run: |
-          make publish FLIT_INDEX_URL=https://test.pypi.org/legacy FLIT_PASSWORD=${{ secrets.TEST_PYPI_TOKEN }}
+          make publish FLIT_INDEX_URL=https://test.pypi.org/legacy/ FLIT_PASSWORD=${{ secrets.TEST_PYPI_TOKEN }}
 
       - name: Publish package pypi
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         run: |
-          make publish FLIT_INDEX_URL=https://upload.pypi.org/legacy FLIT_PASSWORD=${{ secrets.PYPI_TOKEN }}
+          make publish FLIT_INDEX_URL=https://upload.pypi.org/legacy/ FLIT_PASSWORD=${{ secrets.PYPI_TOKEN }}

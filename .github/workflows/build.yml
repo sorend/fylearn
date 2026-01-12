@@ -49,6 +49,7 @@ jobs:
 
       - name: Publish package testpypi
         continue-on-error: true
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         run: |
           make publish FLIT_INDEX_URL=https://test.pypi.org/legacy/ FLIT_PASSWORD=${{ secrets.TEST_PYPI_TOKEN }}
 

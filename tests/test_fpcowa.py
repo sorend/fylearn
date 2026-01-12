@@ -2,23 +2,26 @@ from __future__ import print_function
 
 import numpy as np
 
-import fylearn.nfpc as nfpc
+import fylearn.fpcowa as fpcowa
 import fylearn.fuzzylogic as fl
 from sklearn import datasets
 
+
 def t_factory(**k):
     return fl.TriangularSet(k["min"], k["mean"], k["max"])
+
 
 def test_simple_fpc():
     iris = datasets.load_iris()
     X = iris.data
     y = iris.target
-    c = nfpc.FuzzyPatternClassifier()
+    c = fpcowa.FuzzyPatternClassifier()
     c.fit(X, y)
-    mu = nfpc.predict_protos(X, c.protos_, c.aggregation_)
+    mu = fpcowa.predict_protos(X, c.protos_, c.aggregation_)
     pro = c.predict_proba(X)
     pro_sum = pro.sum(axis=1)
-    assert np.all(pro_sum > 0.)
+    assert np.all(pro_sum > 0.0)
+
 
 # def test_build_shrinking():
 
@@ -61,16 +64,15 @@ def test_simple_fpc():
 
 
 def test_build_meowa_factory():
-
     iris = datasets.load_iris()
     X = iris.data
     y = iris.target
 
     from sklearn.preprocessing import MinMaxScaler
+
     X = MinMaxScaler().fit_transform(X)
 
-    l = nfpc.FuzzyPatternClassifier(membership_factory=t_factory,
-                                    aggregation_factory=nfpc.MEOWAFactory())
+    l = fpcowa.FuzzyPatternClassifier(membership_factory=t_factory, aggregation_factory=fpcowa.MEOWAFactory())
 
     from sklearn.model_selection import cross_val_score
 
@@ -81,17 +83,16 @@ def test_build_meowa_factory():
 
 
 def test_build_ps_owa_factory():
-
     iris = datasets.load_iris()
     X = iris.data
     y = iris.target
 
     from sklearn.preprocessing import MinMaxScaler
+
     X = MinMaxScaler().fit_transform(X)
 
-    l = nfpc.FuzzyPatternClassifier(
-        membership_factory=t_factory,
-        aggregation_factory=nfpc.GAOWAFactory(optimizer=nfpc.ps_owa_optimizer())
+    l = fpcowa.FuzzyPatternClassifier(
+        membership_factory=t_factory, aggregation_factory=fpcowa.GAOWAFactory(optimizer=fpcowa.ps_owa_optimizer())
     )
 
     from sklearn.model_selection import cross_val_score

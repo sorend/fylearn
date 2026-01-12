@@ -9,10 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.12]
+        python-version: ["3.12", "3.13", "3.14-dev"]
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Setup python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -20,9 +23,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run tests
-        run: |
-          python -m pip install --upgrade pip
-          CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} make test
+        run: CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} make test
 
   pack-and-publish:
     name: Pack and publish
@@ -34,6 +35,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Setup python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -41,15 +45,14 @@ jobs:
 
       - name: Build wheel
         run: |
-          python -m pip install --upgrade pip
           make build
 
       - name: Publish package testpypi
         continue-on-error: true
         run: |
-          make publish FLIT_INDEX_URL=https://test.pypi.org/legacy FLIT_PASSWORD=${{ secrets.TEST_PYPI_TOKEN }}
+          make publish FLIT_INDEX_URL=https://test.pypi.org/legacy/ FLIT_PASSWORD=${{ secrets.TEST_PYPI_TOKEN }}
 
       - name: Publish package pypi
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         run: |
-          make publish FLIT_INDEX_URL=https://upload.pypi.org/legacy FLIT_PASSWORD=${{ secrets.PYPI_TOKEN }}
+          make publish FLIT_INDEX_URL=https://upload.pypi.org/legacy/ FLIT_PASSWORD=${{ secrets.PYPI_TOKEN }}

@@ -1,4 +1,4 @@
-﻿####################################################################
+####################################################################
 #
 # Pattern Search (PS) and Local Unimodal Sampling (LUS).
 # Heuristic optimization methods for real-valued functions.
@@ -19,6 +19,7 @@ from sklearn.utils import check_random_state
 
 logger = logging.getLogger(__name__)
 
+
 def init_position(rs, lower, upper):
     """
     Initialize a position in the search-space with random uniform values between
@@ -29,6 +30,7 @@ def init_position(rs, lower, upper):
     :return: Random value between lower and upper boundaries.
     """
     return rs.rand(lower.shape[0]) * (upper - lower) + lower
+
 
 def sample_bounded(rs, x, d, lower_bound, upper_bound):
     """
@@ -48,6 +50,7 @@ def sample_bounded(rs, x, d, lower_bound, upper_bound):
     # Return a random sample.
     return init_position(rs, l, u)
 
+
 def ps_optimize_step(f, x, d, current_fitness, lower_bound, upper_bound, rs, **kwargs):
     idx = rs.randint(0, x.shape[0])  # pick index to modify
     t = x[idx]  # save old value and update
@@ -64,6 +67,7 @@ def ps_optimize_step(f, x, d, current_fitness, lower_bound, upper_bound, rs, **k
         x[idx] = t
         d[idx] *= -0.5
         return x, new_fitness, d
+
 
 def lus_optimize_step(f, x, d, current_fitness, lower_bound, upper_bound, rs, **kwargs):
     """
@@ -85,11 +89,18 @@ def lus_optimize_step(f, x, d, current_fitness, lower_bound, upper_bound, rs, **
         d *= q
         return x, new_fitness, d
 
+
 def scipy_refine(f, best_x, best_fitness, lower_bound, upper_bound):
     """
     Scipy refine function. Requires scipy.optimize is installed before use
     """
-    import scipy.optimize
+    try:
+        import scipy.optimize
+    except ImportError:
+        raise ImportError(
+            "The 'scipy' library is required for this functionality. Please install it with `pip install scipy`."
+        )
+
     # Refine best result using scipy (slow).
     # Scipy requires bounds in another format.
     bounds = list(zip(lower_bound, upper_bound))
@@ -103,7 +114,8 @@ def scipy_refine(f, best_x, best_fitness, lower_bound, upper_bound):
 
     return best_x, best_fitness
 
-class helper_generations(object):
+
+class helper_generations:
     """
     This helper wraps the optimizer, so ga.helper_n_generations can be used for
     iteratively evaluating the optimizer much like a population based method.
@@ -120,16 +132,20 @@ class helper_generations(object):
     >>> wrapped = helper_n_generations(wrapped, 100)
     >>> wrapped.best(5)  # get 5 best solutions and their fitness
     """
+
     def __init__(self, optimizer):
         self.optimizer = optimizer
         self.X_ = np.zeros((0, optimizer.lower_bound.shape[0]))
         self.fitness_ = np.zeros((0,))
 
-    def next(self):
+    def __next__(self):
         """Next generation"""
         X, fitness = self.optimizer()
-        self.X_ = np.append(self.X_, [ X ], axis=0)
+        self.X_ = np.append(self.X_, [X], axis=0)
         self.fitness_ = np.append(self.fitness_, fitness)
+
+    def next(self):
+        return self.__next__()
 
     def bestidx(self, num=5):
         """
@@ -150,6 +166,7 @@ class helper_generations(object):
         idx = self.bestidx(num)
         return self.X_[idx], self.fitness_[idx]
 
+
 def helper_num_runs(optimizer, num_runs=100, refine=None):
     """
     This is a helper function to evaluate an optimizer a specified number
@@ -165,16 +182,15 @@ def helper_num_runs(optimizer, num_runs=100, refine=None):
     best_x, best_fitness = X[best_idx], fitness[best_idx]
 
     if refine is not None:  # refine function was given
-        best_x, best_fitness = refine(optimizer.f, best_x, best_fitness,
-                                      optimizer.lower_bound, optimizer.upper_bound)
+        best_x, best_fitness = refine(optimizer.f, best_x, best_fitness, optimizer.lower_bound, optimizer.upper_bound)
 
     return best_x, best_fitness
 
-class BaseOptimizer(object):
 
-    def __init__(self, f, lower_bound, upper_bound, lower_init=None, upper_init=None,
-                 random_state=None, max_evaluations=100):
-
+class BaseOptimizer:
+    def __init__(
+        self, f, lower_bound, upper_bound, lower_init=None, upper_init=None, random_state=None, max_evaluations=100
+    ):
         self.f = f
 
         self.lower_bound = np.array(lower_bound)
@@ -189,34 +205,39 @@ class BaseOptimizer(object):
         self.optimize_function_args = {}
 
     def __call__(self):
-
         d = self.upper_bound - self.lower_bound  # initialize
         x = init_position(self.random_state, self.lower_init, self.upper_init)
         fitness = self.f(x)
         for evaluation in range(self.max_evaluations):
-            x, new_fitness, d = self.optimize_function(self.f, x, d, fitness,
-                                                       self.lower_bound, self.upper_bound,
-                                                       self.random_state,
-                                                       **self.optimize_function_args)
+            x, new_fitness, d = self.optimize_function(
+                self.f,
+                x,
+                d,
+                fitness,
+                self.lower_bound,
+                self.upper_bound,
+                self.random_state,
+                **self.optimize_function_args,
+            )
             if new_fitness < fitness:
                 fitness = new_fitness
 
         return x, fitness
 
-class LocalUnimodalSamplingOptimizer(BaseOptimizer):
 
+class LocalUnimodalSamplingOptimizer(BaseOptimizer):
     def __init__(self, *args, **kwargs):
         if "gamma" in kwargs:
             self.gamma = kwargs.pop("gamma")
         else:
             self.gamma = 3.0
-        super(LocalUnimodalSamplingOptimizer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.optimize_function = lus_optimize_step
         self.q = 0.5 ** (1.0 / (self.gamma * self.lower_bound.shape[0]))  # set Q
         self.optimize_function_args["q"] = self.q
 
-class PatternSearchOptimizer(BaseOptimizer):
 
+class PatternSearchOptimizer(BaseOptimizer):
     def __init__(self, *args, **kwargs):
-        super(PatternSearchOptimizer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.optimize_function = ps_optimize_step

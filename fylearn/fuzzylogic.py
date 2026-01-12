@@ -11,7 +11,7 @@ Fuzzy sets and aggregation utils
 import numpy as np
 from collections.abc import Sequence
 import numbers
-from scipy.optimize import minimize
+
 
 def helper_np_array(X):
     if isinstance(X, (np.ndarray, np.generic)):
@@ -23,6 +23,7 @@ def helper_np_array(X):
     else:
         raise ValueError("unsupported type for building np.array: %s" % (type(X),))
 
+
 class ZadehNegatedSet:
     def __init__(self, s):
         self.s = s
@@ -32,6 +33,7 @@ class ZadehNegatedSet:
 
     def __str__(self):
         return "Not(%s)" % (str(self.s),)
+
 
 class TriangularSet:
     def __init__(self, a, b, c):
@@ -55,6 +57,7 @@ class TriangularSet:
     def __repr__(self):
         return str(self)
 
+
 class TrapezoidalSet:
     def __init__(self, a, b, c, d):
         self.a = a
@@ -76,9 +79,9 @@ class TrapezoidalSet:
     def __str__(self):
         return "T(%.2f %.2f %.2f %.2f)" % (self.a, self.b, self.c, self.d)
 
+
 class PiSet:
     def __init__(self, r, a=None, b=None, p=None, q=None, m=2.0):
-
         if a is not None:
             self.a = a
             self.p = (r + a) / 2.0  # between r and a
@@ -102,7 +105,7 @@ class PiSet:
 
         self.r = r
         self.m = m
-        self.S = (2 ** (m - 1.0))
+        self.S = 2 ** (m - 1.0)
 
         self.r_a = self.r - self.a
         self.b_r = self.b - self.r
@@ -130,39 +133,50 @@ class PiSet:
     def __repr__(self):
         return str(self)
 
+
 def prod(X, axis=-1):
     """Product along dimension 0 or 1 depending on array or matrix"""
     return np.multiply.reduce(X, axis)
 
+
 def mean(X, axis=-1):
     return np.nanmean(X, axis)
+
 
 def min(X, axis=-1):
     return np.nanmin(X, axis)
 
+
 def max(X, axis=-1):
     return np.nanmax(X, axis)
+
 
 def lukasiewicz_i(X):
     return np.maximum(0.0, X[:, 0] + X[:, 1] - 1)
 
+
 def lukasiewicz_u(X):
     return np.minimum(1.0, X[:, 0] + X[:, 1])
+
 
 def einstein_i(X):
     a, b = X[:, 0], X[:, 1]
     return (a * b) / (2.0 - (a + b - (a * b)))
 
+
 def einstein_u(X):
     a, b = X[:, 0], X[:, 1]
     return (a + b) / (1.0 + (a * b))
 
+
 def algebraic_sum(X, axis=-1):
     return 1.0 - prod(1.0 - X, axis)
+
 
 def min_max_normalize(X):
     nmin, nmax = np.nanmin(X), np.nanmax(X)
     return (X - nmin) / (nmax - nmin)
+
 
 def p_normalize(X, axis=None):
     """Normalize values as probabilities (sums to one)
@@ -177,17 +191,17 @@ def p_normalize(X, axis=None):
     assert axis in [None, 0, 1], "Only axes None, 0 and 1 is supported"
 
     def handle_all_zeros(a):
-        b = np.sum(X, dtype='float')
+        b = np.sum(X, dtype="float")
         if b > 0.0:
             return a / b
         else:
             return np.ones(a.shape) / a.size
 
     def handle_zero_rows(a):
-        b = np.sum(a, axis=0, dtype='float')
-        f = (b == 0)
+        b = np.sum(a, axis=0, dtype="float")
+        f = b == 0
         y = np.array(a, copy=True)
-        y[:,f] = 1
+        y[:, f] = 1
         b[f] = y.shape[0]
         return y / b
 
@@ -198,11 +212,14 @@ def p_normalize(X, axis=None):
     else:
         return handle_all_zeros(X)
 
+
 def dispersion(w):
     return -np.sum(w[w > 0.0] * np.log(w[w > 0.0]))  # filter 0 as 0 * -inf is undef in NumPy
 
+
 def ndispersion(w):
     return dispersion(w) / np.log(len(w))
+
 
 def yager_orness(w):
     """
@@ -213,17 +230,20 @@ def yager_orness(w):
     n = len(w)
     return np.sum(np.arange(n - 1, -1, -1) * w) / (n - 1.0)
 
+
 def yager_andness(w):
     """
     Yager's andness is 1.0 - Yager's orness for a given weight vector.
     """
     return 1.0 - yager_orness(w)
 
+
 def weights_mapping(w):
-    s = np.e ** w
+    s = np.e**w
     return s / np.sum(s)
 
-class OWA(object):
+
+class OWA:
     """
     Order weighted averaging operator.
 
@@ -238,6 +258,7 @@ class OWA(object):
     v : The weights
 
     """
+
     def __init__(self, v):
         self.v = v
         self.v_ = v[::-1]  # save the inverse so we don't need to reverse np.sort
@@ -254,7 +275,7 @@ class OWA(object):
         return np.sum(X * self.v_, axis)
 
     def __str__(self):
-        return "OWA(" + " ".join([ "%.4f" % (x,) for x in self.v]) + ")"
+        return "OWA(" + " ".join(["%.4f" % (x,) for x in self.v]) + ")"
 
     def __repr__(self):
         return str(self)
@@ -271,6 +292,7 @@ class OWA(object):
     def ndisp(self):
         return ndispersion(self.v)
 
+
 class GOWA(OWA):
     """
     Generalized order weighted averaging operator.
@@ -281,6 +303,7 @@ class GOWA(OWA):
 
     Averaging is used using the power-mean: sum(w*b^p)^(1/p), where p is the power parameter.
     """
+
     def __init__(self, p, v):
         """
         Constructs GOWA operator.
@@ -291,29 +314,34 @@ class GOWA(OWA):
 
         v : weights.
         """
-        super(GOWA, self).__init__(v)
+        super().__init__(v)
         self.p = p
-        self.inv_p = (1.0 / p)
+        self.inv_p = 1.0 / p
 
     def sorted_mean(self, X, axis=-1):
-        return np.sum((X ** self.p) * self.v_, axis) ** self.inv_p
+        return np.sum((X**self.p) * self.v_, axis) ** self.inv_p
 
     def __str__(self):
-        return ("GOWA(%f, " % (self.p,)) + " ".join([ "%.4f" % (x,) for x in self.v]) + ")"
+        return ("GOWA(%f, " % (self.p,)) + " ".join(["%.4f" % (x,) for x in self.v]) + ")"
+
 
 def gowa(p, *w):
     """Create Generalized OWA (GOWA) operator from weights"""
     w = np.asarray(w).ravel()
     return GOWA(p, w)
 
+
 def owa(*w):
     """Create OWA operator from weights"""
     w = np.asarray(w).ravel()
     return OWA(w)
 
+
 def meowa(n, orness, **kwargs):
     """
     Maximize dispersion at a specified orness level.
+
+    This method uses O'Hagan's method for finding the MEOWA weights.
     """
     if 0.0 > orness or orness > 1.0:
         raise ValueError("orness must be in [0, 1]")
@@ -321,16 +349,58 @@ def meowa(n, orness, **kwargs):
     if n < 2:
         raise ValueError("n must be > 1")
 
-    def negdisp(v):
-        return -dispersion(v)  # we want to maximize, but scipy want to minimize
+    # edge cases
+    if np.isclose(orness, 0.5):
+        return OWA(np.ones(n) / n)
+    elif np.isclose(orness, 0.0):
+        w = np.zeros(n)
+        w[-1] = 1.0
+        return OWA(w)
+    elif np.isclose(orness, 1.0):
+        w = np.zeros(n)
+        w[0] = 1.0
+        return OWA(w)
 
-    def constraint_has_orness(v):
-        return yager_orness(v) - orness
+    try:
+        from scipy.optimize import root_scalar
+    except ImportError:
+        raise ImportError(
+            "The 'scipy' library is required for this functionality. Please install it with `pip install scipy`."
+        )
 
-    def constraint_has_sum(v):
-        return np.sum(v) - 1.0
+    # helper to calculate weights from h
+    def get_w(h):
+        # w_i = h^{n-i} / sum(h^{n-j})
+        p = np.power(h, np.arange(n - 1, -1, -1))
+        return p / np.sum(p)
 
-    return _minimize_owa(negdisp, (constraint_has_orness, constraint_has_sum), n, **kwargs)
+    # function to find root for
+    def f(h):
+        return yager_orness(get_w(h)) - orness
+
+    if orness < 0.5:
+        # h in [0, 1]
+        bracket = [0.00001, 0.99999]
+    else:
+        # h in [1, inf]
+        # heuristic upper bound
+        ub = 2.0
+        while f(ub) < 0:
+            ub *= 2.0
+            if ub > 1e10:  # safety break
+                raise ValueError("Could not bound root for orness %f" % (orness,))
+        bracket = [1.00001, ub]
+
+    # filter kwargs for root_scalar
+    rs_args = {k: v for k, v in kwargs.items() if k in ["maxiter", "xtol", "rtol"]}
+
+    res = root_scalar(f, bracket=bracket, method="brentq", **rs_args)
+
+    if res.converged:
+        return OWA(get_w(res.root))
+    else:
+        raise ValueError("Could not optimize weights: " + str(res))
+
 
 def sampling_owa_orness(x, d, **kwargs):
     """
@@ -353,6 +423,7 @@ def sampling_owa_orness(x, d, **kwargs):
 
     return _minimize_owa(negorness, (constraint_has_sum, constraint_has_output_d), n, **kwargs)
 
+
 def sampling_owa_ndisp(x, d, **kwargs):
     """
     Maximize dispersion of an owa operator given a given result data point.
@@ -373,6 +444,7 @@ def sampling_owa_ndisp(x, d, **kwargs):
         return np.sum(v) - 1.0
 
     return _minimize_owa(negndisp, (constraint_has_sum, constraint_has_output_d), n, **kwargs)
+
 
 def mvowa(n, orness, **kwargs):
     """
@@ -397,23 +469,28 @@ def mvowa(n, orness, **kwargs):
 
     return _minimize_owa(variance, (constraint_has_orness, constraint_has_sum), n, **kwargs)
 
-def _minimize_owa(minfunc, constraints, n, **kwargs):
 
-    bounds = tuple([ (0, 1) for x in range(n) ])  # this is actually the third constraint, but common.
+def _minimize_owa(minfunc, constraints, n, **kwargs):
+    try:
+        from scipy.optimize import minimize
+    except ImportError:
+        raise ImportError(
+            "The 'scipy' library is required for this functionality. Please install it with `pip install scipy`."
+        )
+
+    bounds = tuple([(0, 1) for x in range(n)])  # this is actually the third constraint, but common.
 
     initial = np.ones(n) / n
 
-    constraints_ = tuple([ {"fun": c, "type": "eq"} for c in constraints ])
+    constraints_ = tuple([{"fun": c, "type": "eq"} for c in constraints])
 
-    res = minimize(minfunc, initial,
-                   bounds=bounds,
-                   options=kwargs,
-                   constraints=constraints_)
+    res = minimize(minfunc, initial, bounds=bounds, options=kwargs, constraints=constraints_)
 
     if res.success:
         return OWA(res.x)
     else:
         raise ValueError("Could not optimize weights: " + res.message)
+
 
 class AndnessDirectedAveraging:
     def __init__(self, p):
@@ -424,9 +501,10 @@ class AndnessDirectedAveraging:
     def __call__(self, X, axis=-1):
         X = np.asarray(X)
         if self.tnorm:
-            return (np.sum(X ** self.alpha, axis) / X.shape[axis]) ** (1.0 / self.alpha)
+            return (np.sum(X**self.alpha, axis) / X.shape[axis]) ** (1.0 / self.alpha)
         else:
             return 1.0 - ((np.sum((1.0 - X) ** (1.0 / self.alpha), axis) / X.shape[axis]) ** self.alpha)
+
 
 def aa(p):
     assert 0 < p and p < 1

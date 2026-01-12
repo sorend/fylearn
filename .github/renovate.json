@@ -1,0 +1,23 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "schedule": ["every weekend"],
+  "timezone": "UTC",
+  "python": {
+    "lockFileMaintenance": {
+      "enabled": true
+    }
+  },
+  "uv": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["uv"],
+      "lockFileMaintenance": {
+        "enabled": true,
+        "schedule": ["every weekend"]
+      }
+    }
+  ]
+}

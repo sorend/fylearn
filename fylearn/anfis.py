@@ -206,7 +206,7 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
 
         self.history_ = []
         for i in range(self.optimizer_iterations):
-            optimizer.next()
+            next(optimizer)
             _, best_fitness_list = optimizer.best(1)
             best_fitness = best_fitness_list[0]
             self.history_.append(best_fitness)

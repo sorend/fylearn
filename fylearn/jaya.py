@@ -6,6 +6,7 @@ Implementation of Jaya Algorithm Optimization [1].
     and unconstrained optimization problems." Int J of Industrial Engineering
      Computations, 2016, 7(1):19-34.
 """
+
 import numpy as np
 from sklearn.utils import check_random_state
 
@@ -13,7 +14,8 @@ from sklearn.utils import check_random_state
 # Authors: Søren A. Davidsen <soren@atmakuridavidsen.com>
 #
 
-class JayaOptimizer(object):
+
+class JayaOptimizer:
     """
     Jaya Algorithm is a population based optimizer which optimizes a function based on
     best and worst solutions in the population:
@@ -23,8 +25,8 @@ class JayaOptimizer(object):
     2. Avoid the worst solution
 
     """
-    def __init__(self, f, lower_bound, upper_bound,
-                 n_population=50, random_state=None):
+
+    def __init__(self, f, lower_bound, upper_bound, n_population=50, random_state=None):
         """
         Constructor
 
@@ -53,7 +55,7 @@ class JayaOptimizer(object):
         self.fitness_ = np.apply_along_axis(self.f, 1, self.population_)
         # init bestidx
         self.bestidx_ = np.argmin(self.fitness_)
-        self.bestcosts_ = [ self.fitness_[self.bestidx_] ]
+        self.bestcosts_ = [self.fitness_[self.bestidx_]]
 
     def best(self):
         """
@@ -61,7 +63,7 @@ class JayaOptimizer(object):
         """
         return self.population_[self.bestidx_], self.fitness_[self.bestidx_]
 
-    def next(self):
+    def __next__(self):
         """
         One iteration of Jaya Algorithm
         """
@@ -77,9 +79,9 @@ class JayaOptimizer(object):
 
             # make new solution
             new_solution = (
-                self.population_[i] +                            # old position
-                (r1_i * (best - np.abs(self.population_[i]))) -  # move towards best solution
-                (r2_i * (worst - np.abs(self.population_[i])))   # and avoid worst
+                self.population_[i]  # old position
+                + (r1_i * (best - np.abs(self.population_[i])))  # move towards best solution
+                - (r2_i * (worst - np.abs(self.population_[i])))  # and avoid worst
             )
 
             # bound
@@ -93,3 +95,6 @@ class JayaOptimizer(object):
 
         self.bestidx_ = np.argmin(self.fitness_)  # update details
         self.bestcosts_.append(self.fitness_[self.bestidx_])
+
+    def next(self):
+        return self.__next__()

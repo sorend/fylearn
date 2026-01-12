@@ -6,6 +6,7 @@ Implementation of Teaching-Learning Based Optimization [1].
     mechanical design optimization problems." Computer-Aided Design 43(3): 303-315, 2011.
 
 """
+
 import numpy as np
 from sklearn.utils import check_random_state
 
@@ -14,7 +15,8 @@ from sklearn.utils import check_random_state
 # Authors: Søren A. Davidsen <soren@atmakuridavidsen.com>
 #
 
-class TeachingLearningBasedOptimizer(object):
+
+class TeachingLearningBasedOptimizer:
     """
     Teaching-Learning based optimizer (TLBO).
 
@@ -25,8 +27,8 @@ class TeachingLearningBasedOptimizer(object):
 
     2. Learner phase: Randomly adjust pairs of individuals based on the best one with best fitness.
     """
-    def __init__(self, f, lower_bound, upper_bound,
-                 n_population=50, random_state=None):
+
+    def __init__(self, f, lower_bound, upper_bound, n_population=50, random_state=None):
         """
         Constructor
 
@@ -55,7 +57,7 @@ class TeachingLearningBasedOptimizer(object):
         self.fitness_ = np.apply_along_axis(self.f, 1, self.population_)
         # init bestidx
         self.bestidx_ = np.argmin(self.fitness_)
-        self.bestcosts_ = [ self.fitness_[self.bestidx_] ]
+        self.bestcosts_ = [self.fitness_[self.bestidx_]]
 
     def best(self, num=1):
         """
@@ -64,7 +66,7 @@ class TeachingLearningBasedOptimizer(object):
         bestidxs = np.argsort(self.fitness_)[:num]
         return self.population_[bestidxs], self.fitness_[bestidxs]
 
-    def next(self):
+    def __next__(self):
         """
         One iteration of TLBO.
         """
@@ -89,8 +91,7 @@ class TeachingLearningBasedOptimizer(object):
 
         # learning phase
         for i in self.pidx:
-
-            j = rs.choice(self.pidx[:i] + self.pidx[(i + 1):], 1)  # pick another random i!=j
+            j = rs.choice(self.pidx[:i] + self.pidx[(i + 1) :], 1)  # pick another random i!=j
             r_i = rs.rand(self.m)
 
             if self.fitness_[i] < self.fitness_[j]:
@@ -100,12 +101,16 @@ class TeachingLearningBasedOptimizer(object):
 
             new_solution = np.minimum(np.maximum(new_solution, self.lower_bound), self.upper_bound)
             new_fitness = self.f(new_solution)
-            
+
             if new_fitness < self.fitness_[i]:
                 self.population_[i] = new_solution
                 self.fitness_[i] = new_fitness
 
         self.bestidx_ = np.argmin(self.fitness_)  # update details
         self.bestcosts_.append(self.fitness_[self.bestidx_])
+
+    def next(self):
+        return self.__next__()
+
 
 TLBO = TeachingLearningBasedOptimizer  # shortcut to save our fingers

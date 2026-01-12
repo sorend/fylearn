@@ -11,7 +11,7 @@ import logging
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array
-from sklearn.metrics import mean_squared_error, accuracy_score
+from sklearn.metrics import mean_squared_error
 from .fuzzylogic import TriangularSet, prod, p_normalize
 from .ga import UnitIntervalGeneticAlgorithm, helper_fitness
 from .tlbo import TLBO
@@ -38,7 +38,14 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
     - Layer 5: Weighted sum of consequences.
     """
 
-    def __init__(self, n_rules=5, membership_factory=t_factory, optimizer_iterations=100, optimizer_pop_size=50):
+    def __init__(
+        self,
+        n_rules=5,
+        membership_factory=t_factory,
+        optimizer_iterations=100,
+        optimizer_pop_size=50,
+        random_state=None,
+    ):
         """
         Initialize the ANFIS classifier.
 
@@ -52,11 +59,14 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
             Number of generations/iterations for the optimizer.
         optimizer_pop_size : int
             Population size for the optimizer.
+        random_state : int, RandomState instance or None, optional (default=None)
+            The generator used to initialize the optimizer. If int, random_state is the seed used.
         """
         self.n_rules = n_rules
         self.membership_factory = membership_factory
         self.optimizer_iterations = optimizer_iterations
         self.optimizer_pop_size = optimizer_pop_size
+        self.random_state = random_state
 
     def _decode_params(self, params, n_features):
         """
@@ -183,7 +193,11 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
         # Initialize Optimizer (Using TLBO as it's parameter-free and robust)
         # Note: fylearn.tlbo.TLBO minimizes the function f
         optimizer = TLBO(
-            f=fitness, lower_bound=lower_bounds, upper_bound=upper_bounds, n_population=self.optimizer_pop_size
+            f=fitness,
+            lower_bound=lower_bounds,
+            upper_bound=upper_bounds,
+            n_population=self.optimizer_pop_size,
+            random_state=self.random_state,
         )
 
         # Run Optimization

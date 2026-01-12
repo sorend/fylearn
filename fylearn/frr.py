@@ -26,21 +26,20 @@ import fylearn.fuzzylogic as fl
 def pi_factory(*args):
     return fl.PiSet(p=args[0], r=args[1], q=args[2], m=2.0)
 
+
 def build_memberships(X, factory):
     mins = np.nanmin(X, 0)
     maxs = np.nanmax(X, 0)
     means = np.nanmean(X, 0)
-    return [ factory(means[i] - ((maxs[i] - mins[i]) / 2.0),
-                     means[i],
-                     means[i] + ((maxs[i] - mins[i]) / 2.0))
-             for i in range(len(X.T)) ]
+    return [
+        factory(means[i] - ((maxs[i] - mins[i]) / 2.0), means[i], means[i] + ((maxs[i] - mins[i]) / 2.0))
+        for i in range(len(X.T))
+    ]
 
 
 class FuzzyReductionRuleClassifier(BaseEstimator, ClassifierMixin):
-
     def get_params(self, deep=False):
-        return {"aggregation": self.aggregation,
-                "membership_factory": self.membership_factory}
+        return {"aggregation": self.aggregation, "membership_factory": self.membership_factory}
 
     def set_params(self, **kwargs):
         for key, value in kwargs.items():
@@ -52,7 +51,6 @@ class FuzzyReductionRuleClassifier(BaseEstimator, ClassifierMixin):
         self.membership_factory = membership_factory
 
     def fit(self, X, y):
-
         X = check_array(X)
 
         self.classes_, y = np.unique(y, return_inverse=True)
@@ -68,25 +66,40 @@ class FuzzyReductionRuleClassifier(BaseEstimator, ClassifierMixin):
         return self
 
     def predict(self, X):
-
         if self.protos_ is None:
             raise Exception("Prototypes not initialized. Perform a fit first.")
 
         X = check_array(X)
 
-        def predict_one(x):
-            R = np.zeros(len(self.protos_))
-            for class_idx, proto in self.protos_.items():
-                M = [ proto[i](x[i]) for i in range(len(x)) if np.isfinite(x[i]) ]
-                R[class_idx] = self.aggregation(M)
-            return self.classes_.take(np.argmax(R))
+        n_samples, n_features = X.shape
+        n_classes = len(self.classes_)
 
-        # predict the lot
-        return np.apply_along_axis(predict_one, 1, X)
+        R = np.zeros((n_samples, n_classes))
+
+        for class_idx in range(n_classes):
+            # Protos for this class
+            protos = self.protos_[class_idx]
+
+            # Calculate membership for all samples and all features for this class
+            # M will be (n_samples, n_features)
+            M = np.zeros((n_samples, n_features))
+            for j in range(n_features):
+                M[:, j] = protos[j](X[:, j])
+
+            # Aggregate over features (axis 1)
+            try:
+                # Try to use axis parameter if supported (e.g. numpy functions, OWA)
+                R[:, class_idx] = self.aggregation(M, axis=1)
+            except TypeError:
+                # Fallback to apply_along_axis for generic functions
+                R[:, class_idx] = np.apply_along_axis(self.aggregation, 1, M)
+
+        return self.classes_.take(np.argmax(R, axis=1))
 
 
 def build_aiwa_operator(andness, m):
     return fl.aa(andness)
+
 
 def build_owa_operator(andness, m):
     beta = andness / (1.0 - andness)
@@ -96,12 +109,8 @@ def build_owa_operator(andness, m):
 
 
 class ModifiedFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
-
     def get_params(self, deep=False):
-        return {"D": self.D,
-                "pce": self.pce,
-                "andness": self.andness,
-                "operator": self.operator}
+        return {"D": self.D, "pce": self.pce, "andness": self.andness, "operator": self.operator}
 
     def set_params(self, **kwargs):
         for key, value in kwargs.items():
@@ -109,7 +118,6 @@ class ModifiedFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         return self
 
     def __init__(self, D=2, pce=0.0, andness=0.75, operator="aiwa"):
-
         if D not in (2, 4, 6, 8):
             raise ValueError("D must be in {2, 4, 6, 8}")
 
@@ -128,7 +136,6 @@ class ModifiedFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         self.operator = operator
 
     def fit(self, X, y):
-
         self.classes_ = np.unique(y)
 
         self.S_ = []
@@ -146,7 +153,6 @@ class ModifiedFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         self.operator_ = globals()["build_" + self.operator + "_operator"](self.andness, X.shape[1])
 
     def predict(self, X):
-
         def mu_mfpc(m, S, C):
             return 2 ** -((np.abs(m - S) / C) ** self.D)
 

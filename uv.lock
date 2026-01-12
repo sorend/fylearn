@@ -127,6 +127,10 @@ source = { editable = "." }
 dependencies = [
     { name = "numpy" },
     { name = "scikit-learn" },
+]
+
+[package.optional-dependencies]
+scipy = [
     { name = "scipy" },
 ]
 
@@ -143,8 +147,9 @@ dev = [
 requires-dist = [
     { name = "numpy", specifier = ">=1.17" },
     { name = "scikit-learn", specifier = ">=0.22" },
-    { name = "scipy", specifier = ">=1.3" },
+    { name = "scipy", marker = "extra == 'scipy'", specifier = ">=1.3" },
 ]
+provides-extras = ["scipy"]
 
 [package.metadata.requires-dev]
 dev = [

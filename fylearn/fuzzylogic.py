@@ -340,6 +340,8 @@ def owa(*w):
 def meowa(n, orness, **kwargs):
     """
     Maximize dispersion at a specified orness level.
+
+    This method uses O'Hagan's method for finding the MEOWA weights.
     """
     if 0.0 > orness or orness > 1.0:
         raise ValueError("orness must be in [0, 1]")
@@ -347,16 +349,57 @@ def meowa(n, orness, **kwargs):
     if n < 2:
         raise ValueError("n must be > 1")
 
-    def negdisp(v):
-        return -dispersion(v)  # we want to maximize, but scipy want to minimize
+    # edge cases
+    if np.isclose(orness, 0.5):
+        return OWA(np.ones(n) / n)
+    elif np.isclose(orness, 0.0):
+        w = np.zeros(n)
+        w[-1] = 1.0
+        return OWA(w)
+    elif np.isclose(orness, 1.0):
+        w = np.zeros(n)
+        w[0] = 1.0
+        return OWA(w)
 
-    def constraint_has_orness(v):
-        return yager_orness(v) - orness
+    try:
+        from scipy.optimize import root_scalar
+    except ImportError:
+        raise ImportError(
+            "The 'scipy' library is required for this functionality. Please install it with `pip install scipy`."
+        )
 
-    def constraint_has_sum(v):
-        return np.sum(v) - 1.0
+    # helper to calculate weights from h
+    def get_w(h):
+        # w_i = h^{n-i} / sum(h^{n-j})
+        p = np.power(h, np.arange(n - 1, -1, -1))
+        return p / np.sum(p)
 
-    return _minimize_owa(negdisp, (constraint_has_orness, constraint_has_sum), n, **kwargs)
+    # function to find root for
+    def f(h):
+        return yager_orness(get_w(h)) - orness
+
+    if orness < 0.5:
+        # h in [0, 1]
+        bracket = [0.00001, 0.99999]
+    else:
+        # h in [1, inf]
+        # heuristic upper bound
+        ub = 2.0
+        while f(ub) < 0:
+            ub *= 2.0
+            if ub > 1e10:  # safety break
+                raise ValueError("Could not bound root for orness %f" % (orness,))
+        bracket = [1.00001, ub]
+
+    # filter kwargs for root_scalar
+    rs_args = {k: v for k, v in kwargs.items() if k in ["maxiter", "xtol", "rtol"]}
+
+    res = root_scalar(f, bracket=bracket, method="brentq", **rs_args)
+
+    if res.converged:
+        return OWA(get_w(res.root))
+    else:
+        raise ValueError("Could not optimize weights: " + str(res))
 
 
 def sampling_owa_orness(x, d, **kwargs):

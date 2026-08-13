@@ -9,7 +9,8 @@ source = "uv-dynamic-versioning"
 vcs = "git"
 style = "pep440"
 bump = true
-pattern = "^(?P<base>\\d+(?:\\.\\d+)*)"
+metadata = false
+pattern = "^v?(?P<base>\\d+(?:\\.\\d+)*)$"
 
 [project]
 name = "fylearn"

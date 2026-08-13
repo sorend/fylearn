@@ -1,0 +1,54 @@
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify tag is a semantic version on the default branch
+        run: |
+          if ! echo "${{ github.ref_name }}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Tag ${{ github.ref_name }} does not match v*.*.*"
+            exit 1
+          fi
+          git fetch origin "${{ github.event.repository.default_branch }}"
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" "origin/${{ github.event.repository.default_branch }}"; then
+            echo "::error::Tag ${{ github.ref_name }} is not on the default branch ${{ github.event.repository.default_branch }}"
+            exit 1
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build wheel
+        run: |
+          make build
+
+      - name: Publish package to PyPI
+        run: |
+          make publish FLIT_INDEX_URL=https://upload.pypi.org/legacy/ FLIT_PASSWORD=${{ secrets.PYPI_TOKEN }}
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" --generate-notes

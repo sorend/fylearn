@@ -1,8 +1,7 @@
-
 <img src="docs/img/fylearn.svg" alt="fylearn - fuzzy machine learning" width="300">
 
 [![Build status](https://github.com/sorend/fylearn/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/sorend/fylearn/actions/?query=branch%3Amain)
-[![PyPI version](https://badge.fury.io/py/fylearn.svg?branch=main)](https://badge.fury.io/py/fylearn?branch=main)
+[![PyPI version](https://badge.fury.io/py/fylearn.svg)](https://badge.fury.io/py/fylearn)
 [![CodeQL](https://github.com/sorend/fylearn/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/sorend/fylearn/actions/workflows/codeql-analysis.yml)
 [![Codecov](https://codecov.io/gh/sorend/fylearn/branch/main/graph/badge.svg)](https://codecov.io/gh/sorend/fylearn)
 
@@ -18,19 +17,28 @@ Machine learning algorithms
 Fuzzy pattern classifiers are classifiers that describe data using fuzzy sets and fuzzy aggregation functions.
 
 Several fuzzy pattern classifiers are implemented in the library:
- - fylearn.frr.FuzzyReductionRuleClassifier -- based on learning membership functions from min/max.
- - fylearn.fpcga.FuzzyPatternClassifierGA -- optimizes membership functions globally.
- - fylearn.fpcga.FuzzyPatternClassifierLocalGA -- optimizes membership functions locally.
+
+ - fylearn.fpcowa.FuzzyPatternClassifier -- base classifier with OWA-based aggregation (see parameters).
+ - fylearn.fpcowa.MultipleAggregationsFuzzyPatternClassifier -- combines several aggregations in a single classifier.
+ - fylearn.fpcga.FuzzyPatternClassifierGA -- optimizes membership functions globally using a genetic algorithm.
+ - fylearn.fpcga.FuzzyPatternClassifierLGA -- optimizes membership functions locally using a genetic algorithm.
+ - fylearn.fpcga.SEFuzzyPatternClassifier -- fuzzy pattern classifier with membership functions optimized by search effort.
  - fylearn.fpt.FuzzyPatternTreeClassifier -- builds fuzzy pattern trees using bottom-up method.
  - fylearn.fpt.FuzzyPatternTreeTopDownClassifier -- builds fuzzy pattern trees using top-down method.
- - fylearn.nfpc.FuzzyPatternClassifier -- base class for fuzzy pattern classifiers (see parameters).
+ - fylearn.frr.FuzzyReductionRuleClassifier -- based on learning membership functions from min/max.
+ - fylearn.frr.ModifiedFuzzyPatternClassifier -- reduction-rule classifier using OWA / AIWA operators.
+ - fylearn.rafpc.RandomAgreementFuzzyPatternClassifier -- builds fuzzy pattern classifiers using agreement-based random sampling.
 
 ### Genetic Algorithm rule based classifiers
 
-A type of classifier that uses GA to optimize rules
+A type of classifier that uses GA to optimize rules:
 
-- fylearn.garules.MultimodalEvolutionaryClassifer -- learns rules using genetic algorithm.
+ - fylearn.garules.MultimodalEvolutionaryClassifier -- learns rules using genetic algorithm.
+ - fylearn.garules.EnsembleMultimodalEvolutionaryClassifier -- ensemble of multimodal evolutionary classifiers.
 
+### ANFIS
+
+ - fylearn.anfis.AnfisClassifier -- Adaptive-Network-based Fuzzy Inference System classifier (Jang, 1993).
 
 Installation
 ------------
@@ -39,20 +47,32 @@ You can add fylearn to your project by using pip:
 
     pip install fylearn
 
+For development, install the dependencies and run the tests with [uv](https://docs.astral.sh/uv/):
+
+    uv sync
+    uv run make test
+
 ### Usage
 
 You can use the classifiers as any other SciKit-Learn classifier:
 
-    from fylearn.nfpc import FuzzyPatternClassifier
-    from fylearn.garules import MultimodalEvolutionaryClassifier
-    from fylearn.fpt import FuzzyPatternTreeTopDownClassifier
+```python
+from sklearn.datasets import load_iris
+from fylearn.anfis import AnfisClassifier
+from fylearn.fpcowa import FuzzyPatternClassifier
+from fylearn.fpt import FuzzyPatternTreeTopDownClassifier
+from fylearn.garules import MultimodalEvolutionaryClassifier
 
-    C = (FuzzyPatternClassifier(),
-         MultimodalEvolutionaryClassifier(),
-         FuzzyPatternTreeTopDownClassifier())
+X, y = load_iris(return_X_y=True)
 
-    for c in C:
-        print c.fit(X, y).predict([1, 2, 3, 4])
+C = (FuzzyPatternClassifier(),
+     MultimodalEvolutionaryClassifier(n_iterations=100),
+     FuzzyPatternTreeTopDownClassifier(),
+     AnfisClassifier())
+
+for c in C:
+    print(type(c).__name__, c.fit(X, y).predict(X[:5]))
+```
 
 Heuristic search methods
 ------------------------
@@ -70,34 +90,36 @@ for parameter assignment, but, are also usable directly.
 
 Example use:
 
-    import numpy as np
-    from fylearn.ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations
-    from fylearn.local_search import LocalUnimodalSamplingOptimizer, helper_num_runs
-    from fylearn.tlbo import TeachingLearningBasedOptimizer
-    from fylearn.jaya import JayaOptimizer
+```python
+import numpy as np
+from fylearn.ga import UnitIntervalGeneticAlgorithm, helper_fitness, helper_n_generations
+from fylearn.local_search import LocalUnimodalSamplingOptimizer, helper_num_runs
+from fylearn.tlbo import TeachingLearningBasedOptimizer
+from fylearn.jaya import JayaOptimizer
 
-    def fitness(x):  # defined for a single chromosome, so we need helper_fitness for GA
-        return np.sum(x**2)
+def fitness(x):  # defined for a single chromosome, so we need helper_fitness for GA
+    return np.sum(x**2)
 
-    ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(fitness), n_chromosomes=100, n_genes=10)
-    ga = helper_n_generations(ga, 100)
-    best_chromosomes, best_fitness = ga.best(1)
-    print "GA solution", best_chromosomes[0], "fitness", best_fitness[0]
+ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(fitness), n_chromosomes=100, n_genes=10)
+ga = helper_n_generations(ga, 100)
+best_chromosomes, best_fitness = ga.best(1)
+print("GA solution", best_chromosomes[0], "fitness", best_fitness[0])
 
-    lower_bounds, upper_bounds = np.ones(10) * -10., np.ones(10) * 10.
-    lus = LocalUnimodalSamplingOptimizer(fitness, lower_bounds, upper_bounds)
-    best_solution, best_fitness = helper_num_runs(lus, 100)
-    print "LUS solution", best_solution, "fitness", best_fitness
+lower_bounds, upper_bounds = np.ones(10) * -10.0, np.ones(10) * 10.0
+lus = LocalUnimodalSamplingOptimizer(fitness, lower_bounds, upper_bounds)
+best_solution, best_fitness = helper_num_runs(lus, 100)
+print("LUS solution", best_solution, "fitness", best_fitness)
 
-    tlbo = TeachingLearningBasedOptimizer(fitness, lower_bounds, upper_bounds)
-    tlbo = helper_n_generations(tlbo, 100)
-    best_solution, best_fitness = tlbo.best()
-    print "TLBO solution", best_solution, "fitness", best_fitness
+tlbo = TeachingLearningBasedOptimizer(f=fitness, lower_bound=lower_bounds, upper_bound=upper_bounds)
+tlbo = helper_n_generations(tlbo, 100)
+best_solution, best_fitness = tlbo.best()
+print("TLBO solution", best_solution, "fitness", best_fitness)
 
-    jaya = JayaOptimizer(fitness, lower_bounds, upper_bounds)
-    jaya = helper_n_generations(jaya, 100)
-    best_solution, best_fitness = jaya.best()
-    print "Jaya solution", best_solution, "fitness", best_fitness
+jaya = JayaOptimizer(f=fitness, lower_bound=lower_bounds, upper_bound=upper_bounds)
+jaya = helper_n_generations(jaya, 100)
+best_solution, best_fitness = jaya.best()
+print("Jaya solution", best_solution, "fitness", best_fitness)
+```
 
 A tiny fuzzy logic library
 --------------------------
@@ -109,14 +131,18 @@ Tiny, but hopefully useful. The focus of the library is on providing membership 
  - fylearn.fuzzylogic.TriangularSet
  - fylearn.fuzzylogic.TrapezoidalSet
  - fylearn.fuzzylogic.PiSet
+ - fylearn.fuzzylogic.ZadehNegatedSet
+ - fylearn.nonstationary.NonstationaryFuzzySet
 
 Example use:
 
-    import numpy as np
-    from fylearn.fuzzylogic import TriangularSet
-    t = TriangularSet(1.0, 4.0, 5.0)
-    print t(3)   # use with singletons
-    print t(np.array([[1, 2, 3], [4, 5, 6]]))  # use with arrays
+```python
+import numpy as np
+from fylearn.fuzzylogic import TriangularSet
+t = TriangularSet(1.0, 4.0, 5.0)
+print(t(3))   # use with singletons
+print(t(np.array([[1, 2, 3], [4, 5, 6]])))  # use with arrays
+```
 
 ### Aggregation functions
 
@@ -124,20 +150,25 @@ Here focus has been on providing aggregation functions that support aggregation 
 
 Example use:
 
-    import numpy as np
-    from fylearn.fuzzylogic import meowa, OWA
-    a = OWA([1.0, 0.0, 0.0])  # pure AND in OWA
-    X = np.random.rand(5, 3)
-    print a(X)  # AND row-wise
-    a = meowa(5, 0.2)  # OR, andness = 0.2
-    print a(X.T)  # works column-wise, so apply to transposed X
+```python
+import numpy as np
+from fylearn.fuzzylogic import meowa, OWA
+a = OWA(np.array([1.0, 0.0, 0.0]))  # pure AND in OWA
+X = np.random.rand(5, 3)
+print(a(X))  # AND row-wise
+a = meowa(5, 0.2)  # OR, orness = 0.2
+print(a(X.T))  # works column-wise, so apply to transposed X
+```
+
+Also available: t-norms / t-conorms (product, mean, min, max, Lukasiewicz, Einstein, algebraic sum),
+OWA variants (GOWA, weights_mapping, sampling_owa_orness), and andness-directed averaging
+(fylearn.fuzzylogic.AndnessDirectedAveraging).
 
 To Do
 -----
 
 We are working on adding the following algorithms:
 
- - ANFIS.
  - FRBCS.
 
 About

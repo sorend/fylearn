@@ -51,8 +51,10 @@ Issues = "https://github.com/sorend/fylearn/issues"
 
 [dependency-groups]
 dev = [
+  "mypy>=2.3.0",
   "pytest>=9.0.2",
   "pytest-cov>=7.0.0",
+  "ruff>=0.16.3",
   "tox",
   "tox-gh-actions",
   "versiontag>=1.2.0",
@@ -62,6 +64,9 @@ dev = [
 select = ["C4", "E", "F", "I", "PERF", "UP"]
 ignore = ["PERF203"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E501", "E731", "E741", "F403", "F405", "F821", "F841"]
+
 [tool.ruff]
 line-length = 120
 target-version = "py312"
@@ -69,6 +74,11 @@ target-version = "py312"
 #[tool.ruff.lint.per-file-ignores]
 #"__init__.py" = ["F401"]
 #"tests/server/fastmcp/test_func_metadata.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+files = ["fylearn"]
 
 [tool.pytest.ini_options]
 addopts = "-v --cov-fail-under=60 --cov=fylearn"

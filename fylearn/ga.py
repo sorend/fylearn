@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Genetic algorithm implementation.
 
@@ -15,6 +14,9 @@ Has two selection methods implemented:
 
 """
 
+from collections.abc import Callable, Sequence
+from typing import Any
+
 import numpy as np
 from sklearn.utils import check_random_state
 
@@ -23,8 +25,10 @@ from sklearn.utils import check_random_state
 #
 
 
-def tournament_selection(tournament_size=10):
-    def tournament_sel(rs, P, f, n_selection=1):
+def tournament_selection(tournament_size: int = 10) -> Callable:
+    def tournament_sel(
+        rs: np.random.RandomState, P: np.ndarray, f: np.ndarray, n_selection: int = 1
+    ) -> tuple[np.ndarray, np.ndarray]:
         if n_selection == 1:
             participants = rs.choice(len(f), size=tournament_size)  # select the tournament participants
             winners = np.argsort(f[participants])  # sort them by fitness
@@ -54,8 +58,10 @@ def tournament_selection(tournament_size=10):
     return tournament_sel
 
 
-def top_n_selection(n=25):
-    def top_n_sel(rs, P, f, n_selection=1):
+def top_n_selection(n: int = 25) -> Callable:
+    def top_n_sel(
+        rs: np.random.RandomState, P: np.ndarray, f: np.ndarray, n_selection: int = 1
+    ) -> tuple[np.ndarray, np.ndarray]:
         top_n = np.argsort(f)[:n]  # select top-n fitness indices.
 
         if n_selection == 1:
@@ -70,7 +76,7 @@ def top_n_selection(n=25):
     return top_n_sel
 
 
-def helper_n_generations(ga, n=100):
+def helper_n_generations(ga: Any, n: int = 100) -> Any:
     for i in range(n):
         next(ga)
     return ga
@@ -80,7 +86,7 @@ class UniformCrossover:
     """Implements a uniform crossover, with a specific random probability of getting genes
     from each parent."""
 
-    def __init__(self, p1_proba=0.5):
+    def __init__(self, p1_proba: float = 0.5):
         """Constructs the crossover operation.
 
         Parameters:
@@ -90,7 +96,7 @@ class UniformCrossover:
         """
         self.p1_proba = p1_proba
 
-    def __call__(self, P1, P2, random_state):
+    def __call__(self, P1: Any, P2: Any, random_state: Any) -> np.ndarray:
         random_state = check_random_state(random_state)
         C = np.array(P1)  # clone p1
         R = random_state.random_sample(C.shape) > self.p1_proba  # create filter
@@ -103,7 +109,7 @@ class PointwiseCrossover:
     at predefined locations in the chromosome.
     """
 
-    def __init__(self, crossover_locations, n_crossovers=1):
+    def __init__(self, crossover_locations: Sequence[int], n_crossovers: int = 1):
         """Construct the crossover operation
 
         Parameters:
@@ -116,7 +122,7 @@ class PointwiseCrossover:
         self.crossover_locations = np.asarray(crossover_locations)
         self.n_crossovers = n_crossovers
 
-    def __call__(self, A, B, random_state):
+    def __call__(self, A: Any, B: Any, random_state: Any) -> np.ndarray:
         random_state = check_random_state(random_state)
         A, B = np.asarray(A), np.asarray(B)
 
@@ -152,8 +158,10 @@ class PointwiseCrossover:
             return C
 
 
-def helper_min_fitness_decrease(ga, epsilon=0.001, top_n=10):
-    last_fitness = None
+def helper_min_fitness_decrease(
+    ga: "BaseGeneticAlgorithm", epsilon: float = 0.001, top_n: int = 10
+) -> "BaseGeneticAlgorithm":
+    last_fitness: float | None = None
     while True:
         # next
         next(ga)
@@ -169,14 +177,14 @@ def helper_min_fitness_decrease(ga, epsilon=0.001, top_n=10):
     return ga
 
 
-def helper_fitness(chromosome_fitness_function):
+def helper_fitness(chromosome_fitness_function: Callable[[np.ndarray], float]) -> Callable[[np.ndarray], np.ndarray]:
     """
     Helper function, will evaluate chromosome_fitness_function for each chromosome
     and return the result. Can be used to wrap fitness functions that evaluate
     each chromosome at a time instead of the whole population.
     """
 
-    def fitness_function(population):
+    def fitness_function(population: np.ndarray) -> np.ndarray:
         return np.apply_along_axis(chromosome_fitness_function, 1, population)
 
     return fitness_function
@@ -185,15 +193,15 @@ def helper_fitness(chromosome_fitness_function):
 class BaseGeneticAlgorithm:
     def __init__(
         self,
-        fitness_function,
-        selection_function=tournament_selection(),
-        n_genes=None,
-        n_chromosomes=None,
-        elitism=0,
-        p_mutation=0.1,
-        random_state=None,
-        population=None,
-        crossover_function=UniformCrossover(),
+        fitness_function: Callable[[np.ndarray], np.ndarray],
+        selection_function: Callable | None = None,
+        n_genes: int | None = None,
+        n_chromosomes: int | None = None,
+        elitism: int = 0,
+        p_mutation: float = 0.1,
+        random_state: Any = None,
+        population: Any | None = None,
+        crossover_function: Callable | None = None,
     ):
         """
         Initializes the genetic algorithm.
@@ -219,7 +227,7 @@ class BaseGeneticAlgorithm:
 
         """
         self.fitness_function = fitness_function
-        self.selection_function = selection_function
+        self.selection_function = selection_function if selection_function is not None else tournament_selection()
         self.elitism = elitism
         self.p_mutation = p_mutation
         self.random_state = check_random_state(random_state)
@@ -232,21 +240,25 @@ class BaseGeneticAlgorithm:
             self.n_genes = n_genes
             self.n_chromosomes = n_chromosomes
         else:
-            (self.population_,) = population
+            if isinstance(population, tuple) and len(population) == 1:
+                population = population[0]
+            self.population_ = np.asarray(population)
+            if self.population_.ndim != 2:
+                raise ValueError("population must be a 2-dimensional array")
             self.n_genes = self.population_.shape[1]
             self.n_chromosomes = self.population_.shape[0]
         # crossover
-        self.crossover_function = crossover_function
+        self.crossover_function = crossover_function if crossover_function is not None else UniformCrossover()
         # init fitness
         self.fitness_ = self.fitness_function(self.population_)
 
-    def initialize_population(self, n_chromosomes, n_genes):
+    def initialize_population(self, n_chromosomes: int, n_genes: int) -> np.ndarray:
         raise NotImplementedError("initialize_population not implemented")
 
-    def mutate(self, chromosomes, mutation_idx):
+    def mutate(self, chromosomes: np.ndarray, mutation_idx: np.ndarray) -> np.ndarray:
         raise NotImplementedError("mutate not implemented")
 
-    def __next__(self):
+    def __next__(self) -> None:
         # create new population
         new_population = np.array(self.population_)
 
@@ -272,10 +284,10 @@ class BaseGeneticAlgorithm:
         self.population_ = new_population
         self.fitness_ = self.fitness_function(self.population_)
 
-    def next(self):
+    def next(self) -> None:
         return self.__next__()
 
-    def best(self, n_best=1):
+    def best(self, n_best: int = 1) -> tuple[np.ndarray, np.ndarray]:
         f_sorted = np.argsort(self.fitness_)
         p_sorted = self.population_[f_sorted]
         return p_sorted[:n_best], self.fitness_[f_sorted][:n_best]
@@ -288,14 +300,14 @@ class GeneticAlgorithm(BaseGeneticAlgorithm):
     initialized to [-1.0, 1.0] and mutation modifies the gene value in the range [-1.0, 1.0].
     """
 
-    def __init__(self, scaling=1.0, *args, **kwargs):
+    def __init__(self, scaling: float = 1.0, *args: Any, **kwargs: Any):
         self.scaling = scaling
         super().__init__(*args, **kwargs)
 
-    def initialize_population(self, n_chromosomes, n_genes):
+    def initialize_population(self, n_chromosomes: int, n_genes: int) -> np.ndarray:
         return self.random_state.rand(n_chromosomes, n_genes) * self.scaling
 
-    def mutate(self, chromosomes, mutation_idx):
+    def mutate(self, chromosomes: np.ndarray, mutation_idx: np.ndarray) -> np.ndarray:
         mutations = (self.random_state.rand(np.sum(mutation_idx)) - 0.5) * self.scaling
         chromosomes[mutation_idx] += mutations
         return chromosomes
@@ -307,7 +319,7 @@ class UnitIntervalGeneticAlgorithm(GeneticAlgorithm):
     randomly selects a new value in this interval.
     """
 
-    def mutate(self, chromosomes, mutation_idx):
+    def mutate(self, chromosomes: np.ndarray, mutation_idx: np.ndarray) -> np.ndarray:
         mutations = self.random_state.rand(np.sum(mutation_idx)) * self.scaling
         chromosomes[mutation_idx] = mutations
         return chromosomes
@@ -320,7 +332,7 @@ class DiscreteGeneticAlgorithm(GeneticAlgorithm):
     from this domain.
     """
 
-    def __init__(self, ranges=None, *args, **kwargs):
+    def __init__(self, ranges: Sequence[Sequence[int]] | None = None, *args: Any, **kwargs: Any):
         """
         Initializes the genetic algorithm.
 
@@ -335,13 +347,13 @@ class DiscreteGeneticAlgorithm(GeneticAlgorithm):
         self.ranges = ranges
         super().__init__(*args, **kwargs)
 
-    def initialize_population(self, n_chromosomes, n_genes):
+    def initialize_population(self, n_chromosomes: int, n_genes: int) -> np.ndarray:
         P = np.zeros((n_chromosomes, n_genes))
         for i in range(n_genes):
             P[:, i] = self.random_state.choice(self.ranges[i], P.shape[0])
         return P
 
-    def mutate(self, chromosomes, mutation_idx):
+    def mutate(self, chromosomes: np.ndarray, mutation_idx: np.ndarray) -> np.ndarray:
         for i in range(self.n_genes):
             midx_i = mutation_idx[:, i]
             n_mutations = np.sum(midx_i)

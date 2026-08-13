@@ -1,7 +1,7 @@
-from __future__ import print_function
 import numpy as np
 
 from fylearn import garules
+
 
 def test_classifier():
 

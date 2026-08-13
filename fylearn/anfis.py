@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Adaptive Network-based Fuzzy Inference System (ANFIS) classifier.
 
@@ -8,18 +7,21 @@ for gradient-based backpropagation.
 """
 
 import logging
+from collections.abc import Callable
+from typing import Any
+
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.validation import check_array
 from sklearn.metrics import mean_squared_error
-from .fuzzylogic import TriangularSet, prod, p_normalize
-from .ga import UnitIntervalGeneticAlgorithm, helper_fitness
+from sklearn.utils.validation import check_array
+
+from .fuzzylogic import TriangularSet, p_normalize, prod
 from .tlbo import TLBO
 
 logger = logging.getLogger(__name__)
 
 
-def t_factory(mean, std):
+def t_factory(mean: float, std: float) -> TriangularSet:
     """
     Factory for TriangularSet initialized with mean and standard deviation.
     """
@@ -40,11 +42,11 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
 
     def __init__(
         self,
-        n_rules=5,
-        membership_factory=t_factory,
-        optimizer_iterations=100,
-        optimizer_pop_size=50,
-        random_state=None,
+        n_rules: int = 5,
+        membership_factory: Callable[..., Any] = t_factory,
+        optimizer_iterations: int = 100,
+        optimizer_pop_size: int = 50,
+        random_state: Any = None,
     ):
         """
         Initialize the ANFIS classifier.
@@ -68,7 +70,7 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
         self.optimizer_pop_size = optimizer_pop_size
         self.random_state = random_state
 
-    def _decode_params(self, params, n_features):
+    def _decode_params(self, params: np.ndarray, n_features: int) -> tuple[np.ndarray, np.ndarray]:
         """
         Decodes a flat parameter vector into antecedent and consequent parts.
 
@@ -96,7 +98,7 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
 
         return antecedents, consequents
 
-    def _forward_pass(self, X, antecedents, consequents):
+    def _forward_pass(self, X: np.ndarray, antecedents: np.ndarray, consequents: np.ndarray) -> np.ndarray:
         """
         Executes the ANFIS forward pass (Layers 1-5).
         """
@@ -144,7 +146,7 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
 
         return y_pred
 
-    def fit(self, X, y):
+    def fit(self, X: Any, y: Any) -> "AnfisClassifier":
         """
         Fit the ANFIS model using TLBO optimization.
         """
@@ -160,8 +162,10 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
         range_vals = max_vals - min_vals
 
         # Extend bounds slightly to allow coverage at edges
-        lower_bound_ant = np.tile(min_vals - 0.1 * range_vals, (self.n_rules, 3)).flatten()
-        upper_bound_ant = np.tile(max_vals + 0.1 * range_vals, (self.n_rules, 3)).flatten()
+        # The antecedent layout is (n_rules, n_features, 3), so each feature's
+        # bound must be repeated 3 times within each rule block.
+        lower_bound_ant = np.tile(np.repeat(min_vals - 0.1 * range_vals, 3), self.n_rules)
+        upper_bound_ant = np.tile(np.repeat(max_vals + 0.1 * range_vals, 3), self.n_rules)
 
         # Consequent bounds (coefficients and bias)
         # We initialize them somewhat arbitrarily, e.g., [-10, 10] or relative to target
@@ -172,10 +176,8 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
         lower_bounds = np.concatenate([lower_bound_ant, lower_bound_cons])
         upper_bounds = np.concatenate([upper_bound_ant, upper_bound_cons])
 
-        param_dim = len(lower_bounds)
-
         # Fitness Function
-        def fitness(params):
+        def fitness(params: np.ndarray) -> float | np.ndarray:
             # Check for batch processing (TLBO passes a matrix of populations)
             if params.ndim == 2:
                 results = np.zeros(params.shape[0])
@@ -204,14 +206,14 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
         # TLBO doesn't have a distinct 'run' method that iterates, we loop manually
         # or use helper if available. Based on fpcowa.py, we iterate manually.
 
-        self.history_ = []
+        self.history_: list[float] = []
         for i in range(self.optimizer_iterations):
             next(optimizer)
             _, best_fitness_list = optimizer.best(1)
             best_fitness = best_fitness_list[0]
             self.history_.append(best_fitness)
             if i % 10 == 0:
-                logger.debug("Generation %d: Best RMSE %.4f" % (i, best_fitness))
+                logger.debug(f"Generation {i}: Best RMSE {best_fitness:.4f}")
 
         # Store best parameters
         best_chrom, _ = optimizer.best(1)
@@ -222,7 +224,7 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
 
         return self
 
-    def predict(self, X):
+    def predict(self, X: Any) -> np.ndarray:
         """
         Predict class labels for samples in X.
         """
@@ -240,7 +242,7 @@ class AnfisClassifier(BaseEstimator, ClassifierMixin):
 
         return self.classes_.take(y_pred_idx)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X: Any) -> np.ndarray:
         """
         Predict class probabilities.
         Note: ANFIS is inherently a regressor, so this is an approximation based on distance.

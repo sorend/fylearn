@@ -8,6 +8,10 @@ all: build
 deps:
 	uv sync
 
+lint:
+	uv run ruff check .
+	uv run mypy
+
 wheel: deps
 	uv build
 

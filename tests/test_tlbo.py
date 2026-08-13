@@ -1,8 +1,9 @@
-﻿from __future__ import print_function
-import numpy as np
-from fylearn.tlbo import TLBO, TeachingLearningBasedOptimizer
-from fylearn.ga import helper_n_generations
+﻿import numpy as np
 import pytest
+
+from fylearn.ga import helper_n_generations
+from fylearn.tlbo import TLBO, TeachingLearningBasedOptimizer
+
 
 def test_tlbo_variance():
 
@@ -117,3 +118,42 @@ def test_tlbo_constrained_himmelblau():
     tlbo = helper_n_generations(tlbo, 100)
     best_solution, best_fitness = tlbo.best()
     print("TLBO solution", best_solution, "fitness", best_fitness)
+
+
+def test_tlbo_best_multiple():
+    f = lambda x: np.var(x)
+    t = TLBO(f, np.zeros(3), np.ones(3), n_population=10, random_state=1)
+    X, F = t.best(3)
+    assert X.shape == (3, 3)
+    assert F.shape == (3,)
+    assert np.all(np.diff(F) >= 0)
+
+
+def test_tlbo_next_alias():
+    f = lambda x: np.var(x)
+    t = TLBO(f, np.zeros(3), np.ones(3), n_population=10, random_state=1)
+    t.next()
+    assert len(t.bestcosts_) == 2
+
+
+def test_tlbo_teacher_is_position():
+    # the teaching phase must move solutions towards the teacher's *position*,
+    # not towards its index (regression test for an old bug)
+    f = lambda x: np.sum((x - np.array([0.5, 0.25])) ** 2)
+    t = TLBO(f, np.zeros(2), np.ones(2), n_population=20, random_state=3)
+    initial_best = t.best()[1]
+    for _ in range(50):
+        next(t)
+    assert t.best()[1] < initial_best
+    assert t.best()[1] < 0.1  # found the neighbourhood of the optimum
+
+
+def test_tlbo_respects_bounds():
+    f = lambda x: np.sum(x**2)
+    lb = np.array([-0.5, -0.5])
+    ub = np.array([0.5, 0.5])
+    t = TLBO(f, lb, ub, n_population=20, random_state=2)
+    for _ in range(10):
+        next(t)
+    assert np.all(t.population_ >= lb)
+    assert np.all(t.population_ <= ub)

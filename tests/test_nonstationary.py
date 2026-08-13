@@ -1,8 +1,7 @@
-from __future__ import print_function
 import numpy as np
 
 from fylearn.fuzzylogic import TriangularSet
-from fylearn.nonstationary import helper_stationary_value, NonstationaryFuzzySet
+from fylearn.nonstationary import NonstationaryFuzzySet, helper_stationary_value
 
 
 def test_simple_stationary():
@@ -141,3 +140,25 @@ def test_paper():
 
     Y = s(T, X)
     print("Y", Y)
+
+
+def test_helper_stationary_value():
+    f = helper_stationary_value(2.5)
+    assert f(0) == 2.5
+    assert f(100) == 2.5
+
+
+def test_T_must_be_1d():
+    import pytest
+
+    ns = NonstationaryFuzzySet(TriangularSet, a=lambda t: 0.0, b=lambda t: 0.5, c=lambda t: 1.0)
+    with pytest.raises(ValueError):
+        ns(np.array([[0, 1]]), np.array([[0.5], [0.5]]))
+
+
+def test_T_and_X_length_mismatch():
+    import pytest
+
+    ns = NonstationaryFuzzySet(TriangularSet, a=lambda t: 0.0, b=lambda t: 0.5, c=lambda t: 1.0)
+    with pytest.raises(ValueError):
+        ns(np.array([0, 1]), np.array([[0.5], [0.5], [0.5]]))

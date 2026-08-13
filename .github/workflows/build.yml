@@ -4,6 +4,19 @@ name: Build
 on: [push, pull_request]
 
 jobs:
+  run-lint:
+    name: Lint and typecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Lint and typecheck
+        run: make lint
+
   run-tests:
     name: Test
     runs-on: ubuntu-latest

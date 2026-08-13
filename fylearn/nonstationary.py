@@ -20,9 +20,13 @@ For each call to the membership function, $t$ will be increased (think of it as 
     https://ieeexplore.ieee.org/document/4601106?arnumber=4601106
 """
 
+from collections.abc import Callable
+from typing import Any
+
 import numpy as np
 
-def helper_stationary_value(val):
+
+def helper_stationary_value(val: float) -> Callable[[float], float]:
     """
     Helper for creating a parameter which is stationary (not changing based on t)
     in a stationary fuzzy set. Returns the static pertubation function
@@ -34,9 +38,9 @@ def helper_stationary_value(val):
     """
     return lambda t: val
 
-class NonstationaryFuzzySet:
 
-    def __init__(self, factory, **pertubations):
+class NonstationaryFuzzySet:
+    def __init__(self, factory: Callable[..., Any], **pertubations: Callable[[float], float]):
         """
         Initializes the nonstationary fuzzy set.
 
@@ -48,9 +52,9 @@ class NonstationaryFuzzySet:
                        parameter for the backing set must be defined by a pertubation function.
         """
         self.factory = factory
-        self.pertubations = pertubations
+        self.pertubations: dict[str, Callable[[float], float]] = pertubations
 
-    def __call__(self, T, X):
+    def __call__(self, T: Any, X: Any) -> np.ndarray:
         """
         Calculates membership values of a row of values of X for a given set of T.
 
@@ -64,7 +68,7 @@ class NonstationaryFuzzySet:
         # ensure 2d
         X = np.array(X)
         if X.ndim == 1:
-            X = np.array([ X ])
+            X = np.array([X])
 
         T = np.atleast_1d(T)
 
@@ -79,10 +83,10 @@ class NonstationaryFuzzySet:
         # calculate for each timestamp
         for idx, t in enumerate(T):
             # build set
-            params = { k: v(t) for k, v in self.pertubations.items() }
+            params = {k: v(t) for k, v in self.pertubations.items()}
             mu = self.factory(**params)
             # calculate values
-            Y[idx, ] = mu(X[idx, ])
+            Y[idx,] = mu(X[idx,])
 
         return Y
 

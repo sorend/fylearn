@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Random agreement Fuzzy Pattern Classifier method.
 
 The module structure is the following:
@@ -11,16 +10,19 @@ References:
 """
 
 import logging
-import numpy as np
+from collections.abc import Callable
+from typing import Any
 
+import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_array
 
 import fylearn.fuzzylogic as fl
+from fylearn._validation import has_nan_classes
 
 
-def agreement_t_test(a, b):
+def agreement_t_test(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Check agreement based on means of two samples, using the t-statistic."""
     try:
         import scipy.stats as stats
@@ -39,8 +41,8 @@ def agreement_t_test(a, b):
     return p1 < 0.05
 
 
-def fuzzify_partitions(p):
-    def fuzzify_p(A):
+def fuzzify_partitions(p: int) -> Callable[[np.ndarray], tuple[int, np.ndarray, list]]:
+    def fuzzify_p(A: np.ndarray) -> tuple[int, np.ndarray, list]:
         R = np.zeros((A.shape[0], A.shape[1] * p))
 
         cmin, cmax = np.nanmin(A, 0), np.nanmax(A, 0)
@@ -63,7 +65,7 @@ def fuzzify_partitions(p):
     return fuzzify_p
 
 
-def fuzzify_mean(A):
+def fuzzify_mean(A: np.ndarray) -> tuple[int, np.ndarray, list]:
     # output for fuzzified values
     R = np.zeros((A.shape[0], A.shape[1] * 3))
 
@@ -87,7 +89,7 @@ def fuzzify_mean(A):
     return 3, R, mus
 
 
-def agreement_fuzzy(aggregation, A, B):
+def agreement_fuzzy(aggregation: Callable, A: np.ndarray, B: np.ndarray) -> tuple[Any, np.ndarray]:
     """
     Calculate agreement between two samples.
 
@@ -104,7 +106,7 @@ def agreement_fuzzy(aggregation, A, B):
     return a, d
 
 
-def agreement_hamming(p, X, a, b):
+def agreement_hamming(p: int, X: np.ndarray, a: int, b: int) -> np.ndarray:
     d = np.abs(X[a, :] - X[b, :])
     f = int(X.shape[1] / p)
     E = np.zeros(f)
@@ -113,15 +115,15 @@ def agreement_hamming(p, X, a, b):
     return 1.0 - ((1.0 / p) * E)
 
 
-def triangular_factory(*args):
+def triangular_factory(*args: Any) -> fl.TriangularSet:
     return fl.TriangularSet(args[0], args[1], args[2])
 
 
-def pi_factory(*args):
+def pi_factory(*args: Any) -> fl.PiSet:
     return fl.PiSet(a=args[0], r=args[1], b=args[2], m=2.0)
 
 
-def build_memberships(X, factory):
+def build_memberships(X: np.ndarray, factory: Callable) -> list[tuple[int, Any]]:
     mins = np.nanmin(X, 0)
     maxs = np.nanmax(X, 0)
     means = np.nanmean(X, 0)
@@ -131,7 +133,9 @@ def build_memberships(X, factory):
     ]
 
 
-def agreement_pruning(X, proto, n_features, rs):
+def agreement_pruning(
+    X: np.ndarray, proto: list[tuple[int, Any]], n_features: int, rs: Any
+) -> list[tuple[int, Any]]:
     if len(proto) <= n_features:  # nothing to prune.
         return proto
 
@@ -145,18 +149,27 @@ def agreement_pruning(X, proto, n_features, rs):
     return proto
 
 
-def build_for_class(X, max_samples, n_features, rs, factory):
-    # construct wanted number of prototypes
-    max_no = max(max_samples, len(X))
-    sample_idx = rs.permutation(max_no) % len(X)
-
+def build_for_class(
+    X: np.ndarray,
+    max_samples: int,
+    n_features: int,
+    rs: Any,
+    factory: Callable,
+) -> list[tuple[int, Any]]:
     # construct memberships for all features based on the sample
     proto = build_memberships(X, factory)
 
     return agreement_pruning(X, proto, n_features, rs)
 
 
-def build_for_class_multi(X, max_samples, n_features, rs, factory, n_protos):
+def build_for_class_multi(
+    X: np.ndarray,
+    max_samples: int,
+    n_features: int,
+    rs: Any,
+    factory: Callable,
+    n_protos: int,
+) -> list[list[tuple[int, Any]]]:
     protos = []
     for p in range(n_protos):
         # construct wanted number of prototypes
@@ -173,7 +186,13 @@ def build_for_class_multi(X, max_samples, n_features, rs, factory, n_protos):
     return protos
 
 
-def _predict(prototypes, aggregation, classes, X, n_features):
+def _predict(
+    prototypes: dict[int, list[tuple[int, Any]]],
+    aggregation: Callable,
+    classes: np.ndarray,
+    X: np.ndarray,
+    n_features: Any,
+) -> np.ndarray:
     Mus = np.zeros((X.shape[0], n_features))
     R = np.zeros((X.shape[0], len(classes)))  # holds output for each class
     attribute_idxs = range(n_features)
@@ -188,7 +207,13 @@ def _predict(prototypes, aggregation, classes, X, n_features):
     return classes.take(np.argmax(R, 1))
 
 
-def _predict_multi(prototypes, aggregation, classes, X, n_features):
+def _predict_multi(
+    prototypes: dict[int, list[list[tuple[int, Any]]]],
+    aggregation: Callable,
+    classes: np.ndarray,
+    X: np.ndarray,
+    n_features: Any,
+) -> np.ndarray:
     Mus = np.zeros(X.shape)  # holds output per prototype
     R = np.zeros((X.shape[0], len(classes)))  # holds output for each class
     feature_nos = range(n_features)  # index for agreements
@@ -210,7 +235,7 @@ logger = logging.getLogger("rafpc")
 
 
 class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
-    def get_params(self, deep=False):
+    def get_params(self, deep: bool = False) -> dict[str, Any]:
         return {
             "n_protos": self.n_protos,
             "n_features": self.n_features,
@@ -221,20 +246,20 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
             "random_state": self.random_state,
         }
 
-    def set_params(self, **kwargs):
+    def set_params(self, **kwargs: Any) -> "RandomAgreementFuzzyPatternClassifier":
         for key, value in kwargs.items():
             setattr(self, key, value)
         return self
 
     def __init__(
         self,
-        n_protos=5,
-        n_features=None,
-        max_samples=100,
-        epsilon=0.95,
-        aggregation=fl.mean,
-        membership_factory=triangular_factory,
-        random_state=None,
+        n_protos: int = 5,
+        n_features: int | None = None,
+        max_samples: int = 100,
+        epsilon: float = 0.95,
+        aggregation: Callable = fl.mean,
+        membership_factory: Callable = triangular_factory,
+        random_state: Any = None,
     ):
         """
         Initialize the classifier
@@ -266,7 +291,7 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         self.membership_factory = membership_factory
         self.random_state = random_state
 
-    def fit(self, X, y):
+    def fit(self, X: Any, y: Any) -> "RandomAgreementFuzzyPatternClassifier":
         # get random
         rs = check_random_state(self.random_state)
 
@@ -274,7 +299,7 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         self.classes_, y = np.unique(y, return_inverse=True)
 
-        if np.nan in self.classes_:
+        if has_nan_classes(self.classes_):
             raise Exception("NaN not supported in class values")
 
         # fuzzify data
@@ -300,7 +325,7 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
 
         return self
 
-    def predict(self, X):
+    def predict(self, X: Any) -> np.ndarray:
         """
 
         Predict outputs given examples.
@@ -316,7 +341,7 @@ class RandomAgreementFuzzyPatternClassifier(BaseEstimator, ClassifierMixin):
         y_pred : Predicted values for each row in matrix.
 
         """
-        if self.protos_ is None:
+        if not hasattr(self, "protos_"):
             raise Exception("Prototypes not initialized. Perform a fit first.")
 
         X = check_array(X)

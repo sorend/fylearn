@@ -24,6 +24,8 @@ References:
 """
 
 import heapq
+from collections.abc import Callable, Iterator, Sequence
+from typing import Any
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -31,6 +33,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.utils.validation import check_array
 
 import fylearn.fuzzylogic as fl
+from fylearn._validation import has_nan_classes
 
 # aggregation operators to use
 OPERATORS = (
@@ -50,7 +53,7 @@ OPERATORS = (
 )
 
 
-def _tree_iterator(root):
+def _tree_iterator(root: Any) -> Iterator["Tree"]:
     Q = [root]
     while Q:
         tree = Q.pop(0)
@@ -59,11 +62,11 @@ def _tree_iterator(root):
         yield tree
 
 
-def _tree_leaves(root):
+def _tree_leaves(root: Any) -> list["Leaf"]:
     return [x for x in _tree_iterator(root) if isinstance(x, Leaf)]
 
 
-def _tree_clone_replace_leaf(root, replace_node, new_node):
+def _tree_clone_replace_leaf(root: Any, replace_node: Any, new_node: Any) -> "Tree":
     if root == replace_node:
         return new_node
     else:
@@ -74,18 +77,18 @@ def _tree_clone_replace_leaf(root, replace_node, new_node):
             return Inner(root.aggregation_, new_branches)
 
 
-def _tree_contains(root, to_find):
+def _tree_contains(root: Any, to_find: Any) -> bool:
     for n in _tree_iterator(root):
         if n == to_find:
             return True
     return False
 
 
-def default_rmse(a, b):
+def default_rmse(a: np.ndarray, b: np.ndarray) -> float:
     return 1.0 - mean_squared_error(a, b)
 
 
-def default_fuzzifier(idx, F):
+def default_fuzzifier(idx: int, F: np.ndarray) -> list["Leaf"]:
     """Default fuzzifier function.
 
     Creates three fuzzy sets with triangular membership functions: (low, med, hig) from min and max data points.
@@ -104,11 +107,11 @@ def default_fuzzifier(idx, F):
 class TreeEvaluator:
     """Evaluates trees with caching of intermediate results."""
 
-    def __init__(self, X):
+    def __init__(self, X: np.ndarray):
         self.X = X
-        self.cache = {}
+        self.cache: dict[Any, np.ndarray] = {}
 
-    def predict(self, node):
+    def predict(self, node: Any) -> np.ndarray:
         if node in self.cache:
             return self.cache[node]
 
@@ -130,13 +133,21 @@ class TreeEvaluator:
         return val
 
 
-def _select_candidates(candidates, n_select, class_vector, similarity_measure, evaluator):
+def _select_candidates(
+    candidates: Sequence["Tree"],
+    n_select: int,
+    class_vector: np.ndarray,
+    similarity_measure: Callable,
+    evaluator: TreeEvaluator,
+) -> list[tuple[float, "Tree"]]:
     """Select a number of candidate trees with the best similarity to the class vector."""
     R = [_evaluate_similarity(c, class_vector, similarity_measure, evaluator) for c in candidates]
     return heapq.nlargest(n_select, R, key=lambda x: x[0])
 
 
-def _evaluate_similarity(candidate, class_vector, similarity_measure, evaluator):
+def _evaluate_similarity(
+    candidate: "Tree", class_vector: np.ndarray, similarity_measure: Callable, evaluator: TreeEvaluator
+) -> tuple[float, "Tree"]:
     y_pred = evaluator.predict(candidate)
     s = similarity_measure(y_pred, class_vector)
     return (s, candidate)
@@ -149,29 +160,33 @@ class Tree:
 class Leaf(Tree):
     __slots__ = ["idx", "name", "mu"]
 
-    def __init__(self, idx, name, mu):
+    def __init__(self, idx: int, name: str, mu: Callable[[np.ndarray], np.ndarray]):
         self.idx = idx
         self.name = name
         self.mu = mu
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Leaf(" + repr(self.idx) + "_" + self.name + ")"
 
-    def __call__(self, X):
+    def __call__(self, X: np.ndarray) -> np.ndarray:
         return self.mu(X[:, self.idx])  # apply the membership function to the specific feature idx
 
 
 class Inner(Tree):
     __slots__ = ["aggregation_", "branches_"]
 
-    def __init__(self, aggregation, branches):
+    def __init__(self, aggregation: Callable[[np.ndarray], np.ndarray], branches: list[Any]):
         self.branches_ = branches
         self.aggregation_ = aggregation
 
-    def __repr__(self):
-        return "(" + repr(self.aggregation_.__name__) + ", " + ", ".join([repr(x) for x in self.branches_]) + ")"
+    def __repr__(self) -> str:
+        # OWA/GOWA instances are objects without a __name__ attribute
+        name = getattr(self.aggregation_, "__name__", None)
+        if name is None:
+            name = repr(self.aggregation_)
+        return "(" + name + ", " + ", ".join([repr(x) for x in self.branches_]) + ")"
 
-    def __call__(self, X):
+    def __call__(self, X: np.ndarray) -> np.ndarray:
         # output for each branches
         R = np.zeros((X.shape[0], len(self.branches_)))
         for idx, branch in enumerate(self.branches_):
@@ -183,7 +198,12 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
     """Fuzzy pattern tree classifier"""
 
     def __init__(
-        self, similarity_measure=default_rmse, max_depth=5, num_candidates=2, num_slaves=3, fuzzifier=default_fuzzifier
+        self,
+        similarity_measure: Callable = default_rmse,
+        max_depth: int = 5,
+        num_candidates: int = 2,
+        num_slaves: int = 3,
+        fuzzifier: Callable = default_fuzzifier,
     ):
         """Construct classifier
 
@@ -205,7 +225,7 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
         self.num_slaves = num_slaves
         self.fuzzifier = fuzzifier
 
-    def get_params(self, deep=True):
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
         return {
             "similarity_measure": self.similarity_measure,
             "max_depth": self.max_depth,
@@ -214,17 +234,17 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
             "fuzzifier": self.fuzzifier,
         }
 
-    def set_params(self, **params):
+    def set_params(self, **params: Any) -> "FuzzyPatternTreeClassifier":
         for key, value in params.items():
             setattr(self, key, value)
         return self
 
-    def fit(self, X, y):
+    def fit(self, X: Any, y: Any) -> "FuzzyPatternTreeClassifier":
         X = check_array(X)
 
         self.classes_, y = np.unique(y, return_inverse=True)
 
-        if np.nan in self.classes_:
+        if has_nan_classes(self.classes_):
             raise Exception("nan not supported for class values")
 
         self.trees_ = {}
@@ -243,7 +263,9 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
 
         return self
 
-    def select_slaves(self, candidates, P_U_S, class_vector, X):
+    def select_slaves(
+        self, candidates: list[tuple[float, Any]], P_U_S: list[Any], class_vector: np.ndarray, X: np.ndarray
+    ) -> list[tuple[float, "Tree"]]:
         evaluator = TreeEvaluator(X)
         R = []
         for candidate in candidates:
@@ -259,7 +281,7 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
         RR = []
         used_nodes = set()
         for candidate in R:
-            inner_node = candidate[1]
+            inner_node: Any = candidate[1]
             found = False
             for tree in inner_node.branches_:
                 if tree in used_nodes:
@@ -270,7 +292,7 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
 
         return heapq.nlargest(self.num_slaves, RR, key=lambda x: x[0])
 
-    def predict(self, X):
+    def predict(self, X: Any) -> np.ndarray:
         """Predict class for X.
 
         Parameters
@@ -286,7 +308,7 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
 
         X = check_array(X)
 
-        if self.trees_ is None:
+        if not hasattr(self, "trees_"):
             raise Exception("Pattern trees not initialized. Perform a fit first.")
 
         # We can't easily cache here as trees might share structure but we need a fresh evaluator per call
@@ -299,9 +321,9 @@ class FuzzyPatternTreeClassifier(BaseEstimator, ClassifierMixin):
         # predict the maximum value
         return self.classes_.take(np.argmax(y_classes, -1))
 
-    def build_for_class(self, X, y, class_vector, P):
+    def build_for_class(self, X: np.ndarray, y: np.ndarray, class_vector: np.ndarray, P: list[Any]) -> "Tree":
         evaluator = TreeEvaluator(X)
-        S = []
+        S: list[Any] = []
         C = _select_candidates(P, self.num_candidates, class_vector, self.similarity_measure, evaluator)
 
         for depth in range(self.max_depth):
@@ -340,14 +362,18 @@ class FuzzyPatternTreeTopDownClassifier(FuzzyPatternTreeClassifier):
     """
 
     def __init__(
-        self, similarity_measure=default_rmse, relative_improvement=0.01, num_candidates=5, fuzzifier=default_fuzzifier
+        self,
+        similarity_measure: Callable = default_rmse,
+        relative_improvement: float = 0.01,
+        num_candidates: int = 5,
+        fuzzifier: Callable = default_fuzzifier,
     ):
         self.similarity_measure = similarity_measure
         self.relative_improvement = relative_improvement
         self.num_candidates = num_candidates
         self.fuzzifier = fuzzifier
 
-    def get_params(self, deep=True):
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
         return {
             "similarity_measure": self.similarity_measure,
             "relative_improvement": self.relative_improvement,
@@ -355,12 +381,14 @@ class FuzzyPatternTreeTopDownClassifier(FuzzyPatternTreeClassifier):
             "fuzzifier": self.fuzzifier,
         }
 
-    def select_slaves(self, candidates, P_U_S, class_vector, X):
+    def select_slaves(
+        self, candidates: list[tuple[float, Any]], P_U_S: list[Any], class_vector: np.ndarray, X: np.ndarray
+    ) -> list[tuple[float, "Tree"]]:
         evaluator = TreeEvaluator(X)
         R = []
         for candidate in candidates:
             c = candidate[1]
-            modified = []
+            modified: list[Any] = []
             candidate_leaves = _tree_leaves(c)
 
             for c_leaf in candidate_leaves:
@@ -377,7 +405,7 @@ class FuzzyPatternTreeTopDownClassifier(FuzzyPatternTreeClassifier):
 
         return sorted(R, key=lambda x: x[0], reverse=True)
 
-    def build_for_class(self, X, y, class_vector, P):
+    def build_for_class(self, X: np.ndarray, y: np.ndarray, class_vector: np.ndarray, P: list[Any]) -> "Tree":
         evaluator = TreeEvaluator(X)
         C = _select_candidates(P, self.num_candidates, class_vector, self.similarity_measure, evaluator)
         C = sorted(C, key=lambda x: x[0])

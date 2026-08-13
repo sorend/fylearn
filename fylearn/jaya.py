@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
 """
 Implementation of Jaya Algorithm Optimization [1].
 
 [1] R. V. Rao, "Jaya: A simple and new optimization algorithm for solving constrained
     and unconstrained optimization problems." Int J of Industrial Engineering
-     Computations, 2016, 7(1):19-34.
+    Computations, 2016, 7(1):19-34.
 """
+
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 from sklearn.utils import check_random_state
@@ -26,7 +28,14 @@ class JayaOptimizer:
 
     """
 
-    def __init__(self, f, lower_bound, upper_bound, n_population=50, random_state=None):
+    def __init__(
+        self,
+        f: Callable[[np.ndarray], Any],
+        lower_bound: np.ndarray,
+        upper_bound: np.ndarray,
+        n_population: int = 50,
+        random_state: Any = None,
+    ):
         """
         Constructor
 
@@ -57,13 +66,13 @@ class JayaOptimizer:
         self.bestidx_ = np.argmin(self.fitness_)
         self.bestcosts_ = [self.fitness_[self.bestidx_]]
 
-    def best(self):
+    def best(self) -> tuple[np.ndarray, float]:
         """
         Returns the best solution and fitness at current epoch
         """
         return self.population_[self.bestidx_], self.fitness_[self.bestidx_]
 
-    def __next__(self):
+    def __next__(self) -> None:
         """
         One iteration of Jaya Algorithm
         """
@@ -96,5 +105,5 @@ class JayaOptimizer:
         self.bestidx_ = np.argmin(self.fitness_)  # update details
         self.bestcosts_.append(self.fitness_[self.bestidx_])
 
-    def next(self):
+    def next(self) -> None:
         return self.__next__()

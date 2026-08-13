@@ -1,6 +1,7 @@
-from __future__ import print_function
 
 import numpy as np
+import pytest
+
 from fylearn.ga import *
 
 
@@ -121,3 +122,101 @@ def test_ga_variance():
         next(ga)
 
     assert 0.1 > ga.best(1)[1]
+
+
+def test_population_as_plain_array():
+    # regression: population could only be passed as a 1-tuple before
+    P = np.random.rand(10, 3)
+    ga = GeneticAlgorithm(fitness_function=lambda p: np.zeros(len(p)), population=P)
+    assert ga.n_genes == 3
+    assert ga.n_chromosomes == 10
+    assert np.array_equal(ga.population_, P)
+
+
+def test_population_as_tuple():
+    P = np.random.rand(10, 3)
+    ga = GeneticAlgorithm(fitness_function=lambda p: np.zeros(len(p)), population=(P,))
+    assert ga.n_chromosomes == 10
+
+
+def test_population_wrong_shape():
+    P = np.random.rand(10)
+    with pytest.raises(ValueError):
+        GeneticAlgorithm(fitness_function=lambda p: np.zeros(len(p)), population=P)
+
+
+def test_no_population_or_genes_raises():
+    with pytest.raises(ValueError):
+        GeneticAlgorithm(fitness_function=lambda p: np.zeros(len(p)))
+
+
+def test_best_n_multiple():
+    ga = GeneticAlgorithm(fitness_function=helper_fitness(lambda x: np.var(x)), n_genes=3, n_chromosomes=20)
+    chroms, fits = ga.best(5)
+    assert chroms.shape == (5, 3)
+    assert fits.shape == (5,)
+    assert np.all(np.diff(fits) >= 0)  # sorted ascending
+
+
+def test_elitism_keeps_best():
+    ff = lambda x: np.sum(x**2)  # noqa: E731
+    P = np.array([[0.5, 0.5, 0.5], [0.1, 0.1, 0.1], [0.9, 0.9, 0.9], [0.2, 0.2, 0.2]])
+    ga = GeneticAlgorithm(fitness_function=helper_fitness(ff), population=P, elitism=1, p_mutation=0.0, random_state=0)
+    before = ga.best(1)[0][0]
+    next(ga)
+    after = ga.best(1)[0][0]
+    assert np.array_equal(before, after)
+
+
+def test_top_n_selection():
+    sel = top_n_selection(3)
+    rs = np.random.RandomState(42)
+    f = np.array([0.5, 0.1, 0.4, 0.9, 0.2])
+    p, q = sel(rs, None, f)
+    # both parents must be in the top-3
+    top3 = set(np.argsort(f)[:3])
+    assert p in top3
+    assert q in top3
+    # vectorized version
+    p, q = sel(rs, None, f, n_selection=4)
+    assert p.shape == (4,)
+    assert q.shape == (4,)
+
+
+def test_tournament_selection_vectorized():
+    sel = tournament_selection(3)
+    rs = np.random.RandomState(42)
+    f = np.array([0.6, 0.2, 0.3, 0.4, 0.1])
+    p, q = sel(rs, None, f, n_selection=7)
+    assert p.shape == (7,)
+    assert q.shape == (7,)
+    assert np.all(p < len(f))
+    assert np.all(q < len(f))
+
+
+def test_unit_interval_ga_stays_in_unit_interval():
+    ff = lambda x: np.var(x)
+    ga = UnitIntervalGeneticAlgorithm(fitness_function=helper_fitness(ff), n_genes=5, n_chromosomes=50, p_mutation=0.3)
+    for i in range(20):
+        next(ga)
+        assert np.all(ga.population_ >= 0.0)
+        assert np.all(ga.population_ <= 1.0)
+
+
+def test_helper_min_fitness_decrease():
+    ff = lambda x: np.var(x)
+    ga = GeneticAlgorithm(fitness_function=helper_fitness(ff), n_genes=5, n_chromosomes=50, p_mutation=0.1)
+    ga = helper_min_fitness_decrease(ga, epsilon=0.0001, top_n=5)
+    chroms, fits = ga.best(1)
+    assert fits[0] < 1.0
+
+
+def test_pointwise_crossover_deterministic():
+    # with a fixed random state, crossover point selection is deterministic
+    rs1 = np.random.RandomState(7)
+    rs2 = np.random.RandomState(7)
+    c = PointwiseCrossover(crossover_locations=[0, 1, 2], n_crossovers=1)
+    a = c([1, 2, 3], [10, 20, 30], rs1)
+    b = c([1, 2, 3], [10, 20, 30], rs2)
+    assert np.array_equal(a, b)
+    assert set(np.unique(a)).issubset({1, 2, 3, 10, 20, 30})

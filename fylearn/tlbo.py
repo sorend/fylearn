@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Implementation of Teaching-Learning Based Optimization [1].
 
@@ -7,9 +6,11 @@ Implementation of Teaching-Learning Based Optimization [1].
 
 """
 
+from collections.abc import Callable
+from typing import Any
+
 import numpy as np
 from sklearn.utils import check_random_state
-
 
 #
 # Authors: Søren A. Davidsen <soren@atmakuridavidsen.com>
@@ -28,7 +29,14 @@ class TeachingLearningBasedOptimizer:
     2. Learner phase: Randomly adjust pairs of individuals based on the best one with best fitness.
     """
 
-    def __init__(self, f, lower_bound, upper_bound, n_population=50, random_state=None):
+    def __init__(
+        self,
+        f: Callable[[np.ndarray], Any],
+        lower_bound: np.ndarray,
+        upper_bound: np.ndarray,
+        n_population: int = 50,
+        random_state: Any = None,
+    ):
         """
         Constructor
 
@@ -48,7 +56,7 @@ class TeachingLearningBasedOptimizer:
         self.f = f
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
-        self.pidx = list(range(n_population))
+        self.pidx: list[int] = list(range(n_population))
         self.m = lower_bound.shape[0]  # columns
         self.random_state = check_random_state(random_state)
 
@@ -59,21 +67,21 @@ class TeachingLearningBasedOptimizer:
         self.bestidx_ = np.argmin(self.fitness_)
         self.bestcosts_ = [self.fitness_[self.bestidx_]]
 
-    def best(self, num=1):
+    def best(self, num: int = 1) -> tuple[np.ndarray, np.ndarray]:
         """
         Returns the num best solution and fitness at current epoch
         """
         bestidxs = np.argsort(self.fitness_)[:num]
         return self.population_[bestidxs], self.fitness_[bestidxs]
 
-    def __next__(self):
+    def __next__(self) -> None:
         """
         One iteration of TLBO.
         """
         mean = np.nanmean(self.population_, axis=0)  # column mean.
         rs = self.random_state
 
-        teacher = np.argmin(self.fitness_)  # select teacher
+        teacher = self.population_[np.argmin(self.fitness_)]  # select teacher
 
         # teaching phase
         for i in self.pidx:
@@ -109,7 +117,7 @@ class TeachingLearningBasedOptimizer:
         self.bestidx_ = np.argmin(self.fitness_)  # update details
         self.bestcosts_.append(self.fitness_[self.bestidx_])
 
-    def next(self):
+    def next(self) -> None:
         return self.__next__()
 
 

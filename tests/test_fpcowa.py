@@ -1,10 +1,9 @@
-from __future__ import print_function
 
 import numpy as np
+from sklearn import datasets
 
 import fylearn.fpcowa as fpcowa
 import fylearn.fuzzylogic as fl
-from sklearn import datasets
 
 
 def t_factory(**k):
@@ -103,3 +102,193 @@ def test_build_ps_owa_factory():
     print("mean", mean)
 
     assert 0.9 < mean
+
+
+def test_t_factory():
+    t = fpcowa.t_factory(min=0.0, mean=0.5, max=1.0)
+    assert isinstance(t, fl.TriangularSet)
+    assert np.isclose(t.a, 0.0)
+    assert np.isclose(t.b, 0.5)
+    assert np.isclose(t.c, 1.0)
+
+
+def test_pi_factory():
+    p = fpcowa.pi_factory(min=0.0, mean=0.5, max=1.0)
+    assert isinstance(p, fl.PiSet)
+    assert np.isclose(p.r, 0.5)
+
+
+def test_learn_class():
+    X = np.array([[0.1, 0.2], [0.2, 0.3], [0.9, 0.8]])
+    y = np.array([0, 0, 1])
+    mus, aggr = fpcowa.learn_class(X, y, y == 0, fpcowa.t_factory, fpcowa.StaticFactory(fpcowa.prod))
+    assert len(mus) == 2
+    assert aggr is fpcowa.prod
+
+
+def test_predict_protos_aggregations():
+    X = np.array([[0.1, 0.2], [0.9, 0.8]])
+    protos = [[fl.TriangularSet(0.0, 0.2, 0.4), fl.TriangularSet(0.1, 0.3, 0.5)]]
+    aggs = [fl.prod]
+    y = fpcowa.predict_protos_aggregations(X, protos, aggs)
+    assert y.shape == (2, 1)
+
+
+def test_build_y_target():
+    y = np.array([0, 1, 0])
+    target = fpcowa.build_y_target(y, np.array([0, 1]))
+    assert target.shape == (3, 2)
+    assert np.allclose(target[0], [1.0, 0.0])
+    assert np.allclose(target[1], [0.0, 1.0])
+
+
+def test_evaluate_rmse_nan():
+    assert fpcowa.evaluate_rmse(np.array([1.0]), np.array([np.nan])) == 1.0
+    assert fpcowa.evaluate_rmse(np.array([1.0]), np.array([1.0])) == 0.0
+
+
+def test_owa_decoder_plain():
+    o = fpcowa.owa_decoder_plain(np.array([0.0, 1.0]))
+    assert isinstance(o, fl.OWA)
+    assert np.isclose(np.sum(o.v), 1.0)
+
+
+def test_static_factory():
+    f = fpcowa.StaticFactory(fl.prod)
+    assert f(1, 2, 3) is fl.prod
+
+
+def test_meowa_andness_selection():
+    s = fpcowa.meowa_andness_selection(andness=0.7)
+    o = s(np.zeros((10, 3)), np.zeros(10))
+    assert isinstance(o, fl.OWA)
+    assert len(o.v) == 3
+
+
+def test_static_selection():
+    s = fpcowa.static_selection(np.argmax)
+    assert s(1, 2, 3) is np.argmax
+
+
+def test_fpc_predict_before_fit():
+    import pytest
+
+    c = fpcowa.FuzzyPatternClassifier()
+    with pytest.raises(Exception) as e:
+        c.predict(np.zeros((2, 3)))
+    assert "fit" in str(e.value)
+    with pytest.raises(Exception):
+        c.predict_proba(np.zeros((2, 3)))
+
+
+def test_fpc_nan_classes_rejected():
+    import pytest
+
+    c = fpcowa.FuzzyPatternClassifier()
+    X = np.array([[0.1, 0.2], [0.9, 0.8]])
+    y = np.array([0.0, np.nan])
+    with pytest.raises(ValueError):
+        c.fit(X, y)
+
+
+def test_ga_owa_factory_small():
+    X = np.array(
+        [
+            [0.10, 0.20],
+            [0.15, 0.18],
+            [0.20, 0.40],
+            [0.25, 0.42],
+        ]
+    )
+    y = np.array([0, 0, 1, 1])
+    protos = [
+        [fl.TriangularSet(0.0, 0.15, 0.3), fl.TriangularSet(0.1, 0.2, 0.4)],
+        [fl.TriangularSet(0.1, 0.25, 0.4), fl.TriangularSet(0.3, 0.4, 0.5)],
+    ]
+    f = fpcga_ga_owa_smoke(X, y, protos)
+    assert isinstance(f, fl.OWA)
+    assert len(f.v) == 2
+
+
+def fpcga_ga_owa_smoke(X, y, protos):
+    factory = fpcowa.GAOWAFactory(optimizer=fpcowa.ps_owa_optimizer(f_evals=5))
+    return factory(protos, X, y, np.array([0, 1]))
+
+
+def test_tlbo_owa_optimizer():
+    # regression: upper bound was previously all-zeros (equal to lower bound)
+    opt = fpcowa.tlbo_owa_optimizer(f_evals=2)
+    X = np.zeros((4, 2))
+    def fitness(c):
+        return np.sum(c**2)
+    w = opt(X, fitness)
+    assert w.shape == (2,)
+    assert np.all(w >= 0.0)
+
+
+def test_lus_owa_optimizer():
+    opt = fpcowa.lus_owa_optimizer(f_evals=2)
+    X = np.zeros((4, 2))
+    def fitness(c):
+        return np.sum(c**2)
+    w = opt(X, fitness)
+    assert w.shape == (2,)
+
+
+def test_multiple_aggregations_fpc():
+    X = np.array(
+        [
+            [0.10, 0.20],
+            [0.15, 0.18],
+            [0.20, 0.40],
+            [0.25, 0.42],
+        ]
+    )
+    y = np.array([0, 0, 1, 1])
+    c = fpcowa.MultipleAggregationsFuzzyPatternClassifier(
+        membership_factory=fpcowa.t_factory,
+        aggregation_factory=fpcowa.StaticFactory(fl.prod),
+        selection_factory=fpcowa.static_selection(np.argmax),
+    )
+    c.fit(X, y)
+    y_pred = c.predict(X)
+    assert len(y_pred) == 4
+    pro = c.predict_proba(X)
+    assert np.allclose(np.sum(pro, axis=1), 1.0)
+
+
+def test_multiple_aggregations_meowa_selection():
+    X = np.array(
+        [
+            [0.10, 0.20],
+            [0.15, 0.18],
+            [0.20, 0.40],
+            [0.25, 0.42],
+        ]
+    )
+    y = np.array([0, 0, 1, 1])
+    c = fpcowa.MultipleAggregationsFuzzyPatternClassifier(
+        membership_factory=fpcowa.t_factory,
+        aggregation_factory=fpcowa.StaticFactory(fl.prod),
+        selection_factory=fpcowa.meowa_andness_selection(0.6),
+    )
+    c.fit(X, y)
+    y_pred = c.predict(X)
+    assert len(y_pred) == 4
+
+
+def test_optimizer_owa_factory():
+    X = np.array(
+        [
+            [0.10, 0.20],
+            [0.15, 0.18],
+            [0.20, 0.40],
+            [0.25, 0.42],
+        ]
+    )
+    y = np.array([0, 0, 1, 1])
+    mus = [fl.TriangularSet(0.0, 0.15, 0.3), fl.TriangularSet(0.1, 0.2, 0.4)]
+    factory = fpcowa.OptimizerOWAFactory(optimizer=fpcowa.ps_owa_optimizer(f_evals=5))
+    o = factory(mus, X, y, y == 0)
+    assert isinstance(o, fl.OWA)
+    assert len(o.v) == 2

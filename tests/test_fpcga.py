@@ -1,11 +1,9 @@
-from __future__ import print_function
 
 import numpy as np
+import pytest
 from sklearn.datasets import load_iris
 
 import fylearn.fpcga as fpcga
-
-import pytest
 
 # def test_classifier():
 
@@ -66,3 +64,114 @@ def test_classifier_iris():
     print("mean", mean)
 
     assert 0.92 == pytest.approx(mean, 0.1)
+
+
+def test_set_params_works():
+    # regression: set_params used to call self.setattr which does not exist
+    l = fpcga.FuzzyPatternClassifierGA()
+    out = l.set_params(iterations=3, epsilon=None)
+    assert out is l
+    assert l.iterations == 3
+    assert l.epsilon is None
+
+
+def test_se_set_params_works():
+    # regression: same bug existed for SEFuzzyPatternClassifier
+    l = fpcga.SEFuzzyPatternClassifier()
+    out = l.set_params(iterations=2, adjust_center=True)
+    assert out is l
+    assert l.iterations == 2
+    assert l.adjust_center is True
+
+
+def test_build_pi_membership():
+    m = fpcga.build_pi_membership(np.array([0.1, 0.5, 0.9]), 0)
+    assert isinstance(m, fpcga.fl.PiSet)
+    # parameters must be sorted
+    assert m.a <= m.r <= m.b
+
+
+def test_build_trapezoidal_membership():
+    m = fpcga.build_trapezoidal_membership(np.array([0.8, 0.2, 0.6, 0.4]), 0)
+    assert isinstance(m, fpcga.fl.TrapezoidalSet)
+    assert m.a <= m.b <= m.c <= m.d
+
+
+def test_build_t_membership():
+    m = fpcga.build_t_membership(np.array([0.9, 0.1, 0.5]), 0)
+    assert isinstance(m, fpcga.fl.TriangularSet)
+    assert m.a <= m.b <= m.c
+
+
+def test_build_static_membership():
+    m = fpcga.build_static_membership(np.array([]), 0)
+    assert isinstance(m, fpcga.StaticFunction)
+    assert m(None) == 0.5
+    assert str(m) == "S(0.5)"
+
+
+def test_build_membership_factory_selection():
+    factories = (fpcga.build_pi_membership, fpcga.build_t_membership)
+    m = fpcga.build_membership(factories, np.array([0.99, 0.1, 0.5, 0.9]), 0)
+    assert isinstance(m, fpcga.fl.TriangularSet)
+    m = fpcga.build_membership(factories, np.array([0.01, 0.1, 0.5, 0.9]), 0)
+    assert isinstance(m, fpcga.fl.PiSet)
+
+
+def test_dummy_aggregation_rule_factory():
+    f = fpcga.DummyAggregationRuleFactory(fpcga.fl.prod)
+    assert f(None, None) is fpcga.fl.prod
+
+
+def test_init_validation():
+    with pytest.raises(ValueError):
+        fpcga.FuzzyPatternClassifierGA(mu_factories=None)
+    with pytest.raises(ValueError):
+        fpcga.FuzzyPatternClassifierGA(aggregation_rules=None)
+    with pytest.raises(ValueError):
+        fpcga.FuzzyPatternClassifierGA(iterations=0)
+
+
+def test_predict_before_fit_raises():
+    l = fpcga.FuzzyPatternClassifierGA(iterations=1)
+    with pytest.raises(Exception) as e:
+        l.predict(np.array([[0.1, 0.2]]))
+    assert "fit" in str(e.value)
+
+
+def test_str_before_fit():
+    l = fpcga.FuzzyPatternClassifierGA(iterations=1)
+    assert str(l) == "Not trained"
+
+
+def test_nan_classes_rejected():
+    l = fpcga.FuzzyPatternClassifierGA(iterations=1)
+    X = np.array([[0.1, 0.2], [0.2, 0.3], [0.9, 0.8]])
+    y = np.array([0.0, 0.0, np.nan])
+    with pytest.raises(Exception):
+        l.fit(X, y)
+
+
+def test_lga_smoke():
+    X = np.array([[0.1, 0.2], [0.15, 0.25], [0.2, 0.3], [0.9, 0.8], [0.85, 0.75]])
+    y = np.array([1, 1, 1, 0, 0])
+    l = fpcga.FuzzyPatternClassifierLGA(iterations=3, epsilon=None)
+    l.fit(X, y)
+    y_pred = l.predict([[0.12, 0.22], [0.88, 0.78]])
+    assert len(y_pred) == 2
+    assert set(l.protos_.keys()) == {0, 1}
+
+
+def test_se_classifier_smoke_and_toggle():
+    X = np.array([[0.1, 0.2], [0.15, 0.25], [0.2, 0.3], [0.9, 0.8], [0.85, 0.75]])
+    y = np.array([1, 1, 1, 0, 0])
+    l = fpcga.SEFuzzyPatternClassifier(iterations=3, aggregation=fpcga.fl.mean)
+    l.fit(X, y)
+    assert set(l.protos_.keys()) == {0, 1}
+    assert set(l.bases_.keys()) == {0, 1}
+    y_pred = l.predict([[0.12, 0.22], [0.88, 0.78]])
+    assert len(y_pred) == 2
+    l.toggle_base()
+    assert set(l.protos_.keys()) == {0, 1}
+    l.toggle_base()
+    assert not hasattr(l, "backups_")

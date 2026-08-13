@@ -1,8 +1,9 @@
-from __future__ import print_function
 
 import numpy as np
-import fylearn.fuzzylogic as fl
 import pytest
+
+import fylearn.fuzzylogic as fl
+
 
 def test_max():
     a = np.array([0.0, 0.5, 0.4, 0.2])

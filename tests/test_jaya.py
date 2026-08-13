@@ -1,8 +1,9 @@
-﻿from __future__ import print_function
-import numpy as np
-from fylearn.jaya import JayaOptimizer
-from fylearn.ga import helper_n_generations
+﻿import numpy as np
 import pytest
+
+from fylearn.ga import helper_n_generations
+from fylearn.jaya import JayaOptimizer
+
 
 def test_jaya_variance():
 
@@ -80,3 +81,32 @@ def test_jaya_sphere_bounds():
     assert len(o.fitness_) == 34
     assert len(o.population_) == 34
     assert len(o.bestcosts_) == 101
+
+
+def test_jaya_best_returns_tuple():
+    f = lambda x: np.var(x)
+    j = JayaOptimizer(f, np.zeros(3), np.ones(3), n_population=10, random_state=1)
+    best_x, best_fit = j.best()
+    assert best_x.shape == (3,)
+    assert isinstance(best_fit, float)
+
+
+def test_jaya_next_alias():
+    f = lambda x: np.var(x)
+    j = JayaOptimizer(f, np.zeros(3), np.ones(3), n_population=10, random_state=1)
+    initial = j.best()[1]
+    j.next()
+    assert len(j.bestcosts_) == 2
+    assert j.best()[1] <= initial
+
+
+def test_jaya_respects_bounds():
+    f = lambda x: np.sum(x**2)
+    lb = np.array([-0.5, -0.5])
+    ub = np.array([0.5, 0.5])
+    j = JayaOptimizer(f, lb, ub, n_population=20, random_state=2)
+    for _ in range(10):
+        next(j)
+    assert np.all(j.population_ >= lb)
+    assert np.all(j.population_ <= ub)
+    assert j.best()[1] <= 0.5

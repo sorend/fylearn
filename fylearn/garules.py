@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fuzzy pattern classifier with genetic algorithm based methods
 
 The module structure is the following:
@@ -20,30 +19,34 @@ The module structure is the following:
 """
 
 import logging
+from collections.abc import Callable
+from typing import Any
+
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.validation import check_array
-from sklearn.metrics import DistanceMetric
+from sklearn.metrics import DistanceMetric, accuracy_score
 from sklearn.preprocessing import normalize
-from sklearn.metrics import accuracy_score
 from sklearn.utils import check_random_state
-from fylearn.ga import GeneticAlgorithm, helper_n_generations, helper_fitness
+from sklearn.utils.validation import check_array
+
+from fylearn._validation import has_nan_classes
+from fylearn.ga import GeneticAlgorithm, helper_fitness, helper_n_generations
 
 logger = logging.getLogger("garules")
 
-def stoean_f(X):
+def stoean_f(X: np.ndarray) -> "StoeanDistance":
     return StoeanDistance(np.nanmax(X, 0) - np.nanmin(X, 0))
 
-def distancemetric_f(name, **kwargs):
-    def _distancemetric_factory(X):
+def distancemetric_f(name: str, **kwargs: Any) -> Callable[[np.ndarray], DistanceMetric]:
+    def _distancemetric_factory(X: np.ndarray) -> DistanceMetric:
         return DistanceMetric.get_metric(name)
     return _distancemetric_factory
 
 class StoeanDistance(DistanceMetric):
-    def __init__(self, d):
+    def __init__(self, d: np.ndarray):
         self.d = d
 
-    def pairwise(self, X, Y=None):
+    def pairwise(self, X: np.ndarray, Y: np.ndarray | None = None) -> np.ndarray:
         if Y is None:
             Y = X
         R = np.zeros((len(X), len(Y)))
@@ -56,27 +59,28 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
     """
 
-    def __init__(self, n_iterations=10, df=stoean_f, random_state=None):
+    def __init__(self, n_iterations: int = 10, df: Callable = stoean_f, random_state: Any = None):
         self.n_iterations = n_iterations
         self.df = df
         self.random_state = check_random_state(random_state)
 
-    def get_params(self, deep=False):
+    def get_params(self, deep: bool = False) -> dict[str, Any]:
         return {"n_iterations": self.n_iterations,
                 "random_state": self.random_state,
                 "df": self.df}
 
-    def set_params(self, **kwargs):
+    def set_params(self, **kwargs: Any) -> "MultimodalEvolutionaryClassifier":
         for key, value in kwargs.items():
             setattr(self, key, value)
         return self
 
-    def distance_sum(self, X, Y):
+    def distance_sum(self, X: np.ndarray, Y: np.ndarray) -> np.ndarray:
         return np.sum(self.distance_.pairwise(X, Y), 1)
 
-    def build_for_class(self, X):
+    def build_for_class(self, X: np.ndarray) -> np.ndarray:
 
-        distance_fitness = lambda P: self.distance_sum(P, X)
+        def distance_fitness(P: np.ndarray) -> np.ndarray:
+            return self.distance_sum(P, X)
 
         # setup GA
         ga = GeneticAlgorithm(fitness_function=distance_fitness,
@@ -92,7 +96,7 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         chromosomes, fitness = ga.best(1)
         return chromosomes[0]
 
-    def fit(self, X, y):
+    def fit(self, X: Any, y: Any) -> "MultimodalEvolutionaryClassifier":
         X = check_array(X)
 
         self.classes_, _ = np.unique(y, return_inverse=True)
@@ -109,44 +113,51 @@ class MultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
         return self
 
-    def predict_(self, X):
+    def predict_(self, X: np.ndarray) -> np.ndarray:
         X = check_array(X)
         # calculate similarity for the inputs
         return self.distance_.pairwise(X, self.models_)
 
-    def predict(self, X):
+    def predict(self, X: Any) -> np.ndarray:
         R = self.predict_(X)
         # reduce by taking the one with minimum distance
         return self.classes_.take(np.argmin(R, 1))
 
-    def predict_proba(self, X):
+    def predict_proba(self, X: Any) -> np.ndarray:
         R = self.predict_(X)
         return 1.0 - normalize(R, 'l1')
 
 class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, n_iterations=10, n_models=3, random_state=None, sample_size=10, n_iterations_weights=10):
+    def __init__(
+        self,
+        n_iterations: int = 10,
+        n_models: int = 3,
+        random_state: Any = None,
+        sample_size: int = 10,
+        n_iterations_weights: int = 10,
+    ):
         self.n_iterations = n_iterations
         self.n_models = n_models
         self.random_state = check_random_state(random_state)
         self.sample_size = sample_size
         self.n_iterations_weights = n_iterations_weights
 
-    def get_params(self, deep=False):
+    def get_params(self, deep: bool = False) -> dict[str, Any]:
         return {"n_iterations": self.n_iterations,
                 "n_models": self.n_models,
                 "random_state": self.random_state,
                 "sample_size": self.sample_size,
                 "n_iterations_weights": self.n_iterations_weights}
 
-    def set_params(self, **kwargs):
+    def set_params(self, **kwargs: Any) -> "EnsembleMultimodalEvolutionaryClassifier":
         for key, value in kwargs.items():
-            self.setattr(key, value)
+            setattr(self, key, value)
         return self
 
-    def build_for_class(self, rs, X):
+    def build_for_class(self, rs: Any, X: np.ndarray) -> np.ndarray:
 
-        def distance_fitness(c):
+        def distance_fitness(c: np.ndarray) -> float:
             return np.sum(np.abs(X - c))
 
         # setup GA
@@ -163,11 +174,11 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         chromosomes, fitness = ga.best(1)
         return chromosomes[0]
 
-    def fit_weights(self, rs, models, X, y):
+    def fit_weights(self, rs: Any, models: dict[Any, np.ndarray], X: np.ndarray, y: np.ndarray) -> np.ndarray:
 
         n_genes = self.n_models * len(self.classes_)
 
-        def fitness_function(c):
+        def fitness_function(c: np.ndarray) -> float:
             M = self.predict_(X, models, c)
             y_pred = np.argmin(M, 1)
             return 1.0 - accuracy_score(y, y_pred)
@@ -185,14 +196,14 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
         return chromosomes[0]
 
-    def fit(self, X, y):
+    def fit(self, X: Any, y: Any) -> "EnsembleMultimodalEvolutionaryClassifier":
         X = check_array(X)
 
         random_state = self.random_state
 
         self.classes_, y_reverse = np.unique(y, return_inverse=True)
 
-        if np.nan in self.classes_:
+        if has_nan_classes(self.classes_):
             raise ValueError("NaN class not supported.")
 
         # build models
@@ -214,7 +225,7 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
 
         return self
 
-    def predict_(self, X, models, weights):
+    def predict_(self, X: np.ndarray, models: dict[Any, np.ndarray], weights: np.ndarray) -> np.ndarray:
         X = check_array(X)
 
         M = np.zeros((len(X), len(self.classes_)))
@@ -224,18 +235,20 @@ class EnsembleMultimodalEvolutionaryClassifier(BaseEstimator, ClassifierMixin):
         for c_idx, c_value in enumerate(self.classes_):
             for m_idx, model in enumerate(models[c_value]):
                 R[:, m_idx] = np.sum(np.abs(X - model), 1)
-            M[:, c_idx] = weights[c_idx] * np.sum(R, 1)
+            # per-model weights for this class
+            w = weights[c_idx * self.n_models : (c_idx + 1) * self.n_models]
+            M[:, c_idx] = np.sum(w * R, 1)
 
         return M
 
-    def predict(self, X):
+    def predict(self, X: Any) -> np.ndarray:
 
         M = self.predict_(X, self.models_, self.weights_)
 
         # reduce by taking the one with minimum distance
         return self.classes_.take(np.argmin(M, 1))
 
-    def predict_proba(self, X):
+    def predict_proba(self, X: Any) -> np.ndarray:
 
         M = self.predict_(X, self.models_, self.weights_)
 

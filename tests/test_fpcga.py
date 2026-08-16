@@ -118,6 +118,32 @@ def test_build_membership_factory_selection():
     assert isinstance(m, fpcga.fl.PiSet)
 
 
+def test_global_chromosome_schema_indices_cover_each_membership_block():
+    assert fpcga.chromosome_size(m=2, n_classes=2) == 17
+    assert [
+        fpcga.membership_gene_index(class_idx, feature_idx, 2)
+        for class_idx in range(2)
+        for feature_idx in range(2)
+    ] == [1, 5, 9, 13]
+
+
+def test_decode_rejects_legacy_oversized_chromosome():
+    X = np.array([[0.1, 0.2], [0.8, 0.9]])
+    y = np.array([0, 1])
+    classes = np.array([0, 1])
+    legacy_size = 2 + X.shape[1] * 5 * len(classes)
+    with pytest.raises(ValueError, match="expected chromosome with 17 genes"):
+        fpcga._decode(
+            X.shape[1],
+            X,
+            y,
+            (fpcga.DummyAggregationRuleFactory(fpcga.fl.prod),),
+            (fpcga.build_pi_membership,),
+            classes,
+            np.zeros(legacy_size),
+        )
+
+
 def test_dummy_aggregation_rule_factory():
     f = fpcga.DummyAggregationRuleFactory(fpcga.fl.prod)
     assert f(None, None) is fpcga.fl.prod

@@ -86,6 +86,20 @@ def build_static_membership(chromosome: np.ndarray, idx: int) -> StaticFunction:
 MEMBERSHIP_FACTORIES = (build_pi_membership,)
 
 
+# Global FPCGA chromosome schema: one aggregation selector followed by one
+# four-gene block (factory selector + three parameters) per class and feature.
+AGGREGATION_GENE_COUNT = 1
+MEMBERSHIP_GENE_STRIDE = 4
+
+
+def chromosome_size(m: int, n_classes: int) -> int:
+    return AGGREGATION_GENE_COUNT + m * n_classes * MEMBERSHIP_GENE_STRIDE
+
+
+def membership_gene_index(class_idx: int, feature_idx: int, m: int) -> int:
+    return AGGREGATION_GENE_COUNT + (class_idx * m + feature_idx) * MEMBERSHIP_GENE_STRIDE
+
+
 # requires 1 gene
 def build_membership(
     mu_factories: Sequence[Callable], chromosome: np.ndarray, idx: int
@@ -108,10 +122,15 @@ def _decode(
     classes: np.ndarray,
     chromosome: np.ndarray,
 ) -> tuple[Any, dict[int, list[Any]]]:
+    expected = chromosome_size(m, len(classes))
+    if len(chromosome) != expected:
+        raise ValueError(f"expected chromosome with {expected} genes, got {len(chromosome)}")
     aggregation = build_aggregation(X, y, aggregation_rules, chromosome, 0)
     protos = {}
     for i in range(len(classes)):
-        protos[i] = [build_membership(mu_factories, chromosome, 2 + (i * m * 5) + (j * 4)) for j in range(m)]
+        protos[i] = [
+            build_membership(mu_factories, chromosome, membership_gene_index(i, j, m)) for j in range(m)
+        ]
     return aggregation, protos
 
 
@@ -248,8 +267,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
             y_pred = _predict(mus, aggregation, self.classes_, X)
             return 1.0 - accuracy_score(y, y_pred)
 
-        # number of genes (2 for the aggregation, 4 for each attribute)
-        n_genes = 2 + (self.m * 5 * len(self.classes_))
+        n_genes = chromosome_size(self.m, len(self.classes_))
 
         logger.info(f"initializing GA {self.iterations} iterations")
         # initialize
@@ -257,7 +275,7 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
             fitness_function=helper_fitness(accuracy_fitness_function),
             scaling=1.0,
             crossover_function=UniformCrossover(0.5),
-            # crossover_points=range(2, n_genes, 5),
+            # crossover_points=range(1, n_genes, MEMBERSHIP_GENE_STRIDE),
             elitism=5,  # no elitism
             n_chromosomes=100,
             n_genes=n_genes,
@@ -302,13 +320,13 @@ class FuzzyPatternClassifierGA(BaseEstimator, ClassifierMixin):
 
 class FuzzyPatternClassifierLGA(FuzzyPatternClassifierGA):
     def decode(self, chromosome: np.ndarray) -> list[Any]:
-        return [build_membership(self.mu_factories, chromosome, i * 5) for i in range(self.m)]
+        return [build_membership(self.mu_factories, chromosome, i * MEMBERSHIP_GENE_STRIDE) for i in range(self.m)]
 
     def build_for_class(self, X: np.ndarray, y: np.ndarray, class_idx: np.ndarray) -> list[Any]:
         y_target = np.zeros(y.shape)  # create the target of 1 and 0.
         y_target[class_idx] = 1.0
 
-        n_genes = 5 * self.m
+        n_genes = MEMBERSHIP_GENE_STRIDE * self.m
 
         def rmse_fitness_function(chromosome: np.ndarray) -> float:
             proto = self.decode(chromosome)
@@ -321,7 +339,7 @@ class FuzzyPatternClassifierLGA(FuzzyPatternClassifierGA):
             fitness_function=helper_fitness(rmse_fitness_function),
             scaling=1.0,
             crossover_function=UniformCrossover(0.5),
-            # crossover_points=range(0, n_genes, 5),
+            # crossover_points=range(0, n_genes, MEMBERSHIP_GENE_STRIDE),
             elitism=5,  # no elitism
             n_chromosomes=100,
             n_genes=n_genes,

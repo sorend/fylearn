@@ -40,6 +40,15 @@ A type of classifier that uses GA to optimize rules:
 
  - fylearn.anfis.AnfisClassifier -- Adaptive-Network-based Fuzzy Inference System classifier (Jang, 1993).
 
+### Neuro-Fuzzy RVFL
+
+ - `fylearn.nf_rvfl.NeuroFuzzyRVFLClassifier` -- neuro-fuzzy random vector functional link classifier.
+ - `fylearn.nf_rvfl.NeuroFuzzyRVFLRegressor` -- neuro-fuzzy random vector functional link regressor.
+
+These estimators implement Sajid et al.'s Neuro-Fuzzy RVFL model using the
+existing fuzzy-logic normalization utilities. See the module documentation
+for the full paper citation and the upstream MATLAB reference implementation.
+
 Installation
 ------------
 

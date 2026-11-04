@@ -167,7 +167,7 @@ def simplify(tree: Tree, resolution: float | None = 1e-4) -> Tree:
         name = op_name(tree.aggregation_)
 
         if children and all(isinstance(c, ConstLeaf) for c in children):
-            vals = np.array([c.value for c in children])
+            vals = np.array([c.value for c in children if isinstance(c, ConstLeaf)])
             return ConstLeaf(_apply_op(tree.aggregation_, vals))
 
         if name in _NEUTRAL:
